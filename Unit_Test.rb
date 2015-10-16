@@ -28,13 +28,14 @@ class Unit_Test < Test::Unit::TestCase
 		assert_equal(true, file_path(file, version_no), expected_path)
 	end
 
-	#Test for branching
+	#Test for branching 
 	#Make sure we create the branch with 'name' and it has all files from master repo
 	def test_branching(path, name):
 		branching(name)
 		assert_equal(true, Dir.exist(name))
 		assert_equal(true, files in branch_path/snapshot.dat == files in path/snapshot.dat)
 	end
+	
 
 	# Test for merging
 	# Merge different branches, this is a kind of unspecific comparison here
