@@ -38,7 +38,8 @@ class UserInterface
 				if i==0
 					if End_Keywords.include?c 
 						puts "Thank you!"
-						exit 0
+						#exit 0
+						raise "Application exit requested!"
 				    elsif c != Start_keyword
 						msg = "Command should start with '" + Start_keyword + "'"
 						break
