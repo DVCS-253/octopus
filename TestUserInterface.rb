@@ -1,10 +1,17 @@
+#Includes 'UserInterface' class.
 require_relative "UserInterface"
 
+#Required for unit testing
 require "test/unit"
  
+#This class contains test cases for UserInterface class
 class TestUserInterface < Test::Unit::TestCase
 
+#Creating an object of UserInterface class
 UI = UserInterface.new()
+
+
+#List of commands to be tested.Note that I have used 'vcs' as the keyword just as 'git' in GitHub.
 
 C_init = "vcs init"
 C_add = "vcs add"
@@ -15,6 +22,10 @@ C_merge = "vcs merge"
 C_push = "vcs push"
 C_pull = "vcs pull"
 C_status = "vcs status"
+C_invalid_start = "abc commit"
+C_invalid_command = "vcs pulled"
+
+#List of messages that are shown for each command
 
 Msg_init_success = "'init' executed!"
 Msg_add_success = "'add' executed!"
@@ -26,8 +37,12 @@ Msg_push_success = "'push' executed!"
 Msg_pull_success = "'pull' executed!"
 Msg_status_success = "'status' executed!"
 
+#List of error messages expected during the test
+
 Msg_invalid_start = "Command should start with 'vcs'"
 Msg_invalid_command = "Invalid command "
+
+#List of valid tokens. Token is the array containing a command with its options, if any
 
 C_init_tk = ["init"]
 C_add_tk = ["add"]
@@ -38,12 +53,10 @@ C_merge_tk = ["merge"]
 C_push_tk = ["push"]
 C_pull_tk = ["pull"]
 C_status_tk = ["status"]
-
-C_invalid_start = "abc commit"
-C_invalid_command = "vcs pulled"
 C_invalid_command_tk = ["pulled"]
 
 #Test cases
+
   def test_parseCommand
 	  assert_equal(UI.parseCommand(C_init),UI.main(C_init))
 	  assert_equal(UI.parseCommand(C_add),UI.main(C_add))
@@ -57,6 +70,7 @@ C_invalid_command_tk = ["pulled"]
 	  assert_equal(UI.parseCommand(C_invalid_start),UI.main(C_invalid_start))
 	  assert_equal(UI.parseCommand(C_invalid_command),UI.main(C_invalid_command))
   end
+  
   def test_executeCommand
       assert_equal(UI.executeCommand(C_init_tk),UI.main(C_init))
 	  assert_equal(UI.executeCommand(C_add_tk),UI.main(C_add))
@@ -69,8 +83,8 @@ C_invalid_command_tk = ["pulled"]
 	  assert_equal(UI.executeCommand(C_status_tk),UI.main(C_status))
 	  assert_equal(UI.executeCommand(C_invalid_command_tk),UI.main(C_invalid_command))
   end
+  
   def test_displayResult
-    
       assert_equal(UI.displayResult(Msg_init_success),UI.main(C_init))
 	  assert_equal(UI.displayResult(Msg_add_success),UI.main(C_add))
 	  assert_equal(UI.displayResult(Msg_checkout_success),UI.main(C_checkout))
@@ -82,7 +96,6 @@ C_invalid_command_tk = ["pulled"]
 	  assert_equal(UI.displayResult(Msg_status_success),UI.main(C_status))
 	  assert_equal(UI.displayResult(Msg_invalid_start),UI.main(C_invalid_start))
 	  assert_match(UI.displayResult(Msg_invalid_command),UI.main(C_invalid_command))
-    
   end
 
 end
