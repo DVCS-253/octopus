@@ -24,6 +24,10 @@ C_pull = "vcs pull"
 C_status = "vcs status"
 C_invalid_start = "abc commit"
 C_invalid_command = "vcs pulled"
+C_q = "q"
+C_quit = "quit"
+C_end = "end"
+C_exit = "exit"
 
 #List of messages that are shown for each command
 
@@ -69,6 +73,10 @@ C_invalid_command_tk = ["pulled"]
 	  assert_equal(UI.parseCommand(C_status),UI.main(C_status))
 	  assert_equal(UI.parseCommand(C_invalid_start),UI.main(C_invalid_start))
 	  assert_equal(UI.parseCommand(C_invalid_command),UI.main(C_invalid_command))
+	  assert_raise(RuntimeError){ UI.main(C_q) }
+	  assert_raise(RuntimeError){ UI.main(C_quit) }
+	  assert_raise(RuntimeError){ UI.main(C_end) }
+	  assert_raise(RuntimeError){ UI.main(C_exit) }
   end
   
   def test_executeCommand
