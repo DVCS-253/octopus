@@ -1,6 +1,15 @@
 require 'fileutils'
 require 'test/unit'
 
+# Tests public methods of the push/pull module.
+#
+# Assumptions:
+#   - There is a method call to initialize an empty repository.
+#   - There is a method to stage a file.
+#   - There is a method to commit with a message.
+#   - There is a method to obtain the commit log.
+#   - There is a method to obtain a list of staged files.
+#
 class TestPushPull < Test::Unit::TestCase
 
   # Defines testing variables before each test runs.
@@ -58,13 +67,6 @@ class TestPushPull < Test::Unit::TestCase
   # Tests pulling from a remote repo to an empty local repo.
   # This test asserts that commit history and staged files are preserved.
   #
-  # Assumptions:
-  #   - There is a method call to initialize an empty repository.
-  #   - There is a method to stage a file.
-  #   - There is a method to commit with a message.
-  #   - There is a method to obtain the commit log.
-  #   - There is a method to obtain a list of staged files.
-  #
   def test_clean_pull
     # Create a commit history on the remote
     Dir.chdir(@remote_dir)
@@ -87,13 +89,6 @@ class TestPushPull < Test::Unit::TestCase
 
   # Tests pulling from a remote repo to a non-empty local repo.
   # This test asserts that commit history and staged files are preserved.
-  #
-  # Assumptions:
-  #   - There is a method call to initialize an empty repository.
-  #   - There is a method to stage a file.
-  #   - There is a method to commit with a message.
-  #   - There is a method to obtain the commit log.
-  #   - There is a method to obtain a list of staged files.
   #
   def test_dirty_pull
     # Create a commit history locally for file 1
@@ -134,13 +129,6 @@ class TestPushPull < Test::Unit::TestCase
   # Tests pushing to an empty remote repo from a local repo.
   # This test asserts that commit history and staged files are preserved.
   #
-  # Assumptions:
-  #   - There is a method call to initialize an empty repository.
-  #   - There is a method to stage a file.
-  #   - There is a method to commit with a message.
-  #   - There is a method to obtain the commit log.
-  #   - There is a method to obtain a list of staged files.
-  #
   def test_clean_push
     # Create a commit history locally
     Dir.chdir(@local_dir)
@@ -161,16 +149,43 @@ class TestPushPull < Test::Unit::TestCase
                  'File contents were not preserved when pushing to remote.')
   end
 
-    # Create a commit history on the remote for file 1 and 2
+  # Tests pushing to a non-empty remote repo from a local repo.
+  # This test asserts that commit history and staged files are preserved.
+  #
+  def test_dirty_push
+    # Create a commit history on the remote
     Dir.chdir(@base_dir+@remote_dir)
     File.write(@files[0], @remote_file_contents[0])
     stage(@files[0])
     commit(@remote_commit_messages[0])
 
-    # Create a commit history locally for file 1
+    # Create a commit history locally
     Dir.chdir(@base_dir+@local_dir)
+    pull('127.0.0.1'+@base_dir+@remote_dir)
+
     File.write(@files[0], @local_file_contents[0])
     stage(@files[0])
     commit(@local_commit_messages[0])
+
+    File.write(@files[1], @local_file_contents[1])
+    stage(@files[1])
+    commit(@local_commit_messages[1])
+
+    # Push to the remote
+    push('127.0.0.1'+@base_dir+@remote_dir)
+
+    # Assert that the commit history and staged files are correct
+    Dir.chdir(@base_dir+@remote_dir)
+    assert_equal(@local_commit_messages[0], get_second_to_last_commit_message(),
+                 'Commit history was not preserved when pushing to remote.')
+    assert_equal(@local_commit_messages[1], get_last_commit_message(),
+                 'Commit history was not preserved when pushing to remote.')
+    assert_equal([@files[0], @files[1]], get_staged_files(),
+                 'List of staged files was not preserved when pushing to remote.')
+    assert_equal(@local_file_contents[0], File.read(@files[0]),
+                 'File contents were not merged when pushing to remote.')
+    assert_equal(@local_file_contents[1], File.read(@files[1]),
+                 'File contents were not preserved when pushing to remote.')
+  end
 
 end
