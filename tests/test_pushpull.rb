@@ -83,7 +83,52 @@ class TestPushPull < Test::Unit::TestCase
                  'List of staged files was not preserved when pulling from remote.')
     assert_equal(@remote_file_contents[0], File.read(@files[0]),
                  'File contents were not preserved when pulling from remote.')
+  end
 
+  # Tests pulling from a remote repo to a non-empty local repo.
+  # This test asserts that commit history and staged files are preserved.
+  #
+  # Assumptions:
+  #   - There is a method call to initialize an empty repository.
+  #   - There is a method to stage a file.
+  #   - There is a method to commit with a message.
+  #   - There is a method to obtain the commit log.
+  #   - There is a method to obtain a list of staged files.
+  #
+  def test_dirty_pull
+    # Create a commit history locally for file 1
+    Dir.chdir(@base_dir+@local_dir)
+    File.write(@files[0], @local_file_contents[0])
+    stage(@files[0])
+    commit(@local_commit_messages[0])
+
+    # Pull from local and create a commit history on the remote for file 1 and 2
+    Dir.chdir(@base_dir+@remote_dir)
+    pull('127.0.0.1'+@base_dir+@local_dir)
+
+    File.write(@files[0], @remote_file_contents[0])
+    stage(@files[0])
+    commit(@remote_commit_messages[0])
+
+    File.write(@files[1], @remote_file_contents[1])
+    stage(@files[1])
+    commit(@remote_commit_messages[1])
+
+    # Change to the local repository and pull
+    Dir.chdir(@base_dir+@local_dir)
+    pull('127.0.0.1'+@base_dir+@remote_dir)
+
+    # Assert that the commit history and staged files are correct
+    assert_equal(@remote_commit_messages[0], get_second_to_last_commit_message(),
+                 'Commit history was not preserved when pulling from remote.')
+    assert_equal(@remote_commit_messages[1], get_last_commit_message(),
+                 'Commit history was not preserved when pulling from remote.')
+    assert_equal([@files[0], @files[1]], get_staged_files(),
+                 'List of staged files was not preserved when pulling from remote.')
+    assert_equal(@remote_file_contents[0], File.read(@files[0]),
+                 'File contents were not merged when pulling from remote.')
+    assert_equal(@remote_file_contents[1], File.read(@files[1]),
+                 'File contents were not preserved when pulling from remote.')
   end
 
   # Tests pushing to an empty remote repo from a local repo.
@@ -115,5 +160,17 @@ class TestPushPull < Test::Unit::TestCase
     assert_equal(@local_file_contents[0], File.read(@files[0]),
                  'File contents were not preserved when pushing to remote.')
   end
+
+    # Create a commit history on the remote for file 1 and 2
+    Dir.chdir(@base_dir+@remote_dir)
+    File.write(@files[0], @remote_file_contents[0])
+    stage(@files[0])
+    commit(@remote_commit_messages[0])
+
+    # Create a commit history locally for file 1
+    Dir.chdir(@base_dir+@local_dir)
+    File.write(@files[0], @local_file_contents[0])
+    stage(@files[0])
+    commit(@local_commit_messages[0])
 
 end
