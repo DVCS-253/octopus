@@ -17,14 +17,14 @@ def test_public()
 	test_file1.puts("file1")
 	test_file1.close
 	id1 = store(test_file1) #call store
-	raise "Invaid id 1" unless /(key structure)/ === id1 #make sure id is of the right form
+	assert_equal(/(key structure)/,id1,"Invaid id 1") #make sure id is of the right form
 
 	test_file2 = File.new('test2.txt', "w") #create a test file
 	test_file2.puts("file2")
 	test_file2.close
 	id2 = store(test_file2) #call store
-	raise "Invaid id 2" unless /(key structure)/ === id2 #make sure id is of the right form
-	raise "ID's were equal" if (id1 == id2)
+	assert_equal(/(key structure)/,id1,"Invaid id 2") #make sure id is of the right form
+	assert_not_equal(id1,id2,"ID's were equal")
 
 	#########################################################
 	# end store												#
@@ -39,9 +39,8 @@ def test_public()
 	#loads the two files previously stored
 	#fails if retrieved files are not original files
 
-	raise "Unexpected file loaded (file 1)" unless load(id1) == test_file1
-	raise "Unexpected file loaded (file 2)" unless load(id2) == test_file2
-
+	assert_equal(load(id1), test_file1, "Unexpected file loaded (file 1)")
+	assert_equal(load(id2), test_file2, "Unexpected file loaded (file 2)")
 	#########################################################
 	# end load 												#
 	#########################################################
@@ -73,11 +72,11 @@ def test_public()
 	merged.close
 
 
-	raise "Self comparison faiure" unless merge(test_file1, test_file1) == test_file1
+	assert_equal(merge(test_file1, test_file1), test_file1, "Self comparison faiure") 
 
-	raise "Simple merge failure" unless merge(merge_file1, merge_file2) == merge_file3
+	assert_equal(merge(merge_file1, merge_file2), merge_file3, "Simple merge failure") 
 
-	raise "Complex merge failure" unless merge(test_file1, test_file2) == merged
+	assert_equal(merge(test_file1, test_file2), merged, "Complex merge failure") 
 
 	#########################################################
 	# end merge 											#
@@ -105,21 +104,21 @@ def test_private()
 	id2 = hash("foo")
 	id3 = hash("fool")
 
-	raise "Invaid hash id 1" unless /(key structure)/ === id1 #make sure id is of the right form
-	raise "Invaid hash id 2" unless /(key structure)/ === id2 #make sure id is of the right form
-	raise "Invaid hash id 3" unless /(key structure)/ === id3 #make sure id is of the right form
-	raise "ID 1,2 were equal" if (id1 == id2)
-	raise "ID 1,3 were equal" if (id1 == id3)
-	raise "ID 2,3 were equal" if (id3 == id2)
+	assert_equal(/(key structure)/, id1, "Invaid hash id 1") #make sure id is of the right form
+	assert_equal(/(key structure)/, id2, "Invaid hash id 2") #make sure id is of the right form
+	assert_equal(/(key structure)/, id3, "Invaid hash id 3") #make sure id is of the right form
+	assert_not_equal(id1, id2, "ID 1,2 were equal")
+	assert_not_equal(id1, id3, "ID 1,3 were equal")
+	assert_not_equal(id3, id2, "ID 2,3 were equal")
 
 	#rigorous tests
 	test_arr = []
 	10000.times {test_arr.push(hash("foo"))}
-	raise "Duplicate ID's (constant)" unless test_arr.detect{ |e| test_arr.count(e) > 1 } == nil
+	assert_equal(test_arr.detect{ |e| test_arr.count(e) > 1 }, nil, "Duplicate ID's (constant)")
 
 	test_foo = []
 	10000.times {|x| test_foo.push(hash("foo"+ x.to_s))}
-	raise "Duplicate ID's (variant)" unless test_foo.detect{ |e| test_foo.count(e) > 1 } == nil
+	assert_equal(test_foo.detect{ |e| test_foo.count(e) > 1 }, nil, "Duplicate ID's (variant)")
 
 	#########################################################
 	# end hash												#
