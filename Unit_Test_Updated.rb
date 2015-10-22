@@ -26,7 +26,10 @@ class Test_Repos < Test::Unit::TestCase
 	# refs: File with heads and remotes, similar structure as remotes,
 	# but only records latest commit
 	# objects: record all contents user ever checked, commits
-	# Store the diff and save with a random nodeID in a hash database named Snapshot
+	# Store the diff and save with a random nodeID in a hash database Save_file
+	# For this maybe the Revlog's Job?
+	# and another database Snapshot, it 
+	# to save all files' diff
 	# for the subdirectory and next 38 chars are the filename
 
 
@@ -34,6 +37,8 @@ class Test_Repos < Test::Unit::TestCase
 		@Username = "CSC253"
 		@init_path = "Desktop/DVCS/Test"
 		@repo_path = "Desktop/DVCS/Test/.git"
+
+		@branch_path = "Desktop/DVCS/Branching"
 
 		@head_s = "/HEAD"
 		@commit_msg_s = "/COMMIT_EDITMSG"
@@ -50,12 +55,20 @@ class Test_Repos < Test::Unit::TestCase
 		@second_commit_msg = "second commit's comment"
 
 		@head_msg = "ref: refs/heads/master"
+		@head_branch_msg = "ref: refs/heads/second"
 
 		@first_nodeID = 10
 		@second_nodeID = 20
 
 		@first_text = "first commit"
 		@second_text = "second commit"
+
+		@test1
+		@test2
+
+
+		@result = []
+
 
 		
 	end
@@ -67,8 +80,8 @@ class Test_Repos < Test::Unit::TestCase
 		# area I want
 		Dir.chdir(@init_path)
 		
-		# call test_init to create repos with the name ".git"
-		test_init()
+		# call init to create repos with the name ".git"
+		init()
 
 		# make sure init() worked normally
 		# create all files user needs
@@ -97,6 +110,7 @@ class Test_Repos < Test::Unit::TestCase
 	# Test the commit function
 	# Files are files that user want to commit in workspace
 	# commit_msg is user's comment for this commit
+	# Everytime user commit, DVCS saves all files in repo to Snapshot, with a certain nodeID
 	def test_commit(commit_msg)
 		########################BEGIN THE FIRST COMMIT###############################
 		dir.chdir(@init_path)
@@ -108,14 +122,14 @@ class Test_Repos < Test::Unit::TestCase
 		first_commit_text = File.open("COMMIT_EDITMSG").read
 		assert_equal(first_commit_text, @first_commit_msg)
 
-		# Test whether diff and NodeID have included in Snapshot
-		# Now we only have one Node ID with diff is the content of that file
+		# Test whether save test with nodeID
+		# 
 		Dir.chdir(@repo_path + @objects)
-		Snapshot.each do |key, content|
+		Snapshot.each do |key, file|
 			nodeID = key
 			assert_equal(true, key.is_a?)
 		end
-		assert_equal(Snapshot[nodeID], first_text)
+		assert_equal(Snapshot[nodeID], test)
 
 		# Test HEAD in logs
 		Dir.chdir(@repo_path + @logs)
@@ -134,22 +148,55 @@ class Test_Repos < Test::Unit::TestCase
 		########################DONE WITH THE FIRST COMMIT###############################
 
 		########################BEGIN THE SECOND COMMIT###############################
+		Dir.chdir(@init_path)
+		commit(@second_commit_msg)
+
+		# Test whether comment in COMMIT_EDITMSG has been updated
+		second_commit_text = File.open("COMMIT_EDITMSG").read
+		assert_equal(second_commit_text, @second_commit_msg)
+
+		# Make sure we have save the whole repos 
+		Dir.chdir(@repo_path + @objects)
+		Save_file.each do |key, content|
+			@result << key
+		end
+		assert_equal(true, @result.include? @second_nodeID)
 
 
 	end
 
 	# Return context of a file with NodeID 
+	# This should be Revlog?
 	def test_history (NodeID)
+		first_history = history (@first_nodeID)
+		assert_equal("first_comment", first_history)
+
+		second_history = history (@second_nodeID)
+		assert_equal("second_commit", second_history)
 
 	end
+
+	# ID created when did a commit, this will return files that time
+	def test_Snapshot (NodeId)
+		assert_equal(Snapshot(first_nodeID), test1)
+		assert_equal(Snapshot(second_nodeID), test2)
+
 
 	# Test Branching
-	def branching (branch_name)
+	# Create a new branch "Similar to checkout in Git"
+	def test_branching (branch_name)
+		Dir.chdir(@init_path)
+		branching(second)
 
-	end
+		# Switch to second branch
+		Dir.chdir(@repo_path)
+		assert_equal(@head_branch_msg, File.open("HEAD").read)
 
-	# Test Merging
-	def merging (branch_name)
+		Dir.chdir(@repo_path + @logs + @refs + "/heads")
+		assert_equal(true, File.exist?("second"))
+
+		Dir.chdir(@repo_path + @refs + "/heads")
+		assert_equal(true, File.exist?("second"))
 
 	end
 
