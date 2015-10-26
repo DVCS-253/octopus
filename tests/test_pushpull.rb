@@ -137,7 +137,7 @@ class TestPushPull < Test::Unit::TestCase
   end
   
   # Tests pulling from a remote repo to a local repo with uncommitted changes.
-  # This test asserts that an error is raised.
+  # This test asserts that an exception is raised.
   #
   def test_pull_into_uncommitted_repo
     # Create uncommitted changes locally for file 1
@@ -242,6 +242,28 @@ class TestPushPull < Test::Unit::TestCase
                  'File contents were not merged when pushing to remote.')
     assert_equal(@local_file_contents[1], File.read(@files[1]),
                  'File contents were not preserved when pushing to remote.')
+  end
+
+  # Tests pushing to a remote repo with uncommitted changes from a local repo.
+  # This test asserts that an exception is raised.
+  #
+  def test_push_to_uncommitted_repo
+    # Create uncommitted changes on the remote
+    Dir.chdir(@base_dir+@remote_dir)
+    File.write(@files[0], @remote_file_contents[0])
+
+    # Create a commit history locally
+    Dir.chdir(@base_dir+@local_dir)
+    pull('127.0.0.1'+@base_dir+@remote_dir)
+    File.write(@files[0], @local_file_contents[0])
+    stage(@files[0])
+    commit(@local_commit_messages[0])
+
+    # Assert that pushing raises an exception
+    Dir.chdir(@base_dir+@local_dir)
+    assert_raise do
+      push('127.0.0.1'+@base_dir+@remote_dir)
+    end
   end
 
 end
