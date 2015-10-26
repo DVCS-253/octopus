@@ -68,7 +68,7 @@ class TestPushPull < Test::Unit::TestCase
   # Tests pulling from a remote repo to an empty local repo.
   # This test asserts that commit history and staged files are preserved.
   #
-  def test_clean_pull
+  def test_pull_into_empty_repo
     # Create a commit history on the remote
     Dir.chdir(@base_dir+@remote_dir)
     File.write(@files[0], @remote_file_contents[0])
@@ -88,10 +88,10 @@ class TestPushPull < Test::Unit::TestCase
                  'File contents were not preserved when pulling from remote.')
   end
 
-  # Tests pulling from a remote repo to a non-empty local repo.
+  # Tests pulling from a remote repo to a local repo with committed changes.
   # This test asserts that commit history and staged files are preserved.
   #
-  def test_dirty_pull
+  def test_pull_into_committed_repo
     # Create a commit history locally for file 1
     Dir.chdir(@base_dir+@local_dir)
     File.write(@files[0], @local_file_contents[0])
@@ -153,7 +153,7 @@ class TestPushPull < Test::Unit::TestCase
   # Tests pushing to an empty remote repo from a local repo.
   # This test asserts that commit history and staged files are preserved.
   #
-  def test_clean_push
+  def test_push_to_empty_repo
     # Create a commit history locally
     Dir.chdir(@local_dir)
     File.write(@files[0], @local_file_contents[0])
@@ -173,10 +173,10 @@ class TestPushPull < Test::Unit::TestCase
                  'File contents were not preserved when pushing to remote.')
   end
 
-  # Tests pushing to a non-empty remote repo from a local repo.
+  # Tests pushing to a remote repo with committed changes from a local repo.
   # This test asserts that commit history and staged files are preserved.
   #
-  def test_dirty_push
+  def test_push_to_committed_repo
     # Create a commit history on the remote
     Dir.chdir(@base_dir+@remote_dir)
     File.write(@files[0], @remote_file_contents[0])
