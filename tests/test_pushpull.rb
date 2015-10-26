@@ -20,6 +20,7 @@ class TestPushPull < Test::Unit::TestCase
     @base_dir   = Dir.getwd + '/'
     @local_dir  = 'repo_1/'
     @remote_dir = 'repo_2/'
+    @clone_dir  = 'repo_clone/'
 
     @files = [
       'a.txt',
@@ -69,7 +70,7 @@ class TestPushPull < Test::Unit::TestCase
   #
   def test_clean_pull
     # Create a commit history on the remote
-    Dir.chdir(@remote_dir)
+    Dir.chdir(@base_dir+@remote_dir)
     File.write(@files[0], @remote_file_contents[0])
     stage(@files[0])
     commit(@remote_commit_messages[0])
@@ -124,6 +125,29 @@ class TestPushPull < Test::Unit::TestCase
                  'File contents were not merged when pulling from remote.')
     assert_equal(@remote_file_contents[1], File.read(@files[1]),
                  'File contents were not preserved when pulling from remote.')
+  end
+
+  # Tests cloning a remote repo into a new directory.
+  # This test asserts that commit history and staged files are preserved.
+  #
+  def test_clone
+    # Create a commit history on the remote
+    Dir.chdir(@base_dir+@remote_dir)
+    File.write(@files[0], @remote_file_contents[0])
+    stage(@files[0])
+    commit(@remote_commit_messages[0])
+
+    # Clone the remote repo into a new folder called @clone_dir
+    clone('127.0.0.1'+@base_dir+@remote_dir, @clone_dir)
+    Dir.chdir(@base_dir+@clone_dir)
+
+    # Assert that the commit history and staged files are correct
+    assert_equal(@remote_commit_messages[0], get_last_commit_message(),
+                 'Commit history was not preserved when cloning remote.')
+    assert_equal([@files[0]], get_staged_files(),
+                 'List of staged files was not preserved when cloning remote.')
+    assert_equal(@remote_file_contents[0], File.read(@files[0]),
+                 'File contents were not preserved when cloning remote.')
   end
 
   # Tests pushing to an empty remote repo from a local repo.
