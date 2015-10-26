@@ -135,6 +135,27 @@ class TestPushPull < Test::Unit::TestCase
     assert_equal(@remote_file_contents[1], File.read(@files[1]),
                  'File contents were not preserved when pulling from remote.')
   end
+  
+  # Tests pulling from a remote repo to a local repo with uncommitted changes.
+  # This test asserts that an error is raised.
+  #
+  def test_pull_into_uncommitted_repo
+    # Create uncommitted changes locally for file 1
+    Dir.chdir(@base_dir+@local_dir)
+    File.write(@files[0], @local_file_contents[0])
+
+    # Create a commit history on the remote for file 1
+    Dir.chdir(@base_dir+@remote_dir)
+    File.write(@files[0], @remote_file_contents[0])
+    stage(@files[0])
+    commit(@remote_commit_messages[0])
+
+    # Assert that pulling raises an exception
+    Dir.chdir(@base_dir+@local_dir)
+    assert_raise do
+      pull('127.0.0.1'+@base_dir+@remote_dir)
+    end
+  end
 
 
   # Tests cloning a remote repo into a new directory.
