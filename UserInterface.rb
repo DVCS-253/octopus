@@ -10,7 +10,7 @@ class UserInterface
 	End_Keywords = ["quit","q","exit","end"]
 	
 	#List of valid commands. This list is used to compare with user's input
-	Valid_Commands = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status"]
+	Valid_Commands = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone"]
 
 	#This is the original 'main' method. This method scans for the user input. 
 	#A new 'main' method has been defined for testing purpose that takes parameterized input. 
