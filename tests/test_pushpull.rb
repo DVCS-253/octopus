@@ -65,6 +65,15 @@ class TestPushPull < Test::Unit::TestCase
 
 
 
+  # Tests connecting to a machine.
+  #
+  def test_connect
+    # Assert that the machine can be connected to
+    assert(connect('127.0.0.1'+@base_dir+@remote_dir),
+           'Failed to connect to remote machine.')
+  end
+
+
   # Tests pulling from a remote repo to an empty local repo.
   # This test asserts that commit history and staged files are preserved.
   #
@@ -127,6 +136,7 @@ class TestPushPull < Test::Unit::TestCase
                  'File contents were not preserved when pulling from remote.')
   end
 
+
   # Tests cloning a remote repo into a new directory.
   # This test asserts that commit history and staged files are preserved.
   #
@@ -149,6 +159,7 @@ class TestPushPull < Test::Unit::TestCase
     assert_equal(@remote_file_contents[0], File.read(@files[0]),
                  'File contents were not preserved when cloning remote.')
   end
+
 
   # Tests pushing to an empty remote repo from a local repo.
   # This test asserts that commit history and staged files are preserved.
