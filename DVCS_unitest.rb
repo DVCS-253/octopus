@@ -9,16 +9,27 @@ class DVCS_test < Test::Unit::TestCase
 	#4, call the clean_work_space to test if it's functional when the workspace is empty
 	#5, test if the work sapce is still empty
 
-	def test_clean_work_space(path)			#path: path of workspace
-		out_file = File.new(path + 'test', "w") # create a text file in workspace
+	#Revisions: This is private function, this function cleans staged files
+	#1, create two test files
+	#2, staged first one, leave the second one unchaged
+	#3, call the function
+	#4, test if staged file is deleted from both workspace and staged_folder
+	#5, test if unstaged file is left in workspace
+
+	def test_clean_work_space(path)			 #path: path of workspace
+		out_file = File.new(path + 'test1', "w") #create a text file in workspace
+		out_file.close()
+		stage(path + 'test1')			 #stage test1
+		out_file = File.new(path + 'test2', "w") #create another one leaving it unstaged
 		out_file.puts("create a new file.")
 		out_file.close		 
 		clean_work_space			#call the function
-		empty = Dir[path].empty?
-		assert_equal(true, empty, 'Errors when cleaning up workspace.')
-		clean_work_space
-		empty = Dir[path].empty?
-		assert_equal(true, empty, 'Errors occur when the workspace is originally empty')
+		empty = Dir[path + '/staged_folder'].empty? 
+		assert_equal(true, empty, 'Errors, staged files are left in staged_folder')
+		file_exist = File.directory?(path + 'test1')
+		assert_equal(false, file_exist, 'Errors, staged files are left in workspace')
+		file_exist = File.directory?(path + 'test2')
+		assert_equal(true, file_exist, 'Errors, unstagd files are deleted')
 	end
 
 
@@ -106,7 +117,46 @@ class DVCS_test < Test::Unit::TestCase
 		indentical = FileUtils.compare_file(path + file_name, path + 'staged_folder/' + file_name) 
 		assert_equal(true, identical, 'Errors. File is not copied into staged_folder corretly')
 	end
+
 	
+	#New test cases for clean function.
+	#Note: this is a public function for cleaning unstaged files, different for private clean function, which cleans staged files
+	#1, create two test files
+	#2, staged first one, leave the second one unchaged
+	#3, call the function
+	#4, test if staged file is deleted from both workspace and staged_folder
+	#5, test if unstaged file is left in workspace
+	def test_clean(path)			
+		out_file = File.new(path + 'test1', "w")
+		out_file.close()
+		stage(path + 'test1')			
+		out_file = File.new(path + 'test2', "w")
+		out_file.puts("create a new file.")
+		out_file.close		 
+		clean
+		file_exist = File.directory?(path + '/staged_folder/test1')
+		assert_equal(true, file_exist, 'Errors, staged files are deleted from staged_folder')
+		file_exist = File.directory?(path + 'test1')
+		assert_equal(true, file_exist, 'Errors, staged files are deleted from workspace')
+		file_exist = File.directory?(path + 'test2')		
+		assert_equal(false, file_exist, 'Errors, unstaged files are left in workspace')
+	end
+
+
+	#New test cases for status function. Assume this function return a file contains list of staged and unstaged files. 
+	#input: 1, path of workspace; 2, a file_lst of staged and unstaged files
+	#1, call the function
+	#2, test if a status file is generated properly
+	#3, test if the content of status file is correct according to the right file_lst
+	def test_status(path, file_lst)
+		if File.exist?(path + 'file_status.dat')
+			File.delete(path + 'file_status.dat')
+		end
+		return_commit_file_list			#call the function to return the list of files 
+		assert_equal(true, File.exist?(path + 'file_status.dat', 'Errors, didnt generate file_state.dat')
+		indentical = FileUtils.compare_file(file_lst, 'file_status.dat')
+		assert_equal(true, identical, 'Errors, the generated version_info.dat is incorrect') 
+	end
 end
 
 
