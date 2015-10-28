@@ -248,18 +248,18 @@ class TestPushPull < Test::Unit::TestCase
   # This test asserts that an exception is raised.
   #
   def test_push_to_uncommitted_repo
-    # Create uncommitted changes on the remote
+    # Create a staged file with uncommitted changes on the remote
     Dir.chdir(@base_dir+@remote_dir)
     File.write(@files[0], @remote_file_contents[0])
+    stage(@files[0])
 
-    # Create a commit history locally
+    # Create a staged file with committed changes locally
     Dir.chdir(@base_dir+@local_dir)
-    pull('127.0.0.1'+@base_dir+@remote_dir)
     File.write(@files[0], @local_file_contents[0])
     stage(@files[0])
     commit(@local_commit_messages[0])
 
-    # Assert that pushing raises an exception
+    # Assert that pushing from the local to the remote raises an exception
     Dir.chdir(@base_dir+@local_dir)
     assert_raise do
       push('127.0.0.1'+@base_dir+@remote_dir)
