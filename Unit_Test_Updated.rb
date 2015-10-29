@@ -2,8 +2,7 @@ require "test/unit"
 
 # CSC 253 - DVCS Projects 
 # Updated Unit Test for Repos
-# Almost rewrite everything 
-# 10/20/2015
+# 10/28/2015
 
 class Test_Repos < Test::Unit::TestCase
 
@@ -13,61 +12,18 @@ class Test_Repos < Test::Unit::TestCase
 	# @init_path used for where the DVCS 
 	# will be initialized
 	# @repo_path is repos directory
-	
-	# @xxx_s is all plain-text, value
-	# is the directory in repos
-	# HEAD: a referrence to the branch user is working with
-	# COMMIT_EDITMSG: last commit message
-	# config: the configuration file, includes information such as remote, branch
-	# FETCH_HEAD: record of information when fetching the branch
+	# For the tree structure of Snapshots, my implementation idea is to make one 
+	# folder to represent one Snapshot, folder name will be the node_id of the 
+	# snapshot. Childern of specific Snapshot will be another folder created in that
+	# specific folder
 
-	# branches: a file used to specify a URL to fetch, pull and push
-	# logs: File records changes made to refs
-	# refs: File with heads and remotes, similar structure as remotes,
-	# but only records latest commit
-	# objects: record all contents user ever checked, commits
-	# Store the diff and save with a random nodeID in a hash database Save_file
-	# For this maybe the Revlog's Job?
-	# and another database Snapshot, it 
-	# to save all files' diff
-	# for the subdirectory and next 38 chars are the filename
+	############################################################################
 
 
 	def setup
 		@Username = "CSC253"
 		@init_path = "Desktop/DVCS/Test"
-		@repo_path = "Desktop/DVCS/Test/.git"
-
-		@branch_path = "Desktop/DVCS/Branching"
-
-		@head_s = "/HEAD"
-		@commit_msg_s = "/COMMIT_EDITMSG"
-		@config_s = "/config"
-		@fetch_head_s = "/FETCH_HEAD"
-
-		@branches = "/branches"
-		@logs = "/logs"
-		@objects = "/objects"
-		@refs = "/refs"
-		@remotes = "/remotes"
-
-		@first_commit_msg = "first commit's comment"
-		@second_commit_msg = "second commit's comment"
-
-		@head_msg = "ref: refs/heads/master"
-		@head_branch_msg = "ref: refs/heads/second"
-
-		@first_nodeID = 10
-		@second_nodeID = 20
-
-		@first_text = "first commit"
-		@second_text = "second commit"
-
-		@test1
-		@test2
-
-
-		@result = []
+		@repo_path = "Desktop/DVCS/Test/.oct"
 
 
 		
@@ -76,11 +32,10 @@ class Test_Repos < Test::Unit::TestCase
 	# Test the initialization of the repos
 	# Input is @init_path created before
 	def test_init()
-		# make the directory to be the test
-		# area I want
+		# make the directory to be the test area I want
 		Dir.chdir(@init_path)
 		
-		# call init to create repos with the name ".git"
+		# call init to create repos with the name ".oct"
 		init()
 
 		# make sure init() worked normally
@@ -88,115 +43,101 @@ class Test_Repos < Test::Unit::TestCase
 		assert_equal(true, File.directory?(@repo_path))
 		assert_equal(@init_path, File.dirname(@repo_path))
 
-		assert_equal(true, File.exist?(@repo_path + @head_s))
-		head_actual_msg = File.open("HEAD").read
-		assert_equal(head_actual_msg, @head_msg)
-
-		assert_equal(true, File.exist?(@repo_path + @config_s))
-		# assert_equal(true, File.exist?(@repo_path + @fetch_head_s))
-
-		assert_equal(true, File.directory?(@repo_path + @branches))
-		# assert_equal(true, File.directory?(@repo_path + @logs))
-		# assert_equal(true, File.exist?(@repo_path + @logs + "/HEAD"))
-		# assert_equal(true, File.directory?(@repo_path + @logs + @refs + "/heads"))
-		# assert_equal(true, File.directory?(@repo_path + @logs + @refs + "/remotes"))
-		assert_equal(true, File.directory?(@repo_path + @objects + "/Snapshot"))
-		assert_equal(true, File.directory?(@repo_path + @refs))
-		assert_equal(true, File.directory?(@repo_path + @refs + "/heads"))
-		# assert_equal(true, File.directory?(@repo_path + @refs + "/remotes"))
-
 	end
 
-	# Test the commit function
-	# Files are files that user want to commit in workspace
-	# commit_msg is user's comment for this commit
-	# Everytime user commit, DVCS saves all files in repo to Snapshot, with a certain nodeID
-	def test_commit(commit_msg)
-		########################BEGIN THE FIRST COMMIT###############################
-		dir.chdir(@init_path)
-		commit(@first_commit_msg)
 
-		# After first commit, user will have file to save latest comment
-		# Pretend we commit one single file one time
-		assert_equal(true, File.exist?(@repo_path + @commit_msg_s))
-		first_commit_text = File.open("COMMIT_EDITMSG").read
-		assert_equal(first_commit_text, @first_commit_msg)
-
-		# Test whether save test with nodeID
-		# 
-		Dir.chdir(@repo_path + @objects)
-		Snapshot.each do |key, file|
-			nodeID = key
-			assert_equal(true, key.is_a?)
-		end
-		assert_equal(Snapshot[nodeID], test)
-
-		# Test HEAD in logs
-		Dir.chdir(@repo_path + @logs)
-		assert_equal("10 CSC253 commit (initial): first commit", File.open("HEAD").read)
-
-		# Test master branch in /logs/refs/heads
-		# Since we commit on master branch, shoulde be same as HEAD in logs
-		Dir.chdir(@repo_path + @logs + @refs + "/heads")
-		assert_equal("10 CSC253 commit (initial): first commit", File.open("master").read)
-
-		# Test master branch in /refs/heads
-		# Only records lastest comment
-		Dir.chdir(@repo_path + @refs + "/heads")
-		assert_equal("10", File.open("master").read)
-
-		########################DONE WITH THE FIRST COMMIT###############################
-
-		########################BEGIN THE SECOND COMMIT###############################
+	# Test make_snapshot, record version ids of a list of files 
+	# and the corresponding reference id to communicate with Revlog
+	def test_make_snapshot():
+		# Call make_snapshot() function, it will always take stage in workspace as parameter
+		# Create version id for each file and file id in order to communicate with Revlog
+		# Created a new file to workspace and add
 		Dir.chdir(@init_path)
-		commit(@second_commit_msg)
+		File.open("test1.txt", 'w'){|f| f.puts("First line")}
+		# Call function in workspace module
+		stage("test1.txt")
+		# Then call make_snapshot
+		@node_id1 = make_snapshot()
+		# Created a Snapshot with name node_id1
+		assert_equal(true, File.exist?(@repo_path + "/" + @node_id1))
 
-		# Test whether comment in COMMIT_EDITMSG has been updated
-		second_commit_text = File.open("COMMIT_EDITMSG").read
-		assert_equal(second_commit_text, @second_commit_msg)
-
-		# Make sure we have save the whole repos 
-		Dir.chdir(@repo_path + @objects)
-		Save_file.each do |key, content|
-			@result << key
-		end
-		assert_equal(true, @result.include? @second_nodeID)
+		# Modify test1.txt and create another snapshot
+		File.open("test1.txt", 'w'){|f| f.puts("Second line")}
+		@node_id11 = make_snapshot()
+		# Will be in the sub-folder of first Snapshot
+		assert_equal(true, File.exist?(@repo_path + "/" + @node_id1 + "/" + @node_id11))
 
 
 	end
 
-	# Return context of a file with NodeID 
-	# This should be Revlog?
-	def test_history (NodeID)
-		first_history = history (@first_nodeID)
-		assert_equal("first_comment", first_history)
-
-		second_history = history (@second_nodeID)
-		assert_equal("second_commit", second_history)
+	# Test restore_snapshot, which takes a node_id that represents a Snapshot
+	# and return list of file_id's 
+	# 
+	def test_restore_snapshot():
+		# Try to restore the first snapshot, only have one file
+		@file_id = restore_snapshot(@node_id1)
+		# call Revlog to verify if it's the first snapshot's 
+		assert_equal(get_file(@file_id), "First line")
 
 	end
 
-	# ID created when did a commit, this will return files that time
-	def test_Snapshot (NodeId)
-		assert_equal(Snapshot(first_nodeID), test1)
-		assert_equal(Snapshot(second_nodeID), test2)
+
+	# Test history, which takes a specific Snapshot's node_id and return all
+	# parent of this node, which are all histories.
+	def test_history():
+		# Find history of the latest node_id
+		@node_ids = history(@node_id11)
+		# Only have one history, which is the first snapshot
+		assert_equal(@node_ids = [node_id1])
+
+	end
+
+	# Test make_branch, which takes a specific node_id and make_branch make a new Snapshot
+	# from that Snapshot
+	def test_make_branch():
+		# After call make_branch on second Snapshot, we will see two folders in node_id1
+		@node_id12 = make_branch(@node_id11)
+		# go to node_id1 folder
+		Dir.chdir(@repo_path + "/" + "node_id1")
+		# Find folder names and save into an array, which will equal to two branches' node ids
+		@folders_name_array = Dir.glob('*').select{|f| File.directory? f}
+		assert_equal(@folders_name_array, ["node_id11", "node_id12"])
+
+	end
+
+	# Test delete_branch, which takes a specific node_id and delete this Snapshot
+	def test_delete_branch():
+		# Delete the branch of node_id11
+		delete_branch(@node_id12)
+		# Find folder name again, now we only have node_id11
+		@folders_name_array = Dir.glob('*').select{|f| File.directory? f}
+		assert_equal(@folders_name_array, ["node_id11"])
 
 
-	# Test Branching
-	# Create a new branch "Similar to checkout in Git"
-	def test_branching (branch_name)
-		Dir.chdir(@init_path)
-		branching(second)
+	end
 
-		# Switch to second branch
-		Dir.chdir(@repo_path)
-		assert_equal(@head_branch_msg, File.open("HEAD").read)
+	# Test diff_snapshots, which takes two different snapshots and return list of file
+	# changes by calling Revlog
+	def test_diff_snapshots():
+		# This function will call Revlog using file_id
+		@diff_contents = diff_snapshots(node_id1, node_id11)
+		assert_equal(@diff_contents, "Second line")
 
-		Dir.chdir(@repo_path + @logs + @refs + "/heads")
-		assert_equal(true, File.exist?("second"))
 
-		Dir.chdir(@repo_path + @refs + "/heads")
-		assert_equal(true, File.exist?("second"))
+	end
+
+	# Test merge, which takes two different node_id and call Revlog and return a new Snapshot
+	def test_merge():
+		# Re-create the branch of node_id11 and add a new line to test1.txt
+		@node_id12 = make_branch(@node_id11)
+		Dir.chdir(@repo_path + "/" + @node_id1 + "/" + @node_id12))
+		File.open("test1.txt", 'w'){|f| f.puts("Third line")}
+		
+		# Merge node_id11, node_id12
+		@node_id_merged = merge(@node_id11, @node_id12)
+		@diff_contents = diff_snapshots(node_id_merged, @node_id11)
+		assert_equal(@diff_contents, "Third line")
+		
 
 	end
 
