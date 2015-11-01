@@ -1,6 +1,4 @@
-#This class contains the implementation of the user interface. 
-#The implementation is limited to checking the basic commands only. The options of the commands
-#are not included yet. 
+#This class contains the implementation of the user interface. . 
 
 class UserInterface
 	#Used as a command starting keyword, just as 'git' in GitHub
