@@ -36,7 +36,7 @@ class UserInterface
 	StatusOpt = 'status'
 	CloneOpt = 'clone repository ["directory"]'
 	DiffOpt = 'diff commit1 commit2'
-#"added new files" "readme.txt" "hello.c"
+
 	#This is the original 'main' method. This method scans for the user input. 
 	#A new 'main' method has been defined for testing purpose that takes parameterized input. 
 	def main
