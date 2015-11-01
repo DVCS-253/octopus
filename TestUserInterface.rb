@@ -23,6 +23,8 @@ C_push = "vcs push"
 C_pull = "vcs pull"
 C_status = "vcs status"
 C_clone = "vcs clone"
+C_diff = "vcs diff"
+C_help = "vcs help"
 C_invalid_start = "abc commit"
 C_invalid_command = "vcs pulled"
 C_q = "q"
@@ -42,6 +44,8 @@ Msg_push_success = "'push' executed!"
 Msg_pull_success = "'pull' executed!"
 Msg_status_success = "'status' executed!"
 Msg_clone_success = "'clone' executed!"
+Msg_diff_success = "'clone' executed!"
+Msg_help_success = "'clone' executed!"
 
 #List of error messages expected during the test
 
@@ -60,6 +64,8 @@ C_push_tk = ["push"]
 C_pull_tk = ["pull"]
 C_status_tk = ["status"]
 C_clone_tk = ["clone"]
+C_diff_tk = ["diff"]
+C_help_tk = ["help"]
 C_invalid_command_tk = ["pulled"]
 
 #Test cases
@@ -75,6 +81,8 @@ C_invalid_command_tk = ["pulled"]
 	  assert_equal(UI.parseCommand(C_pull),UI.main(C_pull))
 	  assert_equal(UI.parseCommand(C_status),UI.main(C_status))
 	  assert_equal(UI.parseCommand(C_clone),UI.main(C_clone))
+	  assert_equal(UI.parseCommand(C_diff),UI.main(C_diff))
+	  assert_equal(UI.parseCommand(C_help),UI.main(C_help))
 	  assert_equal(UI.parseCommand(C_invalid_start),UI.main(C_invalid_start))
 	  assert_equal(UI.parseCommand(C_invalid_command),UI.main(C_invalid_command))
 	  assert_raise(RuntimeError){ UI.main(C_q) }
@@ -94,6 +102,8 @@ C_invalid_command_tk = ["pulled"]
 	  assert_equal(UI.executeCommand(C_pull_tk),UI.main(C_pull))
 	  assert_equal(UI.executeCommand(C_status_tk),UI.main(C_status))
 	  assert_equal(UI.executeCommand(C_clone_tk),UI.main(C_clone))
+	  assert_equal(UI.executeCommand(C_diff_tk),UI.main(C_diff))
+	  assert_equal(UI.executeCommand(C_help_tk),UI.main(C_help))
 	  assert_equal(UI.executeCommand(C_invalid_command_tk),UI.main(C_invalid_command))
   end
   
@@ -108,6 +118,8 @@ C_invalid_command_tk = ["pulled"]
 	  assert_equal(UI.displayResult(Msg_pull_success),UI.main(C_pull))
 	  assert_equal(UI.displayResult(Msg_status_success),UI.main(C_status))
 	  assert_equal(UI.displayResult(Msg_clone_success),UI.main(C_clone))
+	  assert_equal(UI.displayResult(Msg_status_diff),UI.main(C_diff))
+	  assert_equal(UI.displayResult(Msg_clone_help),UI.main(C_help))
 	  assert_equal(UI.displayResult(Msg_invalid_start),UI.main(C_invalid_start))
 	  assert_match(UI.displayResult(Msg_invalid_command),UI.main(C_invalid_command))
   end
