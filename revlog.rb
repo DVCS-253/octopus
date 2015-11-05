@@ -42,7 +42,7 @@ class Revlog
 	# Returns:
 	# exit_code:: 0 if exited successfully
 	def delete_file (file_id)
-		if	@file_table.delete(file_id) == nil
+		if	@file_table.delete(file_id) == nil	#if trying to delete a nonexistant file
 			puts "#{file_id} does not exist"
 			return 1
 		end
