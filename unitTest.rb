@@ -1,159 +1,59 @@
-########
-# test #
-########
+###############
+# test public #
+###############
 
-def test()
-	############
-	# add_file #
-	############
+#NOTE: diff() has been renamed to merge(), it's function is unchanged
 
-	#add_file("filename"): stores specified file
+def test_public()
+	#########
+	# store #
+	#########
 
-	#creates a file and stores it
-	#fails if an exception is raised
+	#creates two files and stores them
+	#fails if the hash id's returned are
+	#invalid or the same
 
 	test_file1 = File.new('test1.txt', "w") #create a test file
-	test_file1.puts("file")
+	test_file1.puts("file1")
 	test_file1.close
-	assert_nothing_raised do
-		add_file(test_file1)
-	end
+	id1 = store(test_file1) #call store
+	assert_equal(/(key structure)/,id1,"Invaid id 1") #make sure id is of the right form
+
+	test_file2 = File.new('test2.txt', "w") #create a test file
+	test_file2.puts("file2")
+	test_file2.close
+	id2 = store(test_file2) #call store
+	assert_equal(/(key structure)/,id1,"Invaid id 2") #make sure id is of the right form
+	assert_not_equal(id1,id2,"ID's were equal")
 
 	#########################################################
-	# end add_file											#
-	#########################################################
-
-
-
-	############
-	# get_file #
-	############
-
-	#get_file("filename"): returns contents of specified file
-
-	#loads the file previously stored
-	#fails if retrieved file is not original file
-
-	assert_equal(get_file('test1.txt'), "file", "Unexpected file loaded (file 1)")
-
-	#########################################################
-	# end get_file 											#
+	# end store												#
 	#########################################################
 
 
 
+	########
+	# load #
+	########
 
-	###############
-	# delete_file #
-	###############
+	#loads the two files previously stored
+	#fails if retrieved files are not original files
 
-	#delete_file("filename"): deletes specified file
-
-	#deletes the file previously stored
-	#fails if an exception is raised during deletion
-	#or if the file can be retrieved without error afterwards
-
-	assert_nothing_raised do
-		delete_file('test1.txt')
-	end
-	assert_raise do
-		get_file('test1.txt')
-	end
-	
+	assert_equal(load(id1), test_file1, "Unexpected file loaded (file 1)")
+	assert_equal(load(id2), test_file2, "Unexpected file loaded (file 2)")
 	#########################################################
-	# end delete_file 										#
+	# end load 												#
 	#########################################################
 
 
-
-	#############
-	# hash_file #
-	#############
-
-	#hash_file function
-	#hash_file("filename"): returns hashcode for specified file
-	#hash_fie(id): returns filename stored at specified hashcode
-	
-	#hashes a filename or returns a filename for a given hashcode
-	#fails if id is not of correct form
-	#fails if generates the same key for different strings
-	#fails if hashcode returns an unexpected filename
-
-	id1 = hash_file("foo1")
-	id2 = hash_file("foo2")
-	id3 = hash_file("foo3")
-
-	assert_equal(/(key structure)/, id1, "Invaid hash id 1") #make sure id is of the right form
-	assert_equal(/(key structure)/, id2, "Invaid hash id 2") #make sure id is of the right form
-	assert_equal(/(key structure)/, id3, "Invaid hash id 3") #make sure id is of the right form
-	assert_not_equal(id1, id2, "ID 1,2 were equal") #make sure id's are unique
-	assert_not_equal(id1, id3, "ID 1,3 were equal") #make sure id's are unique
-	assert_not_equal(id3, id2, "ID 2,3 were equal") #make sure id's are unique
-
-	assert_equal(hash_file(id1), "foo1" "Unexpected string returned (id1)") #make sure hash retrieves correct string
-	assert_equal(hash_file(id2), "foo2" "Unexpected string returned (id2)") #make sure hash retrieves correct string
-	assert_equal(hash_file(id3), "foo3" "Unexpected string returned (id3)") #make sure hash retrieves correct string
-
-
-	#rigorous tests to ensure id's are unique
-
-	#test_arr = []
-	#10000.times {test_arr.push(hash_file("foo"))}
-	#assert_equal(test_arr.detect{ |e| test_arr.count(e) > 1 }, nil, "Duplicate ID's (constant)")
-
-	test_foo = []
-	10000.times {|x| test_foo.push(hash_file("foo"+ x.to_s))}
-	assert_equal(test_foo.detect{ |e| test_foo.count(e) > 1 }, nil, "Duplicate ID's (variant)")
-
-	#########################################################
-	# end hash_file											#
-	#########################################################
-
-
-	##############
-	# diff_files #
-	##############
-
-	#diff_files(fileA, fileB): returns a list of differences between the two files
-	#diff_files("filenameA", "filenameB"): returns a list of differences between the two files
-
-	#tests to make sure a file diffed with
-	#itself is unchanged, and that file diffs
-	#involving partial/entire content work properly
-
-	merge_file1 = File.new('merger1', "w") #create a test file
-	merge_file1.puts("first\nfile\nanarchy")
-	merge_file1.close
-
-	merge_file2 = File.new('merger2', "w") #create a test file
-	merge_file2.puts("file\nanarchy\nNaNarchy")
-	merge_file2.close
-
-	merge_file3 = File.new('merger3', "w") #create a test file
-	merge_file3.puts("or else")
-	merge_file3.close
-
-
-	assert_equal(diff_files(test_file1, test_file1), nil, "Self comparison faiure")
-
-	assert_equal(diff_files(merge_file1, merge_file2), "first, NaNarchy", "Diff failure 1")
-
-	assert_equal(diff_files(test_file1, merge_file1), "file, or else", "Diff failure 2")
-
-	#########################################################
-	# end diff_files 										#
-	#########################################################
 
 	#########
 	# merge #
 	#########
 
-	#merge(fileA, fileB): returns a merged file or conflict file plus a new file id
-	#merge("filenameA", "filenameB"): returns a merged file or conflict file plus a new file id
-
-	#tests to make sure a file merged with
+	#tests to make sure a file diffed with
 	#itself is unchanged, and that simple
-	#and complex file merges work properly
+	#and compex file merges work properly
 
 	merge_file1 = File.new('merger1', "w") #create a test file
 	merge_file1.puts("first\nfile\nanarchy")
@@ -165,53 +65,67 @@ def test()
 
 	merge_file3 = File.new('merger3', "w") #create a test file
 	merge_file3.puts("first\nfile\nanarchy\nNaNarchy")
-	merge_file3.close
+	merge_file3.
 
 	merged = File.new('merged', "w") #create a test file
-	merged.puts(">>merger1:1 first\nfile\n>>merger1:3 anarchy")
+	merged.puts("<<test1.txt:1	file1\n>>test2.txt:1 file2")
 	merged.close
 
 
-	assert_equal(merge(test_file1, test_file1)[0], test_file1, "Self comparison faiure")
+	assert_equal(merge(test_file1, test_file1), test_file1, "Self comparison faiure") 
 
-	assert_equal(merge(merge_file1, merge_file2)[0], merge_file3, "Simple merge failure")
+	assert_equal(merge(merge_file1, merge_file2), merge_file3, "Simple merge failure") 
 
-	assert_equal(merge(test_file1, merger1)[0], merged, "Complex merge failure")
-
-
-	assert_raise do
-		get_file(merge(test_file1, test_file1)[1]) #id is not yet used
-	end
-
-	assert_raise do
-		get_file(merge(merge_file1, merge_file2)[1]) #id is not yet used
-	end
-
-	assert_raise do
-		get_file((merge(test_file1, merger1)[1]) #id is not yet used
-	end
+	assert_equal(merge(test_file1, test_file2), merged, "Complex merge failure") 
 
 	#########################################################
 	# end merge 											#
 	#########################################################
 end
 #########################################################
-# end test												#
+# end test public 										#
 #########################################################
 
+################
+# test private #
+################
+def test_private()
+	########
+	# hash #
+	########
 
+	#private hash function
+	
+	#fails if id is not of correct form
+	#fails if ever generates the same key
+	#even with same string
 
+	id1 = hash("foo")
+	id2 = hash("foo")
+	id3 = hash("fool")
 
+	assert_equal(/(key structure)/, id1, "Invaid hash id 1") #make sure id is of the right form
+	assert_equal(/(key structure)/, id2, "Invaid hash id 2") #make sure id is of the right form
+	assert_equal(/(key structure)/, id3, "Invaid hash id 3") #make sure id is of the right form
+	assert_not_equal(id1, id2, "ID 1,2 were equal")
+	assert_not_equal(id1, id3, "ID 1,3 were equal")
+	assert_not_equal(id3, id2, "ID 2,3 were equal")
 
-#Notes to self/implementation questions:
+	#rigorous tests
+	test_arr = []
+	10000.times {test_arr.push(hash("foo"))}
+	assert_equal(test_arr.detect{ |e| test_arr.count(e) > 1 }, nil, "Duplicate ID's (constant)")
 
-#Does add_file still need to return ids?
-#What should repeated calls to `add_file("x")` do? Overwrite or create new instance?
-#Should files have multiple instances saved or just one copy of each?
-# => If instances, filenames do not suffice for passing files
-#Should hash create unique ids for the same filename?
+	test_foo = []
+	10000.times {|x| test_foo.push(hash("foo"+ x.to_s))}
+	assert_equal(test_foo.detect{ |e| test_foo.count(e) > 1 }, nil, "Duplicate ID's (variant)")
 
-#Hash could return filename or file contents when given hashcode
+	#########################################################
+	# end hash												#
+	#########################################################
 
-#Should merge return a file id or simply store the file?
-#Should merge delete the parameters files on exiting successfully?
+end
+
+#########################################################
+# end test private 										#
+#########################################################
