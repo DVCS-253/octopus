@@ -1,131 +1,185 @@
-###############
-# test public #
-###############
+require_relative 'revlog'
+require 'test/unit'
 
-#NOTE: diff() has been renamed to merge(), it's function is unchanged
 
-def test_public()
-	#########
-	# store #
-	#########
+class Tests < Test::Unit::TestCase
 
-	#creates two files and stores them
-	#fails if the hash id's returned are
-	#invalid or the same
+	############
+	# test_all #
+	############
 
-	test_file1 = File.new('test1.txt', "w") #create a test file
-	test_file1.puts("file1")
-	test_file1.close
-	id1 = store(test_file1) #call store
-	assert_equal(/(key structure)/,id1,"Invaid id 1") #make sure id is of the right form
+	def test_all
+		revlog = Revlog.new
 
-	test_file2 = File.new('test2.txt', "w") #create a test file
-	test_file2.puts("file2")
-	test_file2.close
-	id2 = store(test_file2) #call store
-	assert_equal(/(key structure)/,id1,"Invaid id 2") #make sure id is of the right form
-	assert_not_equal(id1,id2,"ID's were equal")
 
+		############
+		# add_file #
+		############
+
+		#creates two files and stores them
+		#fails if the hash id's returned are
+		#invalid or the same
+
+		test_file1 = File.new('test1.txt', "w") #create a test file
+		test_file1.puts("file1")
+		test_file1.close
+		id1 = revlog.add_file(test_file1) #call add_file
+
+		test_file2 = File.new('test2.txt', "w") #create a test file
+		test_file2.puts("file2")
+		test_file2.close
+		id2 = revlog.add_file(test_file2) #call add_file
+		assert_not_equal(id1,id2,"ID's were equal")
+
+		#rigorous tests for id uniqueness
+		test_arr = []
+		rigor = 100 #Number of times to test
+		rigor.times do |x|
+			file = File.new("Foo"+x.to_s, "w")
+			file.close
+			test_arr.push(revlog.add_file(file))
+		end
+		assert_nil(test_arr.detect{ |e| test_arr.count(e) > 1 }, "Duplicate ID's")
+
+		#########################################################
+		# end add_file											#
+		#########################################################
+
+
+
+		############
+		# get_file #
+		############
+
+		#loads the two files previously stored
+		#fails if retrieved files are not original files
+
+		assert_equal(test_file1, revlog.get_file(id1), "Unexpected file loaded (file 1)")
+		assert_equal(test_file2, revlog.get_file(id2), "Unexpected file loaded (file 2)")
+
+		#########################################################
+		# end get_file 											#
+		#########################################################
+
+
+
+
+		###############
+		# delete_file #
+		###############
+
+		#deletes the file previously stored
+		#fails if deletion exits unsuccessfully
+		#or if the file can be retrieved afterwards
+
+		assert_equal(0, revlog.delete_file(id1), "File deletion unsuccessful")
+		assert_nil(revlog.get_file(id1), "File not properly deleted")
+		
+		#########################################################
+		# end delete_file 										#
+		#########################################################
+
+	'''
+	Currently unimplemented
+
+		##############
+		# diff_files #
+		##############
+
+		#diff_files(fileA, fileB): returns a list of differences between the two files
+
+		#tests to make sure a file diffed with
+		#itself is unchanged, and that file diffs
+		#involving partial/entire content work properly
+
+		merge_file1 = File.new("merger1", "w") #create a test file
+		merge_file1.puts("first\nfile\nanarchy")
+		merge_file1.close
+
+		merge_file2 = File.new("merger2", "w") #create a test file
+		merge_file2.puts("file\nanarchy\nNaNarchy")
+		merge_file2.close
+
+		merge_file3 = File.new("merger3", "w") #create a test file
+		merge_file3.puts("or else")
+		merge_file3.close
+
+
+		assert_nil(diff_files(test_file1, test_file1), "Self comparison faiure")
+
+		assert_equal(diff_files(merge_file1, merge_file2), "first, NaNarchy", "Diff failure 1")
+
+		assert_equal(diff_files(test_file1, merge_file1), "file, or else", "Diff failure 2")
+
+		#########################################################
+		# end diff_files 										#
+		#########################################################
+
+		#########
+		# merge #
+		#########
+
+		#merge(fileA, fileB): returns a merged file or conflict file plus a new file id
+
+		#tests to make sure a file merged with
+		#itself is unchanged, and that simple
+		#and complex file merges work properly
+
+		merge_file1 = File.new("merger1", "w") #create a test file
+		merge_file1.puts("first\nfile\nanarchy")
+		merge_file1.close
+
+		merge_file2 = File.new("merger2", "w") #create a test file
+		merge_file2.puts("file\nanarchy\nNaNarchy")
+		merge_file2.close
+
+		merge_file3 = File.new("merger3", "w") #create a test file
+		merge_file3.puts("first\nfile\nanarchy\nNaNarchy")
+		merge_file3.close
+
+		merged = File.new("merged", "w") #create a test file
+		merged.puts(">>merger1:1 first\nfile\n>>merger1:3 anarchy")
+		merged.close
+
+
+		assert_equal(merge(test_file1, test_file1)[0], test_file1, "Self comparison faiure")
+
+		assert_equal(merge(merge_file1, merge_file2)[0], merge_file3, "Simple merge failure")
+
+		assert_equal(merge(test_file1, merger1)[0], merged, "Complex merge failure")
+
+
+		assert_raise do
+			get_file(merge(test_file1, test_file1)[1]) #id is not yet used
+		end
+
+		assert_raise do
+			get_file(merge(merge_file1, merge_file2)[1]) #id is not yet used
+		end
+
+		assert_raise do
+			get_file((merge(test_file1, merger1)[1]) #id is not yet used
+		end
+
+		#########################################################
+		# end merge 											#
+		#########################################################
+
+		'''
+
+
+		###########
+		# Cleanup #
+		###########
+
+		# Destroy test files
+		File.delete("test1.txt", "test2.txt")
+		rigor.times do |x|
+			File.delete("Foo"+x.to_s)
+		end
+
+	end
 	#########################################################
-	# end store												#
-	#########################################################
-
-
-
-	########
-	# load #
-	########
-
-	#loads the two files previously stored
-	#fails if retrieved files are not original files
-
-	assert_equal(load(id1), test_file1, "Unexpected file loaded (file 1)")
-	assert_equal(load(id2), test_file2, "Unexpected file loaded (file 2)")
-	#########################################################
-	# end load 												#
-	#########################################################
-
-
-
-	#########
-	# merge #
-	#########
-
-	#tests to make sure a file diffed with
-	#itself is unchanged, and that simple
-	#and compex file merges work properly
-
-	merge_file1 = File.new('merger1', "w") #create a test file
-	merge_file1.puts("first\nfile\nanarchy")
-	merge_file1.close
-
-	merge_file2 = File.new('merger2', "w") #create a test file
-	merge_file2.puts("file\nanarchy\nNaNarchy")
-	merge_file2.close
-
-	merge_file3 = File.new('merger3', "w") #create a test file
-	merge_file3.puts("first\nfile\nanarchy\nNaNarchy")
-	merge_file3.
-
-	merged = File.new('merged', "w") #create a test file
-	merged.puts("<<test1.txt:1	file1\n>>test2.txt:1 file2")
-	merged.close
-
-
-	assert_equal(merge(test_file1, test_file1), test_file1, "Self comparison faiure") 
-
-	assert_equal(merge(merge_file1, merge_file2), merge_file3, "Simple merge failure") 
-
-	assert_equal(merge(test_file1, test_file2), merged, "Complex merge failure") 
-
-	#########################################################
-	# end merge 											#
+	# end test_all											#
 	#########################################################
 end
-#########################################################
-# end test public 										#
-#########################################################
-
-################
-# test private #
-################
-def test_private()
-	########
-	# hash #
-	########
-
-	#private hash function
-	
-	#fails if id is not of correct form
-	#fails if ever generates the same key
-	#even with same string
-
-	id1 = hash("foo")
-	id2 = hash("foo")
-	id3 = hash("fool")
-
-	assert_equal(/(key structure)/, id1, "Invaid hash id 1") #make sure id is of the right form
-	assert_equal(/(key structure)/, id2, "Invaid hash id 2") #make sure id is of the right form
-	assert_equal(/(key structure)/, id3, "Invaid hash id 3") #make sure id is of the right form
-	assert_not_equal(id1, id2, "ID 1,2 were equal")
-	assert_not_equal(id1, id3, "ID 1,3 were equal")
-	assert_not_equal(id3, id2, "ID 2,3 were equal")
-
-	#rigorous tests
-	test_arr = []
-	10000.times {test_arr.push(hash("foo"))}
-	assert_equal(test_arr.detect{ |e| test_arr.count(e) > 1 }, nil, "Duplicate ID's (constant)")
-
-	test_foo = []
-	10000.times {|x| test_foo.push(hash("foo"+ x.to_s))}
-	assert_equal(test_foo.detect{ |e| test_foo.count(e) > 1 }, nil, "Duplicate ID's (variant)")
-
-	#########################################################
-	# end hash												#
-	#########################################################
-
-end
-
-#########################################################
-# end test private 										#
-#########################################################
