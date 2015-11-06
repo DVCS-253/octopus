@@ -3,7 +3,7 @@
 ### Push and Pull
 Octopus supports pushing and pulling branches to and from remotes.
 
-##### Public Methods
+#### Public Methods
 ###### `PushPull.connect(remote, path)`
 Opens an SSH connection to the remote and changes into the given path. The path is expected to be the location of the repository on the remote.
 
@@ -12,11 +12,12 @@ This method attempts to connect as the current user without a password, and then
 - Run `ssh-keygen -t rsa` to generate a new key
   - Answer `~/.ssh/id_rsa-octopus-remote` for the location
   - Don't enter a password
-- Edit `~/.ssh/config` and add the following entry:
+- Edit `~/.ssh/config` and add the following entry, replacing `{{{REMOTE_HOSTNAME}}}` with the remote hostname
+
   ```
 Host {{{REMOTE_HOSTNAME}}}
-    IdentitiesOnly yes
-    IdentityFile ~/.ssh/id_rsa-octopus-remote
+        IdentitiesOnly yes
+        IdentityFile ~/.ssh/id_rsa-octopus-remote
   ```
 - Copy the contents of `~/.ssh/id_rsa-octopus-remote.pub` to `~/.ssh/authorized_keys` on the remote
 
