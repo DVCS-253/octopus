@@ -1,4 +1,4 @@
-require 'highline/import'
+require 'io/console'
 require 'net/ssh'
 
 class PushPull
@@ -12,9 +12,9 @@ class PushPull
   #
   def self.connect(remote, path)
     begin
-      username = ask("Username: ") { |q| q.echo = true }
-      password = ask("Password: ") { |q| q.echo = "*" }
-
+      username = STDIN.gets.chomp           # Remove trailing newline
+      password = STDIN.noecho(&:gets).chomp # Remove trailing newline
+	  
       ssh = Net::SSH.start(remote, username, :password => password)
       ssh.exec "cd #{path}"
     rescue
