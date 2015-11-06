@@ -1,37 +1,51 @@
+require_relative "repos"
+require_relative "revlog"
 require "test/unit"
 
-# CSC 253 - DVCS Projects 
+# CSC 253 - DVCS Project
 # Updated Unit Test for Repos
-# 10/28/2015
+# 11/5/2015
 
 class Test_Repos < Test::Unit::TestCase
 
-	# Create values that will be used 
-	# later in the test
+    ############################################################################
 
-	# @init_path used for where the DVCS 
-	# will be initialized
-	# @repo_path is repos directory
-	# For the tree structure of Snapshots, my implementation idea is to make one 
-	# folder to represent one Snapshot, folder name will be the node_id of the 
-	# snapshot. Childern of specific Snapshot will be another folder created in that
-	# specific folder
+	# General ideas of Repos
+	# Contains snapshots that record history of each commit,
+	# So users are able to get whatever history they want with
+	# contents of files with Revlog module
+
+	# Dependency:
+	# Revlog: is sued to store the contents of the committed files and obatain a file_id
+
+	# data structure for Repos is a tree
+	# Every node in the tree represents one snapshot/commit with its node_id
+	# Specifically, for each Node, it has
+	#  1.a snapshot_ID
+	#  2.a hashtable which contains the title of files and a file_ID generated
+	# by Revlog module
+
 
 	############################################################################
 
+	# global variables that will be used in future test
+	# $Username is just username
+	# $init_path is the directory to initialize Repo
+	# $repo_path is the directory of Repo
 
 	def setup
-		@Username = "CSC253"
-		@init_path = "Desktop/DVCS/Test"
-		@repo_path = "Desktop/DVCS/Test/.oct"
-
-
-		
+		$Username = "CSC253"
+		$init_path = "Desktop/DVCS/Test"
+		$repo_path = "Desktop/DVCS/Test/.oct"
 	end
 
+	############################################################################
+
 	# Test the initialization of the repos
-	# Input is @init_path created before
+	# Input is $init_path created before
+
 	def test_init()
+		
 		# make the directory to be the test area I want
 		Dir.chdir(@init_path)
 		
@@ -48,6 +62,7 @@ class Test_Repos < Test::Unit::TestCase
 
 	# Test make_snapshot, record version ids of a list of files 
 	# and the corresponding reference id to communicate with Revlog
+
 	def test_make_snapshot():
 		# Call make_snapshot() function, it will always take stage in workspace as parameter
 		# Create version id for each file and file id in order to communicate with Revlog
