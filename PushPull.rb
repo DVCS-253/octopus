@@ -50,5 +50,6 @@ class PushPull
         #ssh.exec merge(new_snapshot, some_other_snapshot?)
       #}
     }
+  end
   
 end
