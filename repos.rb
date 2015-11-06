@@ -24,6 +24,7 @@ class Repos
 
 	############################################################################
 
+	$latest_commit = nil
 
 	# For Tree structrue
 	# Node has snapshot_ID, repos_hash with file_title and file_id
@@ -48,15 +49,25 @@ class Repos
 
 	# make_snapshot function
 	# files_to_be_commits will be a list with file names
+	# Read the latest commit
+	# if nil, which means this is the first commit
+	# which will be the root of the tree
+	# Set snapshot ID to 1 and make .root = true
+
+	# if not nill, make last_commit's child be this commit
+	# and this commit's parent is the last commit
 
 	def make_snapshot(last_commit=nil, files_to_be_commits)
 		if last_commit == nil
 			snapshot = Node.new(1)
 			snapshot.root = true
+			$latest_commit = snapshot
 		else
+			# Add one on last snapshot_ID to make a new one
 			snapshot = Node.new(last_commit.snapshot_ID + 1)
 			last_commit.child = snapshot
 			snapshot.parent = last_commit
+			$latest_commit = snapshot
 		end
 		for file in files_to_be_commits
 			# Call add_file in revlog to add file
@@ -64,18 +75,35 @@ class Repos
 		end
 	end
 
+	# returns a specific snapshot
+
 	def restore_snapshot(node_id)
-		while snapshot.snapshot_ID != node
+		# Keep going up from the latest_commit
+		snapshot = $latest_commit
+		while snapshot.snapshot_ID != node_id
 			snapshot = snapshot.parent
 		end
+		# put file_id into file_id_lists
 		snapshot.repos_hash.each do |name, id|
 			file_id_lists << id
 		end
 		return file_id_lists
 	end
 
-	def history(node_id)
+	# returns all parents of certain node_id
 
+	def history(node_id)
+		# First find that snapshot
+		snapshot = $latest_commit
+		while snapshot.snapshot_ID != node_id
+			snapshot = snapshot.parent
+		end
+		# now snapshot is the snapshot to find history
+		while snapshot.parent != nil
+			list_of_node_ids << snapshot.snapshot_ID
+			snapshot = snapshot.next
+		end
+		return list_of_node_ids
 	end
 
 	def make_branch(node_id)
