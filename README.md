@@ -1,13 +1,29 @@
 # User Interface
 
-This branch contains code for User Interface module implementation as well as its test cases. 
-There are two ruby files:
-1. UserInterface.rb - This contains the implementation of the UI.   
-2. TestUserInterface.rb - This contains the unit test cases for the implementation. So far, there are total of 3 Tests and 45 Assertions. These test cases are fully functional and can be executed.
+This branch contains code that provides the implementation of the user interface of DVCS
 
-Note that I have used 'vcs' as the keyword just as 'git' in GitHub.
+##Description of contents
++ UserInterface.rb - Implementation of the UI.   
++ TestUserInterface.rb - Unit tests for UI (12 Tests and 36 Assertions).
++ doc - Contains documentation of the UI module
++ UI_Design.pdf - Design and specification of the UI
 
-The implementation is yet incomplete. It only checks for the valid commands and ignores its options. 
-For E.g 'vcs commit' is recognized while in 'vcs commit -m', -m is ignored.
+##UI Dependencies
++ Depends on Repos, Push-Pull and Workspace for the actual execution of the commands. Response from these modules is shown to the user by this module. 
++ Sub module ‘Execute Command’ has to be replaced by methods from other modules
 
-As the requirement becomes more clear, these options will be added.
+
+##Documentation
++ Rdoc was used for autimatically generating documentation for the module
++ Documentation can be viewed from doc/index.html file
+
+##How to run
++ Run the UserInterface.rb along with command line arguments
++ For E.g. <i>ruby UserInterface.rb commit -m 'some changes' MyFile.txt</i>
+
+##How to test
++ Run the TestUserInterface.rb as <i>ruby TestUserInterface.rb</i>
+
+##Help
++ To get list of supported commands and their format, run the following command
++ <i>ruby UserInterface.rb help</i>
