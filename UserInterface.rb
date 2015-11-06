@@ -1,258 +1,222 @@
-#This class contains the implementation of the user interface. . 
-
+#Provides interface to the users in order to execute commands
 class UserInterface
-	#Used as a command starting keyword, just as 'git' in GitHub
-	Start_keyword = "vcs"
 	
-	#Keywords used to exit the application. Any of the one can be used
-	End_Keywords = ["quit","q","exit","end"]
+	#--List of supported commands
+	SupportedCmds = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone", "update", "diff", "help"]
 	
-	#List of valid commands. This list is used to compare with user's input
-	Valid_Commands = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone", "update", "diff", "help"]
+	#--Regular expressions for supported commands 
+	InitRE = "init(\s+([^\s]*))?$"
+	AddRE = "add\s*(((\s+(\"[^\s]*\"))*)|(\s+(\.))?)$"
+	CheckoutRE = "checkout\s*(\s+([^\s]*))?\s*(\s+(-b)\s+([^\s]*))?\s*(\s+(--track)\s+([^\s]*/[^\s]*))?$"
+	CommitRE = "commit(\s+(-a))?(\s+(-m)\s+(\"[^\"]*\"))?((\s+([^\s]*))*)$"
+	BranchRE = "branch\s*((\s+(-a))|\s*(\s+(-d)\s+([^\s]*)))?$"
+	MergeRE = "merge\s*(\s+([^\s]*)\s*)*$"
+	PushRE = "push(\s+(origin))?(\s+([^\s]*))$"
+	PullRE = "pull(\s+(origin))?(\s+([^\s]*))$"
+	StatusRE = "status$"
+	CloneRE = "clone\s*(\s+([^\s]+)\s*)\s*((\s+(\"[^\s]*\"))?)$"
+	DiffRE = "diff(\s+([^\s]*))?(\s+([^\s]*))$"
 	
-	InitRe = "init(\s+(\"[^\"]*\"))?$"
-	AddRe = "add\s*(((\s+(\"[^\s]*\"))*)|(\s+(\.))?)$"
-	CheckoutRe = "checkout\s*(\s+([^\s]*))?\s*(\s+(-b)\s+([^\s]*))?\s*(\s+(--track)\s+([^\s]*/[^\s]*))?$"
-	CommitRe = "commit(\s+(-a))?(\s+(-m)\s+(\"[^\"]*\"))?((\s+(\"[^\s]*\"))*)$"
-	BranchRe = "branch\s*((\s+(-a))|\s*(\s+(-d)\s+([^\s]*)))?$"
-	MergeRe = "merge\s*(\s+([^\s]*)\s*)*$"
-	PushRe = "push(\s+(origin))?(\s+([^\s]*))$"
-	PullRe = "pull(\s+(origin))?(\s+([^\s]*))$"
-	StatusRe = "status$"
-	CloneRe = "clone\s*(\s+([^\s]+)\s*)\s*((\s+(\"[^\s]*\"))?)$"
-	DiffRe = "diff(\s+([^\s]*))?(\s+([^\s]*))$"
+	#--Correct usage of the commands
+	InitUsg = 'init ["directory"]'
+	AddUsg = 'add ([.] | ["file1"] ["file2"] ...)'
+	CheckoutUsg = 'checkout [-b] [branch] [--track origin/branch]'
+	CommitUsg = 'commit [-a] [-m "msg"] ["file1"]["file2"] ...'
+	BranchUsg = 'branch ([-a] | [-d branch])'
+	MergeUsg = 'merge [branch]'
+	PushUsg = 'push [origin] [branch]'
+	PullUsg = 'pull [origin] [branch]'
+	StatusUsg = 'status'
+	CloneUsg = 'clone repository ["directory"]'
+	DiffUsg = 'diff commit1 commit2'
 	
-	
-	InitOpt = 'init ["directory"]'
-	AddOpt = 'add ([.] | ["file1"] ["file2"] ...)'
-	CheckoutOpt = 'checkout [-b] [branch] [--track origin/branch]'
-	CommitOpt = 'commit [-a] [-m "msg"] ["file1"]["file2"] ...'
-	BranchOpt = 'branch ([-a] | [-d branch])'
-	MergeOpt = 'merge [branch]'
-	PushOpt = 'push [origin] [branch]'
-	PullOpt = 'pull [origin] [branch]'
-	StatusOpt = 'status'
-	CloneOpt = 'clone repository ["directory"]'
-	DiffOpt = 'diff commit1 commit2'
-
-	#This is the original 'main' method. This method scans for the user input. 
-	#A new 'main' method has been defined for testing purpose that takes parameterized input. 
-	def main
-		puts "Welcome to DVCS! For help, enter 'vcs help'"
-		$stdin.each_line do |line|
-    		output = parseCommand(line)
-    		displayResult(output)
-  		end
-	end
-	
-	#This method has been defined for testing purpose. It takes parameterized input.
-	#def main(input)
-	#	#puts "Welcome to DVCS!"
-    #	output = parseCommand(input)
-    #	displayResult(output)
-	#end
-	
-	#This method parses the input and collects the command as a token in form of array. It also does syntax checking 
-	def parseCommand(line)
-		command = []
-		msg = ""
-		if line
-			line.split(" ").each_with_index{|c,i| 
-				if i==0
-					if End_Keywords.include?c 
-						puts "Thank you!"
-						exit 0
-						#raise "Application exit requested!"
-				    elsif c != Start_keyword
-						msg = "Command should start with '" + Start_keyword + "'"
-						break
-					end
-				else 
-					command.push(c)
+	#Entry point of the application. Takes the 'command' from user in form of program arguments 
+	#and pass it to 'parseCommand' method after basic syntax checking<br><br>
+	#Params:
+	# - testCommands: commands(String[]), applicable only when called from the unit test module
+	#Returns:
+	# - result: output(String) of execution
+	def main(testCommands)
+		if testCommands
+			command = testCommands
+		else 
+			command = ARGV
+		end 
+		result = ""
+		if !command.empty?
+			command.each_with_index{|cmd,i|
+				if cmd.split(' ').length>1
+					command[i] = '"' + cmd + '"'
 				end
 			}
-			if !command.empty?
-				output = executeCommand(command)
-				return output
-			else
-				return msg
-			end
-		end
-	end
-	
-	#This method checks for the valid command and transfers control to another module's method for command execution
-	def executeCommand(command)
-		if !command.empty?
-			command.each_with_index{|c,i| 
-			if i==0 && Valid_Commands.include?(c)
-				#output = fromOtherModule(c) 
-				output = match(c,command*" ")
-				return output
-			else
-			 	#msg = "Invalid command '" + c + "'.\nOnly the following commands are valid : " + Valid_Commands.to_s
-			 	msg = "Invalid command '" + c + "'"
-			 	return msg
-			end
+			command.each_with_index{|cmd,i| 
+				if i==0 && SupportedCmds.include?(cmd)
+					result = parseCommand(cmd,command*" ")
+					break
+				else
+					result = "Invalid command '" + cmd + "'.\nCommands supported : " + SupportedCmds.to_s
+			 	#result = "Invalid command '" + cmd + "'"
+			 end
 			}
+			displayResult(result) if !testCommands
 		end
+		return result
 	end
 	
-	#This method display the final output sent from other modules
-	def displayResult(output)
-		puts output
-		output
+	#Does the command pattern matching
+	#and pass it to 'parseCommand' method after basic syntax checking<br><br>
+	#Params:
+	# - cmd(String): main command e.g. 'init', on the basis of which further pattern matching is done<br>
+	# - fullCmd(String): full command along with its parameters
+	#Returns:
+	# - result(String): output of execution
+	def parseCommand(cmd, fullCmd)
+		result = ""
+		if cmd == "init"
+			matched = fullCmd.match InitRE
+			if matched
+				params = Hash.new
+				params["directory"] = matched[2] if matched[2]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + InitUsg
+			end
+		elsif cmd == "add"
+			matched = fullCmd.match AddRE
+			if matched
+				params = Hash.new
+				if matched[2]
+					files = matched[2].split(" ")
+					files.each_with_index{|file,i| params[("file"+(i+1).to_s)]= file }
+				end
+				params["all"] = true if matched[5]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + AddUsg
+			end
+		elsif cmd == "checkout"
+			matched = fullCmd.match CheckoutRE
+			if matched
+				params = Hash.new
+				params["existingBranch"] = matched[2] if matched[2]
+				params["createBranch"] = true if matched[4]
+				params["newBranch"] = matched[5] if matched[5]
+				params["track"] = matched[6] if matched[6]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + CheckoutUsg
+			end	
+		elsif cmd == "commit"
+			matched = fullCmd.match CommitRE
+			if matched
+				params = Hash.new
+				params["add"] = true if matched[2]
+				params["msg"] = matched[5].gsub(/"/,'') if matched[4] and matched[5]
+				if matched[6]
+					files = matched[6].split(" ")
+					files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
+				end
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + CommitUsg
+			end	
+		elsif cmd == "branch"
+			matched = fullCmd.match BranchRE
+			if matched
+				params = Hash.new
+				params["all"] = true if matched[2]
+				params["delete"] = true if matched[5]
+				params["branch"] = matched[6] if matched[6]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + BranchUsg
+			end	
+		elsif cmd == "merge"
+			matched = fullCmd.match MergeRE
+			if matched
+				params = Hash.new
+				params["branch"] = matched[2] if matched[2]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + MergeUsg
+			end	
+		elsif cmd == "push"
+			matched = fullCmd.match PushRE
+			if matched
+				params = Hash.new
+				params["remote"] = matched[2] if matched[2]
+				params["branch"] = matched[4] if matched[4]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + PushUsg
+			end	
+		elsif cmd == "pull"
+			matched = fullCmd.match PullRE
+			if matched
+				params = Hash.new
+				params["remote"] = matched[2] if matched[2]
+				params["branch"] = matched[4] if matched[4]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + PullUsg
+			end	
+		elsif cmd == "status"
+			matched = fullCmd.match StatusRE
+			if matched
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + StatusUsg
+			end	
+			
+		elsif cmd == "clone"
+			matched = fullCmd.match CloneRE
+			if matched
+				params = Hash.new
+				params["repository"] = matched[2] if matched[2]
+				params["directory"] = matched[5] if matched[5]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + CloneUsg
+			end	
+		elsif cmd == "diff"
+			matched = fullCmd.match DiffRE
+			if matched
+				params = Hash.new
+				params["commit1"] = matched[2] if matched[2]
+				params["commit2"] = matched[4] if matched[4]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + DiffUsg
+			end	
+		elsif cmd == "help"
+			`cat help.txt`
+		end
+		return result
 	end
-	
-	#This is a temporary method that is acting as a method from another module. It is created for testing purpose.
-	def fromOtherModule(c,params)
-		outp = "Command : "+ c + " Parameters : " + params.to_s
-		return outp
+
+	#Acts a method from other module. It will be replaced by actual method from other module<br><br>
+	#Params:
+	# - cmd(String): main command e.g. 'init'                          <br>
+	# - params(Hash): key-value pairs of command parameters and their values
+	#Returns:
+	# - result(String): output of execution
+	private
+	def executeCommand(cmd, params)
+		result = "Command: "+ cmd + "\nParameters: " + params.to_s
+		return result
 	end
-	
-	def match(c, fc)
-	 if c == "init"
-	 o = fc.match InitRe
-	 	if o
-	 		params = Hash.new
-	 		params["directory"] = o[2] if o[2]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + InitOpt
-	 		return msg
-	 	end
-	 elsif c=="add"
-	 	o = fc.match AddRe
-	 	if o
-	 		params = Hash.new
-	 		if o[2]
-	 			files = o[2].split(" ")
-	 			files.each_with_index{|file,i| params[("file"+(i+1).to_s)]= file }
-	 		end
-	 		params["all"] = true if o[5]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + AddOpt
-	 		return msg
-	 	end
-	 elsif c=="checkout"
-	 	o = fc.match CheckoutRe
-	 	if o
-	 		params = Hash.new
-	 		params["existingBranch"] = o[2] if o[2]
-	 		params["createBranch"] = true if o[4]
-	 		params["newBranch"] = o[5] if o[5]
-	 		params["track"] = o[6] if o[6]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + CheckoutOpt
-	 		return msg
-	 	end	
-	 elsif c=="commit"
-	 	o = fc.match CommitRe
-	 	if o
-	 		params = Hash.new
-	 		params["add"] = true if o[2]
-	 		params["msg"] = o[5] if o[4] and o[5]
-	 		if o[6]
-	 			files = o[6].split(" ")
-	 			files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
-	 		end
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + CommitOpt
-	 		return msg
-	 	end	
-	 elsif c=="branch"
-	 	o = fc.match BranchRe
-	 	if o
-	 		params = Hash.new
-	 		params["all"] = true if o[2]
-	 		params["delete"] = true if o[5]
-	 		params["branch"] = o[6] if o[6]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + BranchOpt
-	 		return msg
-	 	end	
-	 elsif c=="merge"
-	 	o = fc.match MergeRe
-	 	if o
-	 		params = Hash.new
-	 		params["branch"] = o[2] if o[2]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + MergeOpt
-	 		return msg
-	 	end	
-	 elsif c=="push"
-	 	o = fc.match PushRe
-	 	if o
-	 		params = Hash.new
-	 		params["remote"] = o[2] if o[2]
-	 		params["branch"] = o[4] if o[4]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + PushOpt
-	 		return msg
-	 	end	
-	 elsif c=="pull"
-	 	o = fc.match PullRe
-	 	if o
-	 		params = Hash.new
-	 		params["remote"] = o[2] if o[2]
-	 		params["branch"] = o[4] if o[4]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + PullOpt
-	 		return msg
-	 	end	
-	 elsif c=="status"
-	 	o = fc.match StatusRe
-	 	if o
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + StatusOpt
-	 		return msg
-	 	end	
-	 
-	 elsif c=="clone"
-	 	o = fc.match CloneRe
-	 	if o
-	 		params = Hash.new
-	 		params["repository"] = o[2] if o[2]
-	 		params["directory"] = o[5] if o[5]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + CloneOpt
-	 		return msg
-	 	end	
-	 	elsif c=="diff"
-	 	o = fc.match DiffRe
-	 	if o
-	 		params = Hash.new
-	 		params["commit1"] = o[2] if o[2]
-	 		params["commit2"] = o[4] if o[4]
-	 		outp = fromOtherModule(c,params)
-	 		return outp
-	 	else
-	 		msg = "Expected command : " + DiffOpt
-	 		return msg
-	 	end	
-	 	elsif c=="help"
-	 	`cat help.txt`
-	 	end
+
+	#Displays the result of execution of the command<br><br>
+	#Params:
+	# - result(String): result of the execution
+	#Returns:
+	# - result(String): result of the execution to the testing module
+	private
+	def displayResult(result)
+		puts result + "\n\n"
+		result
 	end
 end
 
-#Uncomment the below line to run this program
-UserInterface.new.main
+#'main' method invocation
+UserInterface.new.main(nil)
