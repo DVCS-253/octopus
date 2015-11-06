@@ -4,6 +4,9 @@ require 'net/ssh'
 class PushPull
 
   # Uses the Net::SSH gem to create an SSH session.
+  # The user will be asked for their credentials for the connection.
+  #
+  # TODO: Should check if a connection can be made with a key before asking for creds
   #
   # @param [string] remote The address of the remote machine to connect to.
   # @param [string] path The path to the corresponding repo on the remote.
@@ -22,6 +25,7 @@ class PushPull
     end
 
     yield ssh
+
     ssh.close
   end
 
