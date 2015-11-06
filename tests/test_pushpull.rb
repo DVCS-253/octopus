@@ -1,3 +1,4 @@
+require 'shellwords'
 require 'fileutils'
 require 'test/unit'
 require_relative '../PushPull'
@@ -34,7 +35,7 @@ class TestPushPull < Test::Unit::TestCase
   #
   def setup
     # Repo directories on the filesystem
-    @base_dir   = Dir.getwd + '/'
+    @base_dir   = Shellwords.shellescape(Dir.getwd + '/')
     @local_dir  = 'local_repo/'
     @remote_dir = 'remote_repo/'
     @clone_dir  = 'clone_repo/'
@@ -66,8 +67,6 @@ class TestPushPull < Test::Unit::TestCase
     # Initialize a local and remote repository in their respective directories
     Dir.mkdir(@local_dir, 0755)
     Dir.mkdir(@remote_dir, 0755)
-    init(@local_dir)
-    init(@remote_dir)
   end
 
   # Cleans up the test repositories after each test.
@@ -83,6 +82,13 @@ class TestPushPull < Test::Unit::TestCase
   # Test helpers
   #
 
+
+  # Initializes the local and remote repositories
+  #
+  def initialize_repos
+    init(@local_dir)
+    init(@remote_dir)
+  end
 
   # Runs the given block inside the local repo.
   #
@@ -114,12 +120,26 @@ class TestPushPull < Test::Unit::TestCase
   #
 
 
-  # Tests connecting to a machine.
+  # Tests connecting to a machine without a connection block.
   #
-  def test_connect
+  def test_connect_without_block
     # Assert that the machine can be connected to
-    assert_not_raises(PushPull.connect(@machine_url, @base_dir + @remote_dir),
-                      'Failed to connect to remote machine.')
+    assert_nothing_raised do
+      PushPull.connect(@machine_url, @base_dir + @remote_dir)
+    end
+  end
+
+  # Tests connecting to a machine with a connection block.
+  #
+  def test_connect_with_block
+    # Assert that the machine can be connected to and worked on
+    output = nil
+    PushPull.connect(@machine_url, @base_dir + @remote_dir) { |ssh|
+      output = ssh.exec! 'echo "hello world"'
+    }
+
+    assert_equal("hello world\n", output,
+                 'Failed to execture command on remote machine.')
   end
 
 
@@ -127,6 +147,8 @@ class TestPushPull < Test::Unit::TestCase
   # This test asserts that commit history and staged files are preserved.
   #
   def test_pull_into_empty_repo
+    initialize_repos
+
     # Create file 1 with committed changes on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
@@ -153,6 +175,8 @@ class TestPushPull < Test::Unit::TestCase
   # This test asserts that commit history and staged files are preserved.
   #
   def test_pull_into_committed_repo
+    initialize_repos
+
     # Create file 1 with committed changes locally
     in_local_repo {
       File.write(@files[0], @local_file_contents[0])
@@ -205,6 +229,8 @@ class TestPushPull < Test::Unit::TestCase
   # This test asserts that an exception is raised.
   #
   def test_pull_into_uncommitted_repo
+    initialize_repos
+
     # Create file 1 with uncommitted changes locally
     in_local_repo {
       File.write(@files[0], @local_file_contents[0])
@@ -231,6 +257,8 @@ class TestPushPull < Test::Unit::TestCase
   # This test asserts that commit history and staged files are preserved.
   #
   def test_clone
+    initialize_repos
+
     # Create and commit file 1 on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
@@ -263,6 +291,8 @@ class TestPushPull < Test::Unit::TestCase
   # This test asserts that commit history and staged files are preserved.
   #
   def test_push_to_empty_repo
+    initialize_repos
+
     # Create and commit file 1 locally, then push to the empty remote
     in_local_repo {
       File.write(@files[0], @local_file_contents[0])
@@ -289,6 +319,8 @@ class TestPushPull < Test::Unit::TestCase
   # This test asserts that commit history and staged files are preserved.
   #
   def test_push_to_committed_repo
+    initialize_repos
+
     # Create and commit file 1 on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
@@ -342,6 +374,8 @@ class TestPushPull < Test::Unit::TestCase
   # This test asserts that an exception is raised.
   #
   def test_push_to_uncommitted_repo
+    initialize_repos
+
     # Create and stage file 1 with uncommitted changes on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
