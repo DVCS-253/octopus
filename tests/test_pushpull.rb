@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'test/unit'
+require_relative '../PushPull'
 
 # Tests public methods of the push/pull module.
 #
@@ -40,8 +41,6 @@ class TestPushPull < Test::Unit::TestCase
 
     # Network address for the repos
     @machine_url = '127.0.0.1'
-    @local_url   = @machine_url + @base_dir + @local_dir
-    @remote_url  = @machine_url + @base_dir + @remote_dir
 
     # a.txt contains A words, b.txt contains B words
     @files = ['a.txt', 'b.txt']
@@ -119,8 +118,8 @@ class TestPushPull < Test::Unit::TestCase
   #
   def test_connect
     # Assert that the machine can be connected to
-    assert(connect(@remote_url),
-           'Failed to connect to remote machine.')
+    assert_not_raises(PushPull.connect(@machine_url, @base_dir + @remote_dir),
+                      'Failed to connect to remote machine.')
   end
 
 
