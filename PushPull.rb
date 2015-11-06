@@ -1,12 +1,12 @@
 require 'io/console'
 require 'net/ssh'
+require 'etc'
 
 class PushPull
 
   # Uses the Net::SSH gem to create an SSH session.
-  # The user will be asked for their credentials for the connection.
-  #
-  # TODO: Should check if a connection can be made with a key before asking for creds
+  # The user will be asked for their credentials for the connection,
+  # unless they have a key configured for the connection.
   #
   # @param [string] remote The address of the remote machine to connect to.
   # @param [string] path The path to the corresponding repo on the remote.
@@ -15,16 +15,26 @@ class PushPull
   #
   def self.connect(remote, path)
     begin
-      username = STDIN.gets.chomp           # Remove trailing newline
-      password = STDIN.noecho(&:gets).chomp # Remove trailing newline
-	  
-      ssh = Net::SSH.start(remote, username, :password => password)
-      ssh.exec "cd #{path}"
+      # Attempt to login as the current user with a key
+      ssh = Net::SSH.start(remote, Etc.getlogin)
     rescue
-      raise 'Unable to connect to remote'
+      begin
+        print 'Username: '
+        username = STDIN.gets.chomp           # Remove trailing newline
+        print 'Password: '
+        password = STDIN.noecho(&:gets).chomp # Remove trailing newline
+      
+        ssh = Net::SSH.start(remote, username, :password => password)
+      rescue
+        raise 'Unable to connect to remote'
+      end
     end
 
-    yield ssh
+    ssh.exec "cd #{path}"
+
+    if block_given?
+      yield ssh
+    end
 
     ssh.close
   end
