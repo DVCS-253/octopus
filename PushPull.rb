@@ -47,18 +47,27 @@ class PushPull
   # 
   def self.push(remote, branch)
     self.connect(remote, path) { |ssh|
-      latest_snapshot = ssh.exec! "cat .oct/branches/#{branch}/latest_commit"
+      remote_latest_snapshot = ssh.exec! "cat .oct/branches/#{branch}/latest_commit"
 
-      #if (latest_commit is not in local history)
-        #raise 'Local is not up to date, please pull and try again.'
-        #return
-      #end
+      local_latest_snapshot = IO.read(".oct/branches/#{branch}/latest_commit")
+      snapshot_history = Repo.history(local_latest_snapshot)
 
-      #Use latest remote snapshot to build a list of local snapshots since that one
-      #Have the remote merge those snapshots one by one on the given branch
-      #new_snapshots.each { |snapshot|
-        #ssh.exec merge(new_snapshot, some_other_snapshot?)
-      #}
+      # Raise an exception if the latest snapshot on the remote isn't part of the local history
+      remote_snapshot_index = snapshot_history.index(remote_latest_snapshot)
+      if (remote_snapshot_index.nil?)
+        raise 'Local is not up to date, please pull and try again.'
+        return
+      end
+
+      snapshots_to_merge = snapshot_history[0...remote_snapshot_index]
+
+      # Merge the new local snapshots onto the remote
+      last_snapshot = remote_latest_snapshot
+      snapshots_to_merge.each { |snapshot|
+        # TODO Need to somehow get this snapshot onto the new server, then merge by ID
+        ssh.exec 'merge(last_snapshot, snapshot)'
+        last_snapshot = snapshot
+      }
     }
   end
   
