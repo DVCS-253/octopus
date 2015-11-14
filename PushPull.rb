@@ -1,8 +1,13 @@
 require 'io/console'
+require 'fileutils'
 require 'net/ssh'
+require 'repos'
+require 'json'
 require 'etc'
 
-class PushPull
+module PushPull
+
+  @@repo = Repos.new
 
   # Uses the Net::SSH gem to create an SSH session.
   # The user will be asked for their credentials for the connection,
@@ -70,5 +75,40 @@ class PushPull
       }
     }
   end
+
+  # Clones all branches from the given remote repository to a local directory.
+  # An exception is raised if the destination directory already exists
+  #
+  # @param [string] remote The address of the remote machine to clone.
+  # @param [string] directory_name The name of the directory to clone the repo into.
+  #                                Defaults to the name of the repository on the remote.
+  #
+  def self.clone(remote, directory_name = nil)
+    # TODO The directory name should be the name of the repository by default
+    directory_name = 'clone' if directory_name.nil?
+
+    # Ensure the directory does not already exist
+    raise 'Destination for clone already exists' if Dir.exists?(directory_name)
+
+    Dir.mkdir(directory_name)
+
+    # Initialize the new repository
+    Dir.chdir(directory_name)
+    @@repo.init()
+
+    # TODO This is where we'd set up the origin remote
+    
+    self.connect(remote, path) { |ssh|
+      # Obtain a list of branches on the remote
+      branches = JSON.parse(ssh.exec! 'cat .oct/branch/branches')
+
+      # Pull each branch
+      branches.keys.each { |branch|
+        pull_with_connection(remote, branch, ssh)
+      }
+    }
+  end
+
+  private_class_method :pull_with_connection
   
 end
