@@ -9,6 +9,8 @@ module PushPull
 
   @@repo = Repos.new
 
+  private_class_method :pull_with_connection
+
   # Uses the Net::SSH gem to create an SSH session.
   # The user will be asked for their credentials for the connection,
   # unless they have a key configured for the connection.
@@ -55,16 +57,20 @@ module PushPull
       remote_latest_snapshot = ssh.exec! "cat .oct/branches/#{branch}/latest_commit"
 
       local_latest_snapshot = IO.read(".oct/branches/#{branch}/latest_commit")
-      snapshot_history = Repo.history(local_latest_snapshot)
+      snapshot_history = @@repo.history(local_latest_snapshot)
 
-      # Raise an exception if the latest snapshot on the remote isn't part of the local history
-      remote_snapshot_index = snapshot_history.index(remote_latest_snapshot)
-      if (remote_snapshot_index.nil?)
-        raise 'Local is not up to date, please pull and try again.'
-        return
+      # If the remote has a commit history
+      if remote_latest_snapshot
+        remote_snapshot_index = snapshot_history.index(remote_latest_snapshot)
+
+        # Raise an exception if the latest snapshot on the remote isn't part of the local history
+        raise 'Local is not up to date, please pull and try again' if remote_snapshot_index.nil?
+        
+        snapshots_to_merge = snapshot_history[0...remote_snapshot_index]
+      else
+        # Remote has no commit history, push all local commits
+        snapshots_to_merge = snapshot_history
       end
-
-      snapshots_to_merge = snapshot_history[0...remote_snapshot_index]
 
       # Merge the new local snapshots onto the remote
       last_snapshot = remote_latest_snapshot
@@ -73,6 +79,50 @@ module PushPull
         ssh.exec 'merge(last_snapshot, snapshot)'
         last_snapshot = snapshot
       }
+    }
+  end
+
+  # Pulls new changes from the remote repo to the local repo.
+  # An exception is raised if the remote does not have the local HEAD in its history
+  #
+  # @param [string] remote The address of the remote machine to connect to.
+  # @param [string] branch The name of the branch to pull.
+  # 
+  def self.pull(remote, branch)
+    self.connect(remote, path) { |ssh|
+      pull_with_connection(remote, path, ssh)
+    }
+  end
+
+  # Pulls new changes from the remote repo to the local repo.
+  # An exception is raised if the remote does not have the local HEAD in its history
+  #
+  # @param [string] remote The address of the remote machine to connect to.
+  # @param [string] branch The name of the branch to pull.
+  # @param [Net::SSH] ssh The ssh connection object to use.
+  #
+  def pull_with_connection(remote, branch, ssh)
+    local_latest_snapshot = IO.read(".oct/branches/#{branch}/latest_commit")
+
+    remote_latest_snapshot = ssh.exec! "cat .oct/branches/#{branch}/latest_commit"
+    snapshot_history = # Somehow run Repo.history(remote_latest_snapshot) on the remote
+
+    # If the local repo has a commit history
+    if local_latest_snapshot
+      local_snapshot_index = snapshot_history.index(local_latest_snapshot)
+
+      # Raise an exception if the local latest snapshot isn't part of the remote's history
+      raise 'Local commit history is not present on remote' if local_snapshot_index.nil?
+      
+      snapshots_to_merge = snapshot_history[0...local_snapshot_index]
+    else
+      # Local repo has no commit history, pull all remote commits
+      snapshots_to_merge = snapshot_history
+    end
+
+    # Merge the new remote snapshots onto the local repo
+    snapshots_to_merge.each { |snapshot|
+      @@repo.update_tree(snapshot)
     }
   end
 
@@ -108,7 +158,4 @@ module PushPull
       }
     }
   end
-
-  private_class_method :pull_with_connection
-  
 end
