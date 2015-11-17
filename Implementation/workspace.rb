@@ -129,7 +129,7 @@ class Workspace
 				end
 			end
 		end
-		return add, delete, update
+		return add, delete, update, rename
 	end
 
 end
