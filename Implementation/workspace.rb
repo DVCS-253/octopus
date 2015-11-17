@@ -2,84 +2,90 @@ require 'fileutils'
 
 class Workspace
 
-  ##Public Function: clean
-  def clean_files(path, staged_folder)
-    Dir.foreach(path) do |e|
-     next if [".",".."].include? e #filenenames start with . and .. will not be deleted
-     next if e == staged_folder
-      fullname = path + File::Separator + e
-      if FileTest::directory?(fullname)
-       FileUtils.rm_rf(fullname)
-      else
-       File.delete(fullname)
-      end
-    end
-  end
-                                          
-
-  def clean
-    workspace = '/u/thu/CD class/Implement_test_case/test' #workspace directory
-    staged_folder = 'staged_folder' #staged files' location
-    clean_files(workspace, staged_folder)
-    return 1
-  end
+	def clean
+		#Remove all the files in workspace
+		workspace = './*'
+		FileUtils.rm_rf(workspace)
+		#call Repos.get_head() to get name of latest branch
+		current = Repos.get_head().name
+		#check out the lastest branch
+		check_out(current)
+	end
 
 
-  ##public Function: commit
-  def directory_history(dir, dest, log)
-    Dir.foreach(dir) do |e|
-    next if [".",".."].include? e
-    fullname = dir + File::Separator + e
-      if FileTest::directory?(fullname)
-        write_history('commit directory: ' + fullname, log)
-        directory_history(fullname, dest, log)			
-      else
-        write_history('commit file: ' + fullname, log)
-      end
-    end
-  end
+	def commit(files = nil)
+		results = []
+		if files == nil
+			all_file = Dir["**/*"]
+			all_file.each do |f|
+				results.push((f, Revlog.hash(f)))
+			end
+		elsif files.is_a?(Array)
+			files.each do |f|
+				results.push((f, Revlog.hash(f)))
+			end
+		else
+			results.push((f, Revlog.hash(f)))
+		end
+		current = Repos.last_snapshot()
+		current_files = last_snapshot.file_list()
+		current_files.each do |f|
+			if not results.contains(f)
+				results.push(f)
+			end
+		end
+		Repos.creat_snapshot(results)
+	end
+
+	
+	def check_out(files = branch)
+		if files.is_a?(Array)
+			files.each do |f|
+				path, hash = f
+				content = RevLog.get_file(hash)
+				writeFile(path,content)
+			end
+		else
+			branch = Repos.getBranch(list_file)
+			files = branch.last_snapshot()
+			files.each do |f|
+				path, hash = f
+				content = RevLog.get_file(hash) 
+				writeFile(path,content)
+			end
+		end
+	end
 
 
-  def write_history(text, log)
-    File.write(log, text + "\n")
-  end
-
-
-  def commit(path = nil)
-    dir = '/u/thu/CD class/Implement_test_case/test/'
-    log = dir + '.commit_history'
-    dest = dir + 'staged_folder'
-    staged_folder = 'staged_folder'
-    write_history('COMMIT', log)
-    if path == nil #copy all the files/directories in workspace to the staged_folder
-      Dir.foreach(dir) do |e|
-        next if [".",".."].include? e #commit history file is not necessary to committed
-        next if e == staged_folder
-        fullname = dir + File::Separator + e
-        if FileTest::directory?(fullname)
-          write_history('commit directory: ' + fullname, log)
-          FileUtils.cp_r(fullname, dest)
-          directory_history(fullname, dest, log)
-        else
-          write_history('commit file: ' + fullname, log)
-          FileUtils.cp(fullname, dest)
-        end
-      end	
-      return 1
-    end
-    if File.directory?(dir + path)#copy all the files/directories in given directory to the folder
-      write_history('commit directory: ' + path, log)
-      FileUtils.cp_r(dir + path, dest)
-      directory_history(dir + path, dest, log)
-      return 1
-    end
-    if File.file?(dir + path)#copy the file to the folder
-      write_history('commit file: ' + path, log)
-      FileUtils.cp(dir + path, dest)
-      return 1
-    end
-    return 0
-  end
-
+	def status()
+		add = []
+		delete = []
+		update = [] 
+		current = Repos.last_snapshot()
+		current_files = last_snapshot.file_list()
+		current_path = []
+		current_hash = []
+		current_files.each do |f|
+			path, hash = f
+			current_path.push(path)
+			current_hash.push(hash)
+		end
+		workspace_files = Dir.glob('.')
+		workspace_files.each do |f|
+			if not current_files.contains(f)
+				add.push(f)
+			else
+				if not current_hash.contains(RevLog.hash(f))
+					update.push(f)
+				end
+			end
+		end
+		current_files.each do |f|
+			if not workspace_files.contains(f)
+				delete.push(f)
+			end
+		end
+		return add, delete, update
+	end
 
 end
