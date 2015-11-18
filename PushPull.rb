@@ -55,32 +55,18 @@ module PushPull
   # 
   def self.push(remote, branch)
     self.connect(remote, path) { |ssh|
-      remote_latest_snapshot = JSON.parse(ssh.exec! 'cat .oct/repo/branches')[branch]
+      remote_head = ssh.exec! "oct get_branch_head #{branch}"
 
-      # TODO There's probably a method in Repos that will give me this
-      local_latest_snapshot = JSON.parse(IO.read('.oct/repo/branches'))[branch]
-      snapshot_history = @@repo.history(local_latest_snapshot)
+      local_changes = @@repo.get_latest_snapshots(remote_head)
 
-      # If the remote has a commit history
-      if remote_latest_snapshot
-        remote_snapshot_index = snapshot_history.index(remote_latest_snapshot)
+      # Raise an exception if local changes could not be calculated
+      raise 'Local is not up to date, please pull and try again' if !local_changes
 
-        # Raise an exception if the latest snapshot on the remote isn't part of the local history
-        raise 'Local is not up to date, please pull and try again' if remote_snapshot_index.nil?
-        
-        snapshots_to_merge = snapshot_history[0...remote_snapshot_index]
-      else
-        # Remote has no commit history, push all local commits
-        snapshots_to_merge = snapshot_history
-      end
+      # Copy the contents of the local file to remote/.oct/communication/text_file
+      ssh.exec "echo #{Shellwords.shellescape(IO.read(local_changes))} > .oct/communication/text_file"
 
-      # Merge the new local snapshots onto the remote
-      last_snapshot = remote_latest_snapshot
-      snapshots_to_merge.each { |snapshot|
-        # TODO Need to somehow get this snapshot onto the new server, then merge by ID
-        ssh.exec 'merge(last_snapshot, snapshot)'
-        last_snapshot = snapshot
-      }
+      # Merge the new snapshots into the remote
+      ssh.exec 'oct update_tree .oct/communication/text_file'
     }
   end
 
