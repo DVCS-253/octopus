@@ -16,14 +16,14 @@ class Tree
 	$last_commit = nil
 	$current_branch = "Master"
 
-	attr_accessor :snapshot_IDs
+	attr_accessor :snapshots
 
 	def initialize()
-		@snapshot_IDs = Array.new
+		@snapshots = Array.new
 	end	
 
 	def find_snapshot(snapshot_ID)
-		for snapshot in @snapshot_IDs
+		for snapshot in @snapshots
 			if snapshot.snapshot_ID == snapshot_ID
 				return snapshot
 			end
@@ -34,7 +34,7 @@ class Tree
 
 	def add_snapshot(snapshot_ID)
 		snapshot = Snapshot.new(snapshot_ID)
-		@snapshot_IDs.push(snapshot)
+		@snapshots.push(snapshot)
 		return snapshot
 	end
 
@@ -76,7 +76,7 @@ class Repos
 	# Revlog: is sued to store the contents of the committed files and obatain a file_id
 
 	# data structure for Repos is a tree
-	# Every node in the tree represents one snapshot/commit with its node_id
+	# Every node in the tree represents one snapshot/commit with its snapshot_id
 	# Specifically, for each Node, it has
 	#  1.a snapshot_ID
 	#  2.a hashtable which contains the title of files and a file_ID generated
@@ -101,8 +101,8 @@ class Repos
 	# which will be the root of the tree
 	# Set snapshot ID to 1 and make .root = true
 
-	# if not nil, make last_commit's child be this commit
-	# and this commit's parent is the last commit
+	# if not nil, make this commit be the child of 
+	# last commit on this branch
 
 	def make_snapshot(files_to_be_commits)
 		if $last_commit == nil
@@ -111,13 +111,12 @@ class Repos
 			snapshot.root = true
 			$last_commit = snapshot
 		else
-			# Add one on last snapshot_ID to make a new one
 
 			# latest_branch is the latest commit on this branch
-			r_ids = snapshot_IDs.reverse
+			r_ids = snapshots.reverse
 			latest_branch = r_ids.find{|x| x.branch_name == $current_branch}
 
-			# make snapshot
+			# add one on last snapshot_ID to make a new one
 			snapshot = $snapshot_tree.add_snapshot($last_commit + 1)
 			# save commit time
 			snapshot.commit_time = Time.now
@@ -147,23 +146,26 @@ class Repos
 
 	def history(snapshot_ID)
 		# First find that snapshot
-		snapshot = find_snapshot(node_id)
-		history_helper(Snapshot)
+		snapshot = find_snapshot(snapshot_ID)
+		history_helper(snapshot)
 		# add root snapshot_id, which is 1 to list of ids.
-		list_of_snapshot_ids << 1
-		# since this method will duplicate count snapshot_ids
+		list_of_snapshots << 1
+		# since this method will duplicate count snapshots
 		# use .uniq to remove any duplicate
-		list_of_snapshot_ids = list_of_snapshot_ids.uniq
+		list_of_snapshots = list_of_snapshots.uniq
 
-		return list_of_node_ids
+		return list_of_snapshots
 	end
 
-	def history_helper(Snapshot)
+	def history_helper(snapshot)
 		while snapshot.root != true
+			# If only one parent, just add it to list
 			if snapshot.parent.length == 1
-				list_of_snapshot_ids << snapshot.parent[0].snapshot_ID
+				list_of_snapshots << snapshot.parent[0].snapshot_ID
 				snapshot = snapshot.parent[0]
 			else
+				# a snapshot has at most two parents
+				# (by merging)
 				history_helper(snapshot.parent[0])
 				history_helper(snapshot.parent[1])
 			end
@@ -172,14 +174,14 @@ class Repos
 
 	# Make 2 children 
 	def make_branch(snapshot_ID, name)
-		snapshot = findNode(node_id)
+		snapshot = findNode(snapshot_ID)
 		# If snapshot ID is 5, then two branches will be 51 and 52
 		snapshot_master = snapshot.add_snapshot(snapshot_ID*10 + 1)
 		snapshot_branch = snapshot.add_snapshot(snapshot_ID*10 + 2)
-
+		# save time
 		snapshot_master.commit_time = Time.now
 		snapshot_branch.commit_time = Time.now
-
+		# copy hash table
 		snapshot_master.repos_hash = snapshot.repos_hash
 		snapshot_branch.repos_hash = snapshot.repos_hash
 		# record branch name
@@ -190,11 +192,10 @@ class Repos
 
 		snapshot_branch_master.add_parent(snapshot)
 		snapshot_branch_branch.add_parent(snapshot)
-
 		snapshot.add_child(snapshot_branch_master)
 		snapshot.add_child(snapshot_branch_master)
 
-		jhash = {"#{branch_name}" => "#{node_id}"}
+		jhash = {"#{branch_name}" => "#{snapshot_ID}"}
 		File.open(".oct/branch/branches", "w") do |f|
 			f.write(jhash.to_json)
 		end
@@ -209,7 +210,7 @@ class Repos
 		branch_to_delete = snapshot.branch_name
 
 		# Delete all snapshots with this branch name
-		snapshot_IDs.delete{|x| x.branch_name == branch_to_delete}
+		snapshots.delete{|x| x.branch_name == branch_to_delete}
 	end
 
 	# Leave this 
@@ -220,7 +221,7 @@ class Repos
 	def get_latest_snapshots(snapshot_ID)
 		snapshot = findNode(snapshot_ID)
 		this_ID = snapshot.snapshot_ID
-		latest_snaps = snapshot_IDs.find_all {|x| this_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
+		latest_snaps = snapshots.find_all {|x| this_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
 
 		File.open('text_file', 'w'){ |f|
 			f.puts "snapshot{"
@@ -234,6 +235,7 @@ class Repos
 					f.puts "				#{get_file(title)},"
 					i += 1
 				end
+				f.puts "		},"
 
 			}
 			f.puts "}"
@@ -241,6 +243,8 @@ class Repos
 
 	end
 
+	# read text_file from Push and Pull module
+	# and update snapshots tree
 	def update_tree(text_file)
 
 
@@ -252,7 +256,9 @@ class Repos
 		snapshot_first = find_snapshot(snapshot_ID1)
 		snapshot_second = find_snapshot(snapshot_ID2)
 
+		# create new merged snapshot
 		snapshot = $snapshot_tree.add_snapshot($last_commit + 1)
+		# record time
 		snapshot.commit_time = Time.now
 
 		snapshot.add_parent(snapshot_first)
@@ -260,10 +266,11 @@ class Repos
 		snapshot_first.add_child(snapshot)
 		snapshot_second.add_child(snapshot)
 
+		# for repos_hash,
+		# call merge in Revlog to get new hashed ID
 		merged_hash = snapshot_first.repos_hash
 		merged_hash = merged_hash.merge!(snapshot_second.repos_hash) { |key, v1, v2| merge(v1, v2) }
 		snapshot.repos_hash = merged_hash
-
 
 		return snapshot.snapshot_ID
 
