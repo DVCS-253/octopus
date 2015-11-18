@@ -134,8 +134,8 @@ module PushPull
   #                                Defaults to the name of the repository on the remote.
   #
   def self.clone(remote, directory_name = nil)
-    # TODO The directory name should be the name of the repository by default
-    directory_name = 'clone' if directory_name.nil?
+    # The directory name is the name of the repository by default
+    directory_name = directory_name.nil? ? 'clone' : File.basename(remote)
 
     # Ensure the directory does not already exist
     raise 'Destination for clone already exists' if Dir.exists?(directory_name)
