@@ -1,5 +1,6 @@
 require 'io/console'
 require 'fileutils'
+require 'tempfile'
 require 'net/ssh'
 require 'repos'
 require 'json'
@@ -54,9 +55,10 @@ module PushPull
   # 
   def self.push(remote, branch)
     self.connect(remote, path) { |ssh|
-      remote_latest_snapshot = ssh.exec! "cat .oct/branches/#{branch}/latest_commit"
+      remote_latest_snapshot = JSON.parse(ssh.exec! 'cat .oct/repo/branches')[branch]
 
-      local_latest_snapshot = IO.read(".oct/branches/#{branch}/latest_commit")
+      # TODO There's probably a method in Repos that will give me this
+      local_latest_snapshot = JSON.parse(IO.read('.oct/repo/branches'))[branch]
       snapshot_history = @@repo.history(local_latest_snapshot)
 
       # If the remote has a commit history
@@ -95,34 +97,37 @@ module PushPull
   end
 
   # Pulls new changes from the remote repo to the local repo.
-  # An exception is raised if the remote does not have the local HEAD in its history
+  # An exception is raised if the remote does not have the local HEAD in its history,
+  # or if the given branch does not exist locally or on the remote.
   #
   # @param [string] remote The address of the remote machine to connect to.
   # @param [string] branch The name of the branch to pull.
   # @param [Net::SSH] ssh The ssh connection object to use.
   #
   def pull_with_connection(remote, branch, ssh)
-    local_latest_snapshot = IO.read(".oct/branches/#{branch}/latest_commit")
+    local_head = @@repo.get_branch_head(branch)
 
-    remote_latest_snapshot = ssh.exec! "cat .oct/branches/#{branch}/latest_commit"
-    snapshot_history = # TODO Somehow run Repo.history(remote_latest_snapshot) on the remote
-
-    # If the local repo has a commit history
-    if local_latest_snapshot
-      local_snapshot_index = snapshot_history.index(local_latest_snapshot)
-
-      # Raise an exception if the local latest snapshot isn't part of the remote's history
-      raise 'Local commit history is not present on remote' if local_snapshot_index.nil?
-      
-      snapshots_to_merge = snapshot_history[0...local_snapshot_index]
+    # Calling either of these `oct func` methods updates
+    # the .oct/communication/text_file file on the remote
+    if local_head.nil?
+      # Get the entire history if our locally history is empty
+      if ssh.exec! "oct func get_all_snapshots" == 'error'
+        raise 'Remote has no commit history'
+      end
     else
-      # Local repo has no commit history, pull all remote commits
-      snapshots_to_merge = snapshot_history
+      # Get the history since our latet local snapshot
+      if ssh.exec! "oct func get_latest_snapshot #{local_head}" == 'error'
+        raise 'Local commit history is not present on remote'
+      end
     end
 
-    # Merge the new remote snapshots onto the local repo
-    snapshots_to_merge.each { |snapshot|
-      @@repo.update_tree(snapshot)
+    # Merge the new remote snapshots into the local repo
+    TempFile.open('snapshots_to_merge') { |file|
+      # Copy over the file contents from the remote
+      file.write(ssh.exec! 'cat .oct/communication/text_file')
+
+      # Update our local snapshot tree
+      @@repo.update_tree(file.path)
     }
   end
 
@@ -150,7 +155,7 @@ module PushPull
     
     self.connect(remote, path) { |ssh|
       # Obtain a list of branches on the remote
-      branches = JSON.parse(ssh.exec! 'cat .oct/branch/branches')
+      branches = JSON.parse(ssh.exec! 'cat .oct/repo/branches')
 
       # Pull each branch
       branches.keys.each { |branch|
