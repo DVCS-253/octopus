@@ -105,7 +105,7 @@ module PushPull
     local_latest_snapshot = IO.read(".oct/branches/#{branch}/latest_commit")
 
     remote_latest_snapshot = ssh.exec! "cat .oct/branches/#{branch}/latest_commit"
-    snapshot_history = # Somehow run Repo.history(remote_latest_snapshot) on the remote
+    snapshot_history = # TODO Somehow run Repo.history(remote_latest_snapshot) on the remote
 
     # If the local repo has a commit history
     if local_latest_snapshot
