@@ -9,6 +9,7 @@ require 'etc'
 module PushPull
 
   @@repo = Repos.new
+  @@dvcs_dir = '.octopus' # Name of the directory containing the DVCS files
 
   private_class_method :pull_with_connection
 
@@ -62,11 +63,11 @@ module PushPull
       # Raise an exception if local changes could not be calculated
       raise 'Local is not up to date, please pull and try again' if !local_changes
 
-      # Copy the contents of the local file to remote/.oct/communication/text_file
-      ssh.exec "echo #{Shellwords.shellescape(IO.read(local_changes))} > .oct/communication/text_file"
+      # Copy the contents of the local file to remote/#{@@dvcs_dir}/communication/text_file
+      ssh.exec "echo #{Shellwords.shellescape(IO.read(local_changes))} > #{@@dvcs_dir}/communication/text_file"
 
       # Merge the new snapshots into the remote
-      ssh.exec 'oct update_tree .oct/communication/text_file'
+      ssh.exec "oct update_tree #{@@dvcs_dir}/communication/text_file"
     }
   end
 
@@ -94,7 +95,7 @@ module PushPull
     local_head = @@repo.get_branch_head(branch)
 
     # Calling either of these `oct func` methods updates
-    # the .oct/communication/text_file file on the remote
+    # the #{@@dvcs_dir}/communication/text_file file on the remote
     if local_head.nil?
       # Get the entire history if our locally history is empty
       if ssh.exec! "oct func get_all_snapshots" == 'error'
@@ -110,7 +111,7 @@ module PushPull
     # Merge the new remote snapshots into the local repo
     TempFile.open('snapshots_to_merge') { |file|
       # Copy over the file contents from the remote
-      file.write(ssh.exec! 'cat .oct/communication/text_file')
+      file.write(ssh.exec! "cat #{@@dvcs_dir}/communication/text_file")
 
       # Update our local snapshot tree
       @@repo.update_tree(file.path)
@@ -141,7 +142,7 @@ module PushPull
     
     self.connect(remote, path) { |ssh|
       # Obtain a list of branches on the remote
-      branches = JSON.parse(ssh.exec! 'cat .oct/repo/branches')
+      branches = JSON.parse(ssh.exec! "cat #{@@dvcs_dir}/repo/branches")
 
       # Pull each branch
       branches.keys.each { |branch|
