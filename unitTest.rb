@@ -103,8 +103,7 @@ class Tests < Test::Unit::TestCase
 	# end delete_file 										#
 	#########################################################
 
-	'''
-	Currently unimplemented
+
 
 	##############
 	# diff_files #
@@ -141,6 +140,8 @@ class Tests < Test::Unit::TestCase
 	# end diff_files 										#
 	#########################################################
 
+
+
 	#########
 	# merge #
 	#########
@@ -173,7 +174,7 @@ class Tests < Test::Unit::TestCase
 
 		assert_equal(merge(merge_file1, merge_file2)[0], merge_file3, "Simple merge failure")
 
-		assert_equal(merge(@test_file1, merger1)[0], merged, "Complex merge failure")
+		assert_equal(merge(@test_file1, merged)[0], merged, "Complex merge failure")
 
 
 		assert_raise do
@@ -193,5 +194,4 @@ class Tests < Test::Unit::TestCase
 	# end merge 											#
 	#########################################################
 
-		'''
 end

@@ -49,4 +49,86 @@ class Revlog
 		return 0
 	end
 
+	def diff_files(file_id1, file_id2)
+		file1 = get_file(file_id1)
+		file2 = get_file(file_id2)
+		if file1 == nil or file2 == nil
+			raise "No such file"
+		end
+		file1 = file1.lines
+		file2 = file2.lines
+
+		return ((file1 - file2) + (file2-file1)).join("")
+	end
+
+	def merge(ancestor_id = nil, file_id1, file_id2)
+		# file1 = get_file(file_id1)
+		# file2 = get_file(file_id2)
+		file1 = File.open(File.basename(file_id1)) #Remove
+		file2 = File.open(File.basename(file_id2)) #Remove
+
+		merged = File.new("merging", "w")
+		if file1 == nil or file2 == nil
+			raise "No such file"
+		end
+
+		if ancestor_id == nil
+			return add_file(merge_without_ancestor(file1, file2))
+
+		return add_file(merged)
+
+	def merge_without_ancestor(file1, file2)
+		file1_lines = Hash.new(false)
+		file2_lines = Hash.new(false)
+
+		file1.each_line {|line| file1_lines[line] = true}
+		file2.each_line {|line| file2_lines[line] = true}
+
+		filename1 = File.basename(file1)
+		filename2 = File.basename(file2)
+
+		file1.rewind
+		file2.rewind
+
+		#helper function
+		write_merge = lambda do |merged, file, name, line, otherline, table|
+			merged.puts ">>" + name
+			while (line != otherline) and !file.eof?
+				merged.puts "\t" + line
+				line = file.readline
+				table[line] = false
+			end
+		end
+
+		while !file1.eof? and !file2.eof?
+			line1 = file1.readline
+			line2 = file2.readline
+			if(line1 == line2)
+				merged.puts line1
+				file1_lines[line1] = false
+				file2_lines[line2] = false
+			elsif(file1_lines[line2])
+				write_merge.call(merged, file1, filename1, line1, line2, file1_lines)
+			elsif(file2Lines[line1])
+				write_merge.call(merged, file2, filename2, line2, line1, file2_lines)
+			else
+				write_merge.call(merged, file1, filename1, line1, line2, file1_lines)
+				write_merge.call(merged, file2, filename2, line2, line1, file2_lines)
+			end
+		end
+		return merged
+	end
+
+	def test()
+		a = File.new("file1.txt","w")
+		b = File.new("file2.txt", "w")
+		a.puts "first\nfile\nanarchy"
+		b.puts "file\nanarchy\nNaNarchy"
+		a.close
+		b.close
+		merge(0,a,b)
+	end
 end
+
+x = Revlog.new
+x.test
