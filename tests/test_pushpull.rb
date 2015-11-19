@@ -1,6 +1,7 @@
 require 'shellwords'
 require 'fileutils'
 require 'test/unit'
+require_relative '../workspace'
 require_relative '../PushPull'
 
 # Tests public methods of the push/pull module.
@@ -19,14 +20,10 @@ require_relative '../PushPull'
 #   - Connect
 #     - Connects to the remote repo's machine
 #
-# Assumptions:
-#   - There is a method to initialize an empty repository.
-#   - There is a method to stage a file.
-#   - There is a method to commit with a message.
-#   - There is a method to obtain the commit log.
-#   - There is a method to obtain a list of staged files.
-#
 class TestPushPull < Test::Unit::TestCase
+
+  @@repo = Repos.new
+  @@workspace = Workspace.new
 
   # Defines testing variables before each test runs.
   # A local and remote test repository are set up,
@@ -86,8 +83,8 @@ class TestPushPull < Test::Unit::TestCase
   # Initializes the local and remote repositories
   #
   def initialize_repos
-    init(@local_dir)
-    init(@remote_dir)
+    @@repo.init(@local_dir)
+    @@repo.init(@remote_dir)
   end
 
   # Runs the given block inside the local repo.
@@ -148,23 +145,21 @@ class TestPushPull < Test::Unit::TestCase
   #
   def test_pull_into_empty_repo
     initialize_repos
+    remote_head = nil
 
     # Create file 1 with committed changes on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
-      stage(@files[0])
-      commit(@remote_commit_messages[0])
+      @@workspace.commit(@files[0])
+      remote_head = @@repo.get_head()
     }
 
     # Pull into the empty local repo and assert for correctness
     in_local_repo {
-      pull(@remote_url)
+      PushPull.pull(@remote_url)
 
-      assert_equal(@remote_commit_messages[0], get_last_commit_message(),
-                   'Commit history was not preserved when pulling from remote.')
-
-      assert_equal([@files[0]], get_staged_files(),
-                   'List of staged files was not preserved when pulling from remote.')
+      assert_equal(@@repo.get_head(), remote_head,
+                   'Head of local repo is not same as head of remote.')
 
       assert_equal(@remote_file_contents[0], File.read(@files[0]),
                    'File contents were not preserved when pulling from remote.')
@@ -176,44 +171,35 @@ class TestPushPull < Test::Unit::TestCase
   #
   def test_pull_into_committed_repo
     initialize_repos
+    remote_head = nil
 
     # Create file 1 with committed changes locally
     in_local_repo {
       File.write(@files[0], @local_file_contents[0])
-      stage(@files[0])
-      commit(@local_commit_messages[0])
+      @@workspace.commit(@files[0])
     }
 
     # Pull from local and create a commit history on the remote for file 1 and 2
     in_remote_repo {
-      pull(@local_url)
+      PushPull.pull(@local_url)
 
       # Modify file 1 and commit the changes
       File.write(@files[0], @remote_file_contents[0])
-      stage(@files[0])
-      commit(@remote_commit_messages[0])
+      @@workspace.commit(@files[0])
 
       # Create file 2 and commit it
       File.write(@files[1], @remote_file_contents[1])
-      stage(@files[1])
-      commit(@remote_commit_messages[1])
+      @@workspace.commit(@files[1])
+
+      remote_head = @@repo.get_head()
     }
 
     # Pull into the local repository
     in_local_repo {
-      pull(@remote_url)
+      PushPull.pull(@remote_url)
 
-      # Ensure the commit for changing file 1 is present
-      assert_equal(@remote_commit_messages[0], get_second_to_last_commit_message(),
-                   'Commit history was not preserved when pulling from remote.')
-
-      # Ensure the commit for creating file 2 is present
-      assert_equal(@remote_commit_messages[1], get_last_commit_message(),
-                   'Commit history was not preserved when pulling from remote.')
-
-      # Ensure that file 1 and 2 are staged
-      assert_equal([@files[0], @files[1]], get_staged_files(),
-                   'List of staged files was not preserved when pulling from remote.')
+      assert_equal(@@repo.get_head(), remote_head,
+                   'Head of local repo is not same as head of remote.')
 
       # Ensure that the changes to file 1 were merged
       assert_equal(@remote_file_contents[0], File.read(@files[0]),
@@ -234,20 +220,18 @@ class TestPushPull < Test::Unit::TestCase
     # Create file 1 with uncommitted changes locally
     in_local_repo {
       File.write(@files[0], @local_file_contents[0])
-      stage(@files[0])
     }
 
     # Create file 1 with committed changes on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
-      stage(@files[0])
-      commit(@remote_commit_messages[0])
+      @@workspace.commit(@files[0])
     }
 
     # Assert that pulling from the remote with uncommitted local changes raises an exception
     in_local_repo {
       assert_raise do
-        pull(@remote_url)
+        PushPull.pull(@remote_url)
       end
     }
   end
@@ -258,16 +242,18 @@ class TestPushPull < Test::Unit::TestCase
   #
   def test_clone
     initialize_repos
+    remote_head = nil
 
     # Create and commit file 1 on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
-      stage(@files[0])
-      commit(@remote_commit_messages[0])
+      @@workspace.commit(@files[0])
+
+      remote_head = @@repo.get_head()
     }
 
     # Clone the remote repo into a new folder called @clone_dir
-    clone(@remote_url, @clone_dir)
+    PushPull.clone(@remote_url, @clone_dir)
 
     # Assert that the clone directory was created
     assert(Dir.exist? @clone_dir,
@@ -275,11 +261,8 @@ class TestPushPull < Test::Unit::TestCase
 
     # Assert that the clone repo is identical to the remote
     in_clone_repo {
-      assert_equal(@remote_commit_messages[0], get_last_commit_message(),
-                   'Commit history was not preserved when cloning remote.')
-
-      assert_equal([@files[0]], get_staged_files(),
-                   'List of staged files was not preserved when cloning remote.')
+      assert_equal(@@repo.get_head(), remote_head,
+                   'Head of local repo is not same as head of remote.')
 
       assert_equal(@remote_file_contents[0], File.read(@files[0]),
                    'File contents were not preserved when cloning remote.')
@@ -292,23 +275,21 @@ class TestPushPull < Test::Unit::TestCase
   #
   def test_push_to_empty_repo
     initialize_repos
+    local_head = nil
 
     # Create and commit file 1 locally, then push to the empty remote
     in_local_repo {
       File.write(@files[0], @local_file_contents[0])
-      stage(@files[0])
-      commit(@local_commit_messages[0])
+      @@workspace.commit(@files[0])
 
-      push(@remote_url)
+      local_head = @@repo.get_head()
+      PushPull.push(@remote_url)
     }
 
     # Assert that the remote is identical to the local
     in_remote_repo {
-      assert_equal(@local_commit_messages[0], get_last_commit_message(),
-                   'Commit history was not preserved when pushing to remote.')
-
-      assert_equal([@files[0]], get_staged_files(),
-                   'List of staged files was not preserved when pushing to remote.')
+      assert_equal(@@repo.get_head(), local_head,
+                   'Head of remote repo is not same as head of local.')
 
       assert_equal(@local_file_contents[0], File.read(@files[0]),
                    'File contents were not preserved when pushing to remote.')
@@ -320,45 +301,35 @@ class TestPushPull < Test::Unit::TestCase
   #
   def test_push_to_committed_repo
     initialize_repos
+    local_head = nil
 
     # Create and commit file 1 on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
-      stage(@files[0])
-      commit(@remote_commit_messages[0])
+      @@workspace.commit(@files[0])
     }
 
     in_local_repo {
       # Pull the remote into the empty local repo
-      pull(@remote_url)
+      PushPull.pull(@remote_url)
 
       # Modify file 1 and commit the changes
       File.write(@files[0], @local_file_contents[0])
-      stage(@files[0])
-      commit(@local_commit_messages[0])
+      @@workspace.commit(@files[0])
 
       # Create and commit file 2
       File.write(@files[1], @local_file_contents[1])
-      stage(@files[1])
-      commit(@local_commit_messages[1])
+      @@workspace.commit(@files[1])
 
       # Push the changes from local to the remote
-      push(@remote_url)
+      local_head = @@repo.get_head()
+      PushPull.push(@remote_url)
     }
 
     # Assert that the commit history and staged files are correct on the remote
     in_remote_repo {
-      # Ensure the commit for changing file 1 is present
-      assert_equal(@local_commit_messages[0], get_second_to_last_commit_message(),
-                   'Commit history was not preserved when pushing to remote.')
-
-      # Ensure the commit for creating file 2 is present
-      assert_equal(@local_commit_messages[1], get_last_commit_message(),
-                   'Commit history was not preserved when pushing to remote.')
-
-      # Ensure that file 1 and 2 are staged
-      assert_equal([@files[0], @files[1]], get_staged_files(),
-                   'List of staged files was not preserved when pushing to remote.')
+      assert_equal(@@repo.get_head(), local_head,
+                   'Head of remote repo is not same as head of local.')
 
       # Ensure the changes to file 1 were merged correctly
       assert_equal(@local_file_contents[0], File.read(@files[0]),
@@ -379,20 +350,18 @@ class TestPushPull < Test::Unit::TestCase
     # Create and stage file 1 with uncommitted changes on the remote
     in_remote_repo {
       File.write(@files[0], @remote_file_contents[0])
-      stage(@files[0])
     }
 
     # Create and commit file 1 locally
     in_local_repo {
       File.write(@files[0], @local_file_contents[0])
-      stage(@files[0])
-      commit(@local_commit_messages[0])
+      @@workspace.commit(@files[0])
     }
 
     # Assert that pushing to the remote with uncommitted changes raises an exception
     in_local_repo {
       assert_raise do
-        push(@remote_url)
+        PushPull.push(@remote_url)
       end
     }
   end
