@@ -52,10 +52,14 @@ module PushPull
   # An exception is raised if the user needs to pull before they can push.
   #
   # @param [string] remote The address of the remote machine to connect to.
+  #                        For example: 127.0.0.1:/path/to/repo
   # @param [string] branch The name of the branch to push to.
   # 
   def self.push(remote, branch)
-    self.connect(remote, path) { |ssh|
+    # Splits 127.0.0.1:/path/to/repo into 127.0.0.1 and /path/to/repo
+    address, path = remote.split(':', 2)
+
+    self.connect(address, path) { |ssh|
       remote_head = ssh.exec! "oct get_head #{branch}"
 
       local_changes = @@repo.get_latest_snapshots(remote_head)
@@ -75,10 +79,14 @@ module PushPull
   # An exception is raised if the remote does not have the local HEAD in its history
   #
   # @param [string] remote The address of the remote machine to connect to.
+  #                        For example: 127.0.0.1:/path/to/repo
   # @param [string] branch The name of the branch to pull.
   # 
   def self.pull(remote, branch)
-    self.connect(remote, path) { |ssh|
+    # Splits 127.0.0.1:/path/to/repo into 127.0.0.1 and /path/to/repo
+    address, path = remote.split(':', 2)
+
+    self.connect(address, path) { |ssh|
       pull_with_connection(remote, path, ssh)
     }
   end
@@ -87,11 +95,10 @@ module PushPull
   # An exception is raised if the remote does not have the local HEAD in its history,
   # or if the given branch does not exist locally or on the remote.
   #
-  # @param [string] remote The address of the remote machine to connect to.
   # @param [string] branch The name of the branch to pull.
   # @param [Net::SSH] ssh The ssh connection object to use.
   #
-  def pull_with_connection(remote, branch, ssh)
+  def pull_with_connection(branch, ssh)
     local_head = @@repo.get_head(branch)
 
     # Calling either of these `oct func` methods updates
@@ -102,7 +109,7 @@ module PushPull
         raise 'Remote has no commit history'
       end
     else
-      # Get the history since our latet local snapshot
+      # Get the history since our latest local snapshot
       if ssh.exec! "oct func get_latest_snapshot #{local_head}" == 'error'
         raise 'Local commit history is not present on remote'
       end
