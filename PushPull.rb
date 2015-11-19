@@ -56,7 +56,7 @@ module PushPull
   # 
   def self.push(remote, branch)
     self.connect(remote, path) { |ssh|
-      remote_head = ssh.exec! "oct get_branch_head #{branch}"
+      remote_head = ssh.exec! "oct get_head #{branch}"
 
       local_changes = @@repo.get_latest_snapshots(remote_head)
 
@@ -92,7 +92,7 @@ module PushPull
   # @param [Net::SSH] ssh The ssh connection object to use.
   #
   def pull_with_connection(remote, branch, ssh)
-    local_head = @@repo.get_branch_head(branch)
+    local_head = @@repo.get_head(branch)
 
     # Calling either of these `oct func` methods updates
     # the #{@@dvcs_dir}/communication/text_file file on the remote
