@@ -138,8 +138,6 @@ module PushPull
     Dir.chdir(directory_name)
     @@repo.init()
 
-    # TODO This is where we'd set up the origin remote
-    
     self.connect(remote, path) { |ssh|
       # Obtain a list of branches on the remote
       branches = JSON.parse(ssh.exec! "cat #{@@dvcs_dir}/repo/branches")
