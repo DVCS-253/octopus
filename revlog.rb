@@ -61,72 +61,136 @@ class Revlog
 		return ((file1 - file2) + (file2-file1)).join("")
 	end
 
-	def merge(ancestor_id = nil, file_id1, file_id2)
+	def merge(file_id1, file_id2, ancestor_id = nil)
 		# file1 = get_file(file_id1)
 		# file2 = get_file(file_id2)
 		file1 = File.open(File.basename(file_id1)) #Remove
 		file2 = File.open(File.basename(file_id2)) #Remove
 
-		merged = File.new("merging", "w")
 		if file1 == nil or file2 == nil
 			raise "No such file"
 		end
 
 		if ancestor_id == nil
 			return add_file(merge_without_ancestor(file1, file2))
-
-		return add_file(merged)
-
-	def merge_without_ancestor(file1, file2)
-		file1_lines = Hash.new(false)
-		file2_lines = Hash.new(false)
-
-		file1.each_line {|line| file1_lines[line] = true}
-		file2.each_line {|line| file2_lines[line] = true}
-
-		filename1 = File.basename(file1)
-		filename2 = File.basename(file2)
-
-		file1.rewind
-		file2.rewind
-
-		#helper function
-		write_merge = lambda do |merged, file, name, line, otherline, table|
-			merged.puts ">>" + name
-			while (line != otherline) and !file.eof?
-				merged.puts "\t" + line
-				line = file.readline
-				table[line] = false
-			end
 		end
 
-		while !file1.eof? and !file2.eof?
-			line1 = file1.readline
-			line2 = file2.readline
-			if(line1 == line2)
-				merged.puts line1
-				file1_lines[line1] = false
-				file2_lines[line2] = false
-			elsif(file1_lines[line2])
-				write_merge.call(merged, file1, filename1, line1, line2, file1_lines)
-			elsif(file2Lines[line1])
-				write_merge.call(merged, file2, filename2, line2, line1, file2_lines)
-			else
-				write_merge.call(merged, file1, filename1, line1, line2, file1_lines)
-				write_merge.call(merged, file2, filename2, line2, line1, file2_lines)
+		# ancestor_file = get_file(ancestor_id)
+		ancestor_file = File.open(File.basename(ancestor_id)) #Remove
+
+		#keep files as list
+		files = [ancestor_file, file1, file2]
+		#keep conflict output as list
+		filenames = [File.basename(ancestor_file),"<"*8 + File.basename(file1), ">"*8 + File.basename(file2)]
+
+		merged = File.new("merging", "w")
+		loop do
+			lines = files.map {|file| file.readline unless file.eof?}
+
+			#helper funcs
+			#writes to merged and updates line info
+			write_merge = lambda { |i|
+				while (lines[i] != lines[0])
+					merged.puts lines[i]
+					files[i].eof? ? break : lines[i] = files[i].readline
+				end }
+			#writes conflict tag to merged
+			conflict_write = lambda { |i| merged.puts filenames[i]}
+
+			# puts lines #print
+
+			if lines.all? {|line| line == lines[0]} #no change
+				# puts "no" #print
+			elsif lines[2] == lines[0] 				#extra lines file 1
+				# puts "file 1" #print
+				write_merge.call(1)
+			elsif lines[1] == lines[0] 				#extra lines file 2
+				# puts "file 2" #print
+				write_merge.call(2)
+			else 									#conflict
+				# puts "con" #print
+				conflict_write.call(1)
+				write_merge.call(1)
+				merged.puts "="*8
+				write_merge.call(2)
+				conflict_write.call(2)
 			end
+			break if files.all? {|file| file.eof?}
+			merged.puts lines[0]
+			# puts "-" #print
+		end
+		return add_file(merged)
+	end
+
+	def merge_without_ancestor(file1, file2)
+		#keep files as hash
+		files = {1 => file1, 2 => file2}
+		#hash of file lines, for each file
+		file_lines = {1 => Hash.new(false), 2 => Hash.new(false)}
+
+		#initialize hash
+		files.each {|i, file|
+			file_lines[i][nil] = true
+			file.each {|line| file_lines[i][line] = true}}
+		#reset files
+		files.each {|i, file| file.rewind}
+
+		#keep conflict outputs as hash
+		filenames = {1 => "<"*8 + File.basename(file1), 2 => ">"*8 + File.basename(file2)}
+
+		merged = File.new("merged", "w")
+		# puts "------" #print
+		loop do
+			lines = files.map {|i, file| [i, file.readline] unless file.eof?}.delete_if {|x| x ==nil}
+			lines = lines.to_h
+
+			#helper funcs
+
+			#writes to merged and updates line info and line hash
+			write_merge = lambda { |i|
+				while (!file_lines[~i+4][lines[i]])
+					merged.puts lines[i]
+					file_lines[i][lines[i]] = false
+					files[i].eof? ? break : lines[i] = files[i].readline
+				end }
+			#writes conflict tag to merged
+			conflict_write = lambda { |i| merged.puts filenames[i]}
+
+			# puts lines #print
+
+			if(lines[1] == lines[2])		#no change
+				# puts "no" #print
+				file_lines.each {|i, file_table| file_table[lines[i]] = false}
+			elsif(file_lines[1][lines[2]])	#extra lines file 1
+				write_merge.call(1)
+				# puts "file 1" #print
+			elsif(file_lines[2][lines[1]])	#extra lines file 2
+				# puts "file 2" #print
+				write_merge.call(2)
+			else							#conflict
+				# puts "con" #print
+				conflict_write.call(1)
+				write_merge.call(1)
+				merged.puts "="*8 
+				write_merge.call(2)
+				conflict_write.call(2)
+			end
+			# puts "-" #print
+			break if files.all? {|i, file| file.eof?}
+			merged.puts lines[1]
 		end
 		return merged
 	end
 
 	def test()
-		a = File.new("file1.txt","w")
-		b = File.new("file2.txt", "w")
-		a.puts "first\nfile\nanarchy"
-		b.puts "file\nanarchy\nNaNarchy"
+		a = File.open("file1.txt")
+		b = File.open("file2.txt")
+		c = File.open("ances.txt")
 		a.close
 		b.close
-		merge(0,a,b)
+		c.close
+		merge(a,b,c)
+		merge(a,b)
 	end
 end
 
