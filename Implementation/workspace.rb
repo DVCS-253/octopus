@@ -94,4 +94,71 @@ class Workspace
 		#return 1					###Original implementation!!!
 		return results 					#for testing
 	end
+
+
+
+
+	def status()
+		add = []
+		delete = []
+		update = []
+		rename = []
+		#head = Repos.get_head(branch)						###Original implementation!!!
+		#snapshot = Repos.restore_snapshot(head)				###Original implementation!!!
+		#file_lst = snapshot.file_list()
+		#file_hash = snapshot.file_hash()
+	
+		file_lst = ['test1.txt', 'test2.txt', 'text3.txt']
+		file_hash = {'test1.txt' => 1, 'test2.txt' => 1, 'test3.txt' => 1} 	
+
+		workspace_files = []
+		all_files = Dir.glob('.octopus/*')
+		all_files.each do |f|
+			if f != '.octopus/revlog' and f != '.octopus/repo' and f != '.octopus/communication'
+				workspace_files.push(f)
+			end
+		end
+		workspace_hash = {}
+		workspace_files.each do |f|
+			#workspace_hash[f] = Revlog.hash(f)			###Original implementation!!!
+			workspace_hash[f] = 1
+
+			if file_hash.has_key?(f)
+				if not file_hash[f] == workspace_hash[f]
+					update.push[f]
+				end
+			else
+				rename_flag = false
+				file_hash.each do |g|
+					if file_hash[g] = workspace_hahs[f]
+						rename_flag = true
+						break
+					end
+				end
+				if rename_flag
+					rename.push[f]
+				else
+					add.push[f]
+				end
+			end
+		end
+		file_hash.each do |f|
+			if not workspace_files.hash_key?(f)
+				rename_flag = false
+				workspace_hash.each do |g|
+					if file_hash[g] = workspace_hash[g]
+						rename_flag = true
+						break
+					end
+				end
+				if rename_flag
+					rename.push[f]
+				else
+					delete.push[f]
+				end
+			end
+		end
+		return add, delete, update, rename
+	end
+
 end
