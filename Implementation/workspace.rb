@@ -47,7 +47,7 @@ class Workspace
 		#head = Repos.get_head(branch)			###Original implementation!!!
 		#check_out_snapshot(head)			###Original implementation!!!
 
-		check_out_snapshot(1) #for testing
+		check_out_snapshot(1) 				#for testing
 		return 0	
 	end
 
