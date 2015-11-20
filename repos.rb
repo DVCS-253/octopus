@@ -2,7 +2,7 @@
 # Repos implementation
 # 11/18/2015 
 
-require_relative 'revlog'
+# require_relative 'revlog'
 require 'json'
 
 # For Tree structrue
@@ -41,16 +41,18 @@ class Tree
 end
 
 class Snapshot
-	attr_accessor :snapshot_ID, :repos_hash, :parent, :child, :root, :commit_time, :branch_name
+	attr_accessor :snapshot_ID, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD, :branches
 
 	def initialize(snapshot_ID)
 		@snapshot_ID = snapshot_ID
 		@repos_hash = Hash.new
 		@parent = Array.new
 		@child = Array.new
-		@root = nil
+		@root = false
 		@commit_time = Time.new
 		@branch_name = "Master"
+		@branch_HEAD = false
+		@branches = Array.new
 	end
 
 	def add_child(node)
@@ -84,69 +86,103 @@ class Repos
 
 	############################################################################
 
-	# Initialize the repos directory
+	# Initialize the repo directory
 
-	def init()
+	def init
+
+		# For testing
+		# Dir.mkdir("/Users/haochen/Desktop/test/.octopus")
+		# Dir.mkdir("/Users/haochen/Desktop/test/.octopus/repo")
+
+		# Created .octopus/repo on current directory
+		Dir.mkdir(File.join(Dir.pwd, ".octopus"), 0700)
 		Dir.mkdir(File.join(Dir.pwd, ".octopus/repo"), 0700)
+		Dir.mkdir(File.join(Dir.pwd, ".octopus/communication"), 0700)
+		$repo_dir = File.join(Dir.pwd, ".octopus/repo")
+		$comm_dir = File.join(Dir.pwd, ".octopus/communication")
+		# Created snapshot_tree
 		$snapshot_tree = Tree.new
+
+		# Marshal dump
+		$store_dir = File.join($repo_dir, "store")
+		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
+		# $last_commit is HEAD
 		$last_commit = Snapshot.new(nil)
+
 	end
 
-
-	# make_snapshot function
-	# files_to_be_commits will be a list with file names
-	# Read the latest commit
-
+	
+	# First Read the latest commit(HEAD)
 	# if nil, which means this is the first commit
-	# which will be the root of the tree
-	# Set snapshot ID to 1 and make .root = true
+	# So this snapshot will be the root fo the tree
+	# Set snapshot ID to 1 and make root = true
 
 	# if not nil, make this commit be the child of 
 	# last commit on this branch
 
+	# files_to_be_commits is a list of files ex.["/path/a.rb", "/path/b.rb", "/path/c.rb"]
+	# hashtable in each snapshot will be this format:
+	#   -------------------------------------------
+	#  |"a.rb" => "file_id of a.rb get from Revlog"|
+	#  |"b.rb" => "file_id of b.rb get from Revlog"|
+	#  |"c.rb" => "file_id of c.rb get from Revlog"|
+	#   -------------------------------------------
+
 	def make_snapshot(files_to_be_commits)
-		if $last_commit == nil
+		if $last_commit.snapshot_ID == nil
 			snapshot = $snapshot_tree.add_snapshot(1)
+			# Record commit time of this commit
 			snapshot.commit_time = Time.now
 			snapshot.root = true
 			$last_commit = snapshot
 		else
-
 			# latest_branch is the latest commit on this branch
-			r_ids = snapshots.reverse
+			# which means find last appearance snapshot with current branch name
+			# just reverse array and find first appearance 
+			r_ids = $snapshot_tree.snapshots.reverse
 			latest_branch = r_ids.find{|x| x.branch_name == $current_branch}
 
 			# add one on last snapshot_ID to make a new one
-			snapshot = $snapshot_tree.add_snapshot($last_commit + 1)
-			# save commit time
+			snapshot = $snapshot_tree.add_snapshot($last_commit.snapshot_ID + 1)
+			# Record commit time of this commit
 			snapshot.commit_time = Time.now
+
 			latest_branch.add_child(snapshot)
 			snapshot.add_parent(latest_branch)
-			latest_branch = snapshot
+			# Then $last_commit(HEAD) becomes this snapshot
+			$last_commit = snapshot
 		end
-		for file_title in files_to_be_commits
-			# Call add_file_content in revlog to add file
-			snapshot.repos_hash[file_title] = add_file_content(File.read(file_title))
+		for file in files_to_be_commits
+			# get basename, like "a.rb"
+			file_name = File.basename(file)
+			# send contents of each file and get file_id from Revlog
+			# Save to hash with it's basename
+			snapshot.repos_hash[file_name] = Revlog.add_file(File.read(file))
 		end
+		return snapshot.snapshot_ID
 	end
 
 	# returns a specific snapshot
 
 	def restore_snapshot(snapshot_ID)
 
-		snapshot = find_snapshot(snapshot_ID)
-		# put file_id into file_id_lists
-		snapshot.repos_hash.each do |name, id|
-			file_id_lists << id
-		end
-		return file_id_lists
+		snapshot = $snapshot_tree.find_snapshot(snapshot_ID)
+		
+		# # put file_id into file_id_lists
+		# file_id_lists = Array.new
+		# snapshot.repos_hash.each do |file_dir, file_id|
+		# 	file_id_lists << file_id
+		# end
+
+		return snapshot
 	end
 
 	# returns all parents of certain node_id
 
 	def history(snapshot_ID)
 		# First find that snapshot
-		snapshot = find_snapshot(snapshot_ID)
+		snapshot = $snapshot_tree.find_snapshot(snapshot_ID)
+		list_of_snapshots = Array.new
 		history_helper(snapshot)
 		# add root snapshot_id, which is 1 to list of ids.
 		list_of_snapshots << 1
@@ -157,6 +193,7 @@ class Repos
 		return list_of_snapshots
 	end
 
+	# helper to find all histories
 	def history_helper(snapshot)
 		while snapshot.root != true
 			# If only one parent, just add it to list
@@ -172,58 +209,64 @@ class Repos
 		end
 	end
 
-	# Make 2 children 
-	def make_branch(snapshot_ID, name)
-		snapshot = findNode(snapshot_ID)
-		# If snapshot ID is 5, then two branches will be 51 and 52
-		snapshot_master = snapshot.add_snapshot(snapshot_ID*10 + 1)
-		snapshot_branch = snapshot.add_snapshot(snapshot_ID*10 + 2)
-		# save time
-		snapshot_master.commit_time = Time.now
-		snapshot_branch.commit_time = Time.now
-		# copy hash table
-		snapshot_master.repos_hash = snapshot.repos_hash
-		snapshot_branch.repos_hash = snapshot.repos_hash
-		# record branch name
-		snapshot_branch.branch_name = name
-		# Switch to the branch just created
-		$current_branch = name
+	# Make 1 child from current HEAD 
+	def make_branch(branch_name)
 
-
-		snapshot_branch_master.add_parent(snapshot)
-		snapshot_branch_branch.add_parent(snapshot)
-		snapshot.add_child(snapshot_branch_master)
-		snapshot.add_child(snapshot_branch_master)
-
-		jhash = {"#{branch_name}" => "#{snapshot_ID}"}
-		File.open(".oct/branch/branches", "w") do |f|
+		# Make a Json file in repo named "branches.json"
+		json_dir = File.join(repo_dir, "branches.json")
+		# Record branch_nam and HEAD's snapshot_ID
+		jhash = {"#{branch_name}" => "#{$last_commit.snapshot_ID}"}
+		File.open(json_dir, "w") do |f|
 			f.write(jhash.to_json)
 		end
+
+		snapshot_branch = $snapshot_tree.add_snapshot($last_commit.snapshot_ID + 1)
+		snapshot_branch.branch_name = branch_name
+		snapshot_branch.branch_HEAD = true
+
+		$last_commit.add_child(snapshot_branch)
+		snapshot_branch.add_parent($last_commit)
+		snapshot_branch.repos_hash = $last_commit.repos_hash
+
+		$last_commit.push(branch_name)
+
+		# transfer to this branch
+		$current_branch = branch_name
+		$last_commit = snapshot_branch
 
 	end
 
 	# means delete the whole branch? 
-	def delete_branch(snapshot_ID)
-
-		# Find branch name with snapshot_ID
-		snapshot = findNode(snapshot_ID)
-		branch_to_delete = snapshot.branch_name
+	def delete_branch(branch_name)
 
 		# Delete all snapshots with this branch name
-		snapshots.delete{|x| x.branch_name == branch_to_delete}
+		snapshot_tree.snapshots.delete{|x| x.branch_name == branch_name}
 	end
 
-	# Leave this 
-	def diff_snapshots(node_id1, node_id2)
+	# # Leave this 
+	# def diff_snapshots(node_id1, node_id2)
 
+	# end
+
+	# If a branch_name is given, then return the branch_head ID
+	# else just return current HEAD ID
+	def get_head(branch_name=nil)
+		if branch_name.nil?
+			return $last_commit.snapshot_ID
+		else
+			head = $snapshot_tree.snapshots.find{|x| x.branch_name == branch_name || x.branch_HEAD == true}
+			return head.snapshot_ID
+		end
 	end
 
+	# save text file to .octopus/communication
 	def get_latest_snapshots(snapshot_ID)
 		snapshot = findNode(snapshot_ID)
-		this_ID = snapshot.snapshot_ID
-		latest_snaps = snapshots.find_all {|x| this_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
+		latest_snaps = snapshots.find_all {|x| snapshot_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
 
-		File.open('text_file', 'w'){ |f|
+		text_file_dir = File.join(comm_dir, "text_file")
+
+		File.open(text_file_dir, 'w'){ |f|
 			f.puts "snapshot{"
 			f.puts "	branch_name => #{snapshot.branch_name},"
 			latest_snaps.each_with_index{ |item,index|
@@ -241,6 +284,14 @@ class Repos
 			f.puts "}"
 		}
 
+	end
+
+	# return "store" in /repo
+	# Use Marshal.load to open "store"
+
+	def get_all_snapshots
+		all_snapshots = Marshal.load(File.binread($store_dir))
+		return all_snapshots
 	end
 
 	# read text_file from Push and Pull module
@@ -276,5 +327,19 @@ class Repos
 
 	end
 
+	# Get branch head
+	def get_ancestor(snapshot_ID1, snapshot_ID2)
+		snapshot1 = $snapshot_tree.find_snapshot(snapshot_ID1)
+		snapshot2 = $snapshot_tree.find_snapshot(snapshot_ID2)
+
+		ancestor = $snapshot_tree.snapshots.find{|x| x.branch_HEAD == true || x.branches.include?(snapshot1.branch_name) && x.branches.include?(snapshot2.branch_name)}
+
+		return ancestor
+
+	end
 
 end
+
+# Test
+r = Repos.new
+r.init
