@@ -2,7 +2,7 @@
 class UserInterface
 	
 	#--List of supported commands
-	SupportedCmds = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone", "update", "diff", "help"]
+	SupportedCmds = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone", "update", "diff", "get_latest_snapshot", "get_all_snapshots", "help"]
 	
 	#--Regular expressions for supported commands 
 	InitRE = "init(\s+([^\s]*))?$"
@@ -16,6 +16,9 @@ class UserInterface
 	StatusRE = "status$"
 	CloneRE = "clone\s*(\s+([^\s]+)\s*)\s*((\s+(\"[^\s]*\"))?)$"
 	DiffRE = "diff(\s+([^\s]*))?(\s+([^\s]*))$"
+	UpdateRE = "update(\s+([^\s]*))?$"
+	GetLatestSnapshotRE = "get_latest_snapshot\s*(\s+([^\s]*)\s*)*$"
+	GetAllSnapshotRE = "get_all_snapshots$"
 	
 	#--Correct usage of the commands
 	InitUsg = 'init ["directory"]'
@@ -29,6 +32,9 @@ class UserInterface
 	StatusUsg = 'status'
 	CloneUsg = 'clone repository ["directory"]'
 	DiffUsg = 'diff commit1 commit2'
+	UpdateUsg = 'update ["textfile"]'
+	GetLatestSnapshotUsg = 'get_latest_snapshot [snapshot_id]' #returns error/success
+	GetAllSnapshotUsg = 'get_all_snapshots' #returns error/success
 	
 	#Entry point of the application. Takes the 'command' from user in form of program arguments 
 	#and pass it to 'parseCommand' method after basic syntax checking<br><br>
@@ -187,6 +193,31 @@ class UserInterface
 				result = executeCommand(cmd,params)
 			else
 				result = "Incorrect format. Expected: " + DiffUsg
+			end	
+		elsif cmd == "update"
+			matched = fullCmd.match UpdateRE
+			if matched
+				params = Hash.new
+				params["textfile"] = matched[2] if matched[2]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + UpdateUsg
+			end	
+		elsif cmd == "get_latest_snapshot"
+			matched = fullCmd.match GetLatestSnapshotRE
+			if matched
+				params = Hash.new
+				params["snapshot_id"] = matched[2] if matched[2]
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + GetLatestSnapshotUsg
+			end	
+		elsif cmd == "get_all_snapshots"
+			matched = fullCmd.match GetAllSnapshotRE
+			if matched
+				result = executeCommand(cmd,params)
+			else
+				result = "Incorrect format. Expected: " + GetAllSnapshotUsg
 			end	
 		elsif cmd == "help"
 			`cat help.txt`
