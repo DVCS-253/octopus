@@ -18,7 +18,7 @@ class Workspace
 		#snapshot = Repos.restore_snapshot(snapshot_id)				###Original implementation!!!
                 #file_lst = snapshot.file_lst()						###Original implementation!!!
 		#file_hash = snapshot.file_hash()					###Original implementation!!!
-		file_lst = ['test1.txt', 'test2.txt', 'text3.txt']			#for testing
+		file_lst = ['test1.txt', 'test2.txt', 'test3.txt']			#for testing
 		file_hash = {'test1.txt' => 1, 'test2.txt' => 1, 'test3.txt' => 1} 	#for testing	
                 file_lst.each do |f|
                         path = f
@@ -81,9 +81,9 @@ class Workspace
 		end
 		#head = Repos.get_head()						###Original implementation!!!
 		#current = Repos.restore_snapshot(head)					###Original implementation!!!
-		#file_lst = current.file_lst()					###Original implementation!!!	
-		file_lst = ['Test1.txt', 'Test2.txt', 'Test3.txt']
-		file_hash = {'Test1.txt' => 2, 'Test2.txt' => 3, 'Test3.txt' => 4} 	
+		#file_lst = current.file_lst()						###Original implementation!!!	
+		file_lst = ['Test1.txt', 'Test2.txt', 'Test3.txt']			#for testing
+		file_hash = {'Test1.txt' => 2, 'Test2.txt' => 3, 'Test3.txt' => 4} 	#for testing
 		file_lst.each do |f|
 			if not results.has_key?(f)
 				results[workspace + f] = file_hash[f]
@@ -100,7 +100,7 @@ class Workspace
 	def share_value(hash, v)
 		flag = false
 		hash.each do |key, value|
-			return true if value == v
+			return key if value == v
 		end
 		return false
 	end
@@ -114,11 +114,11 @@ class Workspace
 		rename = []
 		#head = Repos.get_head(branch)						###Original implementation!!!
 		#snapshot = Repos.restore_snapshot(head)				###Original implementation!!!
-		#file_lst = snapshot.file_list()
-		#file_hash = snapshot.file_hash()
+		#file_lst = snapshot.file_list()					###Original implementation!!!
+		#file_hash = snapshot.file_hash()					###Original implementation!!!
 	
-		file_lst = ['.octopus/Test1.txt', '.octopus/test2.txt', '.octopus/Test3.txt']
-		file_hash = {'.octopus/Test1.txt' => 1, '.octopus/test2.txt' => 2, '.octopus/Test3.txt' => 3} 	
+		file_lst = ['.octopus/Test1.txt', '.octopus/test2.txt', '.octopus/Test3.txt']				#for testing
+		file_hash = {'.octopus/Test1.txt' => 1, '.octopus/test2.txt' => 2, '.octopus/Test3.txt' => 3} 		#for testing
 
 		workspace_files = []
 		all_files = Dir.glob('.octopus/*')
@@ -127,14 +127,16 @@ class Workspace
 				workspace_files.push(f)
 			end
 		end
-		#workspace_hash = {}
-		#workspace_files.each do |f|
-		#	workspace_hash[f] = Revlog.hash(f)
-		#end
-		workspace_hash = {'test1.txt' => 3, 'test2.txt' => 4, 'test3.txt' => 5} 
+		#workspace_hash = {}							###Original implementation!!!
+		#workspace_files.each do |f|						###Original implementation!!!
+		#	workspace_hash[f] = Revlog.hash(f)				###Original implementation!!!
+		#end									###Original implementation!!!
+		workspace_hash = {'.octopus/test1.txt' => 3, '.octopus/test2.txt' => 4, '.octopus/est3.txt' => 5}	#for testing 
+
+
 		workspace_files.each do |f|
 			if file_hash.has_key?(f)
-				if not file_hash[f] == workspace_hash[f]
+				if file_hash[f] != workspace_hash[f]
 					update.push(f)
 				end
 			else
@@ -145,9 +147,9 @@ class Workspace
 		end
 		file_lst.each do |f|
 			if not workspace_hash.has_key?(f)
-				rename_flag = false
-				if share_value(workspace_hash, file_hash[f])
-					rename.push(f)
+				new_name = share_value(workspace_hash, file_hash[f])
+				if new_name
+					rename.push(f + ' => ' + new_name)
 				else
 					delete.push(f)
 				end

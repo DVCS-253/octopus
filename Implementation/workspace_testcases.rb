@@ -5,6 +5,7 @@ require_relative "workspace"
 class DVCS_test < Test::Unit::TestCase
 	my_workspace = Workspace.new()
 
+
 	def test_checkout_snapshot()
 		flag = true
 		workspace = '.octopus/'
@@ -49,6 +50,7 @@ class DVCS_test < Test::Unit::TestCase
 	end
 
 
+
 	def test_commit_files()
 		workspace = '.octopus/'
 		my_workspace = Workspace.new()
@@ -61,6 +63,7 @@ class DVCS_test < Test::Unit::TestCase
 	end
 
 
+
 	def test_commit_file()
 		workspace = '.octopus/'
 		my_workspace = Workspace.new()
@@ -71,10 +74,27 @@ class DVCS_test < Test::Unit::TestCase
 		assert_equal(file_hash, answer, 'Errors, incorrect file hash table with one single file')	
 	end
 
+
+
 	def test_status()
 		workspace = '.octopus/'
 		my_workspace = Workspace.new()
 		my_workspace.init()
 		my_workspace.check_out_snapshot(1)
+		add, delete, update, rename = my_workspace.status()
+		assert_equal(add, [".octopus/test3.txt"], 'Errors, new added file list is incorrect.')
+		assert_equal(delete, [".octopus/Test1.txt"], 'Errors, deleted file list is incorrect.')
+		assert_equal(update, [".octopus/test2.txt"], 'Errors, updated files list is incorrect.')
+		assert_equal(rename,  [".octopus/Test3.txt => .octopus/test1.txt"], 'Errors, renamed file list is incorrect.')
+	end
+
+
+	def test_share_value()
+		my_workspace = Workspace.new()
+		test_hash = {'one' => 1, 'two' => 2, 'three' => 3}
+		answer = my_workspace.share_value(test_hash, 1)
+		assert_equal(answer, 'one')
+		answer = my_workspace.share_value(test_hash, 4)
+		assert_equal(answer, false)
 	end
 end
