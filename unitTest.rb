@@ -25,7 +25,8 @@ class Tests < Test::Unit::TestCase
 	###########
 	def teardown
 		# Destroy test files
-		FileUtils.rm_f(['test1.txt', 'test2.txt'])
+		ObjectSpace.each_object(File) {|f| f.close unless f.closed?} #close loose files
+		File.delete('test1.txt','test2.txt')
 	end
 
 
