@@ -1,14 +1,10 @@
 require 'fileutils'
-require_relative 'ReLog'
-require_relative 'Repos'
+#require_relative 'ReLog'
+#require_relative 'Repos'
 
 class Workspace
 
-	#intialize folders for Repos and RevLog	
-	#create .octopus/
-	#create .octopus/revlog
-	#create .octopus/repo
-	#create .octopus/communication
+
 	def init
 		Dir.mkdir('.octopus')
 		Dir.mkdir('.octopus/revlog')
@@ -17,14 +13,19 @@ class Workspace
 	end
 
 
-	def check_out_snapshot(snapshot)
-                #file_lst = snapshot.file_lst()
-		file_lst = [('test1.txt', 1), ('test2.txt', 1), ('test3.txt', 1)] #for testing
+	def check_out_snapshot(snapshot_id)
+		workspace = '.octopus/'
+		#snapshot = Repos.restore_snapshot(snapshot_id)				###Original implementation!!!
+                #file_lst = snapshot.file_lst()						###Original implementation!!!
+		#file_hash = snapshot.file_hash()					###Original implementation!!!
+		file_lst = ['test1.txt', 'test2.txt', 'text3.txt']			#for testing
+		file_hash = {'test1.txt' => 1, 'test2.txt' => 1, 'test3.txt' => 1} 	#for testing	
                 file_lst.each do |f|
-                        path, hash = f
-                        #content = RevLog.get_file(hash)
-			content = hash  #for testing
-                        writeFile(path, content)
+                        path = f
+			hash = file_hash[f]
+                        #content = RevLog.get_file(hash)				###Original implementation!!!
+			content = hash  						#for testing
+                        File.write(workspace + path, content)
                 end
 	end
 
@@ -36,66 +37,15 @@ class Workspace
 				FileUtils.rm_rf(f)
 			end
 		end	
-
-		#head = Pepos.get_head()
-		#current_snapshot = Repos.restore_snapshot(head)	
-		#check_out_snapshot(current_snapshot)
-	
-		check_out_snapshot(1)#for testing
+		#head = Pepos.get_head()  						###Original implementation!!!
+		#check_out_snapshot(head)						###Original implementation!!!
+		check_out_snapshot(1)							#for testing
 		return 0
 	end
 
-
-	
-	def commit(files = nil)
-		results = []
-		if files == nil
-			all_files = Dir.glob('.octopus/*')
-
-			all_files.each do |f|
-
-			if f != '.octopus/revlog' and f != '.octopus/repo' and f != '.octopus/communication'
-				#results.push((f, Revlog.hash(f)))
-				results.push((f, 1)) #for testing
-			end
-			#snapshot_id = Repos.make_snapshot(results)
-			#Repos.update_head(snapshot_id)	
-			#return 0
-			
-			return results #for testing
-		end
-
-
-		if files.is_a?(Array)
-			files.each do |f|
-				results.push((f, Revlog.hash(f)))
-			end
-		else
-			results.push(files, Revlog.hash(files))
-		end
-		
-		#head = Repos.get_head()
-		#current = Repos.restore_snapshot(head)
-		#current_files = current.file_lst()		
-		current_files = [('test1.txt', 1), ('test2.txt', 1), ('test3.txt', 1)] 	#for testing	
-
-		current_files.each do |f|
-			if not results.contains(f)
-				results.push(f)
-			end
-		end
-		#snapshot_id = Repost.make_snapshot(results)
-		#Repost.update_head(snapshot_id)
-		#return 1
-		return results #for testing
-	end
-
-
-
 	def check_out(branch)
-		#head = Repos.get_head(branch)
-		#snapshot = Repost.restore_snapshot(head)
-		#check_out_snapshot(snapshot)
+		#head = Repos.get_head(branch)			###Original implementation!!!
+		#check_out_snapshot(head)			###Original implementation!!!
 
 		check_out_snapshot(1) #for testing
 		return 0	
@@ -103,46 +53,45 @@ class Workspace
 
 
 
-	def status()
-		add = []
-		delete = []
-		update = []
-		rename = []
-		#head = Repos.get_head(branch)
-		#snapshot = Repos.restore_snapshot(head)
-		#current_files = snapshot.file_lst()	
-	
-		current_files = [('test1.txt', 1), ('test2.txt', 1), ('test3.txt', 1)] 	#for testing	
-
-		current_path = []
-		current_hash = []
-		current_files.each do |f|
-			path, hash = f
-			current_path.push(path)
-			current_hash.push(hash)
-		end
-		workspace_files = Dir.glob('.')
-		workspace_hash = []
-		workspace_files.each do |f|
-			workspace_hash.push(RevLog.hash(f))
-			if not current_files.contains(f)
-				add.push(f)
-			else
-				if not current_hash.contains(RevLog.hash(f))
-					update.push(f)
+		
+	def commit(files = nil)
+		workspace = '.octopus/'
+		results = {}
+		if files == nil
+			all_files = Dir.glob('.octopus/*')
+			all_files.each do |f|
+				if f != '.octopus/revlog' and f != '.octopus/repo' and f != '.octopus/communication'
+					#results[f] = Revlog.hash(f)		###Original implementation!!!
+					results[f] = 1				#for testing
 				end
 			end
+			#snapshot_id = Repos.make_snapshot(results) 	###Original implementation!!!
+			#Repos.update_head(snapshot_id)			###Original implementation!!!
+			#return 0  					###Original implementation!!!
+			return results 					#for testing
 		end
-		current_files.each do |f|
-			if not workspace_files.contains(f)
-				if not workspace_hash.contains(RevLog.hash(f))
-					delete.push(f)
-				else
-					rename.push(f)
-				end
+		if files.is_a?(Array)
+			files.each do |f|
+				#results[f] = Revlog.hash(f)		###Original implementation!!!
+				results[f] = 1				#for testing
+			end
+		else
+			#results[files] = Revlog.hash(files)		###Original implementation!!!
+			results[files] = 1				#for testing
+		end
+		#head = Repos.get_head()						###Original implementation!!!
+		#current = Repos.restore_snapshot(head)					###Original implementation!!!
+		#file_lst = current.file_lst()					###Original implementation!!!	
+		file_lst = ['Test1.txt', 'Test2.txt', 'Test3.txt']
+		file_hash = {'Test1.txt' => 2, 'Test2.txt' => 3, 'Test3.txt' => 4} 	
+		file_lst.each do |f|
+			if not results.has_key?(f)
+				results[workspace + f] = file_hash[f]
 			end
 		end
-		return add, delete, update, rename
+		#snapshot_id = Repost.make_snapshot(results)	###Original implementation!!!
+		#Repost.update_head(snapshot_id)		###Original implementation!!!
+		#return 1					###Original implementation!!!
+		return results 					#for testing
 	end
-
 end
