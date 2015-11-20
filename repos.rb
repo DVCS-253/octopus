@@ -14,12 +14,13 @@ require 'json'
 
 class Tree
 	# $last_commit = nil
-	$current_branch = "Master"
+	# $current_branch = "Master"
 
-	attr_accessor :snapshots
+	attr_accessor :snapshots, :current_branch
 
 	def initialize()
 		@snapshots = Array.new
+		@current_branch = "Master"
 	end	
 
 	def find_snapshot(snapshot_ID)
@@ -146,7 +147,7 @@ class Repos
 			# which means find last appearance snapshot with current branch name
 			# just reverse array and find first appearance 
 			r_ids = $snapshot_tree.snapshots.reverse
-			latest_branch = r_ids.find{|x| x.branch_name == $current_branch}
+			latest_branch = r_ids.find {|x| x.branch_name == snapshot_tree.current_branch}
 
 			# add one on last snapshot_ID to make a new one
 			snapshot = $snapshot_tree.add_snapshot($head + 1)
@@ -246,7 +247,7 @@ class Repos
 		head_snapshot.branches.push(branch_name)
 
 		# transfer to this branch
-		$current_branch = branch_name
+		$snapshot_tree.current_branch = branch_name
 		head_snapshot = snapshot_branch
 		$head = head_snapshot.snapshot_ID
 
