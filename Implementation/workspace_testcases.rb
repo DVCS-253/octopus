@@ -39,6 +39,7 @@ class DVCS_test < Test::Unit::TestCase
 	def test_commit_nil()
 		workspace = '.octopus/'
 		my_workspace = Workspace.new()
+		my_workspace.init()
 		File.write(workspace + 'test1.txt', '1')
 		File.write(workspace + 'test2.txt', '1')
 		File.write(workspace + 'test3.txt', '1')
@@ -51,6 +52,7 @@ class DVCS_test < Test::Unit::TestCase
 	def test_commit_files()
 		workspace = '.octopus/'
 		my_workspace = Workspace.new()
+		my_workspace.init()
 		File.write(workspace + 'test1.txt', '1')
 		File.write(workspace + 'test2.txt', '1')
 		file_hash = my_workspace.commit([workspace + 'test1.txt', workspace + 'test2.txt'])
@@ -62,9 +64,17 @@ class DVCS_test < Test::Unit::TestCase
 	def test_commit_file()
 		workspace = '.octopus/'
 		my_workspace = Workspace.new()
+		my_workspace.init()
 		File.write(workspace + 'test1.txt', '1')
 		file_hash = my_workspace.commit([workspace + 'test1.txt', workspace + 'test2.txt'])
 		answer = {".octopus/test1.txt"=>1, ".octopus/Test1.txt"=>2, ".octopus/Test2.txt"=>3, ".octopus/Text3.txt"=>nil}
 		assert_equal(file_hash, answer, 'Errors, incorrect file hash table with one single file')	
+	end
+
+	def test_status()
+		workspace = '.octopus/'
+		my_workspace = Workspace.new()
+		my_workspace.init()
+		my_workspace.check_out_snapshot(1)
 	end
 end
