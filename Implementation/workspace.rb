@@ -18,10 +18,12 @@ class Workspace
 
 
 	def check_out_snapshot(snapshot)
-                file_lst = snapshot.file_lst()
+                #file_lst = snapshot.file_lst()
+		file_lst = [('test1.txt', 1), ('test2.txt', 1), ('test3.txt', 1)] #for testing
                 file_lst.each do |f|
                         path, hash = f
-                        content = RevLog.get_file(hash)
+                        #content = RevLog.get_file(hash)
+			content = hash  #for testing
                         writeFile(path, content)
                 end
 	end
@@ -34,9 +36,12 @@ class Workspace
 				FileUtils.rm_rf(f)
 			end
 		end	
-		head = Pepos.get_head()
-		current_snapshot = Repos.restore_snapshot(head)	
-		check_out(current_snapshot)
+
+		#head = Pepos.get_head()
+		#current_snapshot = Repos.restore_snapshot(head)	
+		#check_out_snapshot(current_snapshot)
+	
+		check_out_snapshot(1)#for testing
 		return 0
 	end
 
@@ -45,13 +50,19 @@ class Workspace
 	def commit(files = nil)
 		results = []
 		if files == nil
-			all_files = Dir.glob('.')
+			all_files = Dir.glob('.octopus/*')
+
 			all_files.each do |f|
-				results.push((f, Revlog.hash(f)))
+
+			if f != '.octopus/revlog' and f != '.octopus/repo' and f != '.octopus/communication'
+				#results.push((f, Revlog.hash(f)))
+				results.push((f, 1)) #for testing
 			end
-			snapshot_id = Repos.make_snapshot(results)
-			Repos.update_head(snapshot_id)	
-			return 0
+			#snapshot_id = Repos.make_snapshot(results)
+			#Repos.update_head(snapshot_id)	
+			#return 0
+			
+			return results #for testing
 		end
 
 
@@ -63,27 +74,33 @@ class Workspace
 			results.push(files, Revlog.hash(files))
 		end
 		
-		head = Repos.get_head()
-		current = Repos.restore_snapshot(head)
-		current_files = current.file_lst()		
-		
+		#head = Repos.get_head()
+		#current = Repos.restore_snapshot(head)
+		#current_files = current.file_lst()		
+		current_files = [('test1.txt', 1), ('test2.txt', 1), ('test3.txt', 1)] 	#for testing	
+
 		current_files.each do |f|
 			if not results.contains(f)
 				results.push(f)
 			end
 		end
-		snapshot_id = Repost.make_snapshot(results)
-		Repost.update_head(snapshot_id)
-		return 1
+		#snapshot_id = Repost.make_snapshot(results)
+		#Repost.update_head(snapshot_id)
+		#return 1
+		return results #for testing
 	end
+
 
 
 	def check_out(branch)
-		head = Repos.get_head(branch)
-		snapshot = Repost.restore_snapshot(head)
-		check_out_snapshot(snapshot)
+		#head = Repos.get_head(branch)
+		#snapshot = Repost.restore_snapshot(head)
+		#check_out_snapshot(snapshot)
+
+		check_out_snapshot(1) #for testing
 		return 0	
 	end
+
 
 
 	def status()
@@ -91,9 +108,12 @@ class Workspace
 		delete = []
 		update = []
 		rename = []
-		head = Repos.get_head(branch)
-		snapshot = Repos.restore_snapshot(head)
-		current_files = snapshot.file_lst()	
+		#head = Repos.get_head(branch)
+		#snapshot = Repos.restore_snapshot(head)
+		#current_files = snapshot.file_lst()	
+	
+		current_files = [('test1.txt', 1), ('test2.txt', 1), ('test3.txt', 1)] 	#for testing	
+
 		current_path = []
 		current_hash = []
 		current_files.each do |f|
