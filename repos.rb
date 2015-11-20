@@ -13,7 +13,7 @@ require 'json'
 # parent(last commit), child (next commit)
 
 class Tree
-	$last_commit = nil
+	# $last_commit = nil
 	$current_branch = "Master"
 
 	attr_accessor :snapshots
@@ -100,6 +100,7 @@ class Repos
 		Dir.mkdir(File.join(Dir.pwd, ".octopus/communication"), 0700)
 		$repo_dir = File.join(Dir.pwd, ".octopus/repo")
 		$comm_dir = File.join(Dir.pwd, ".octopus/communication")
+		$head_dir = File.join(repo_dir, ".octopus/head")
 		# Created snapshot_tree
 		$snapshot_tree = Tree.new
 
@@ -107,7 +108,8 @@ class Repos
 		$store_dir = File.join($repo_dir, "store")
 		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 		# $last_commit is HEAD
-		$last_commit = Snapshot.new(nil)
+		# $last_commit = Snapshot.new(nil)
+		File.open(head_dir, 'w'){ |f| f.write ("0")}
 
 	end
 
@@ -130,13 +132,15 @@ class Repos
 
 	def make_snapshot(files_to_be_commits)
 		$snapshot_tree = Marshal.load(File.binread($store_dir))
+		$head = File.open(head_dir, 'r'){|f| f.read}
 
-		if $last_commit.snapshot_ID == nil
+		if $head == 0
 			snapshot = $snapshot_tree.add_snapshot(1)
 			# Record commit time of this commit
 			snapshot.commit_time = Time.now
 			snapshot.root = true
-			$last_commit = snapshot
+			File.open(head_dir, 'w'){ |f| f.write ("1")}
+
 		else
 			# latest_branch is the latest commit on this branch
 			# which means find last appearance snapshot with current branch name
@@ -145,14 +149,14 @@ class Repos
 			latest_branch = r_ids.find{|x| x.branch_name == $current_branch}
 
 			# add one on last snapshot_ID to make a new one
-			snapshot = $snapshot_tree.add_snapshot($last_commit.snapshot_ID + 1)
+			snapshot = $snapshot_tree.add_snapshot($head + 1)
 			# Record commit time of this commit
 			snapshot.commit_time = Time.now
 
 			latest_branch.add_child(snapshot)
 			snapshot.add_parent(latest_branch)
-			# Then $last_commit(HEAD) becomes this snapshot
-			$last_commit = snapshot
+			# Then head becomes this snapshot' ID
+			File.open(head_dir, 'w'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		end
 		for file in files_to_be_commits
 			# get basename, like "a.rb"
@@ -220,28 +224,34 @@ class Repos
 	def make_branch(branch_name)
 
 		$snapshot_tree = Marshal.load(File.binread($store_dir))
+		$head = File.open(head_dir, 'r'){|f| f.read}
 		# Make a Json file in repo named "branches.json"
 		json_dir = File.join(repo_dir, "branches.json")
 		# Record branch_nam and HEAD's snapshot_ID
-		jhash = {"#{branch_name}" => "#{$last_commit.snapshot_ID}"}
+		jhash = {"#{branch_name}" => "#{$head}"}
 		File.open(json_dir, "w") do |f|
 			f.write(jhash.to_json)
 		end
 
-		snapshot_branch = $snapshot_tree.add_snapshot($last_commit.snapshot_ID + 1)
+		snapshot_branch = $snapshot_tree.add_snapshot($head + 1)
 		snapshot_branch.branch_name = branch_name
 		snapshot_branch.branch_HEAD = true
 
-		$last_commit.add_child(snapshot_branch)
-		snapshot_branch.add_parent($last_commit)
-		snapshot_branch.repos_hash = $last_commit.repos_hash
+		head_snapshot = $snapshot_tree.find_snapshot($head)
 
-		$last_commit.push(branch_name)
+		head_snapshot.add_child(snapshot_branch)
+		snapshot_branch.add_parent(head_snapshot)
+		snapshot_branch.repos_hash = head_snapshot.repos_hash
+
+		head_snapshot.branches.push(branch_name)
 
 		# transfer to this branch
 		$current_branch = branch_name
-		$last_commit = snapshot_branch
+		head_snapshot = snapshot_branch
+		$head = head_snapshot.snapshot_ID
 
+		# update "head" and "store"
+		File.open(head_dir, 'w'){ |f| f.write ("#{head}")}
 		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 
 
@@ -263,10 +273,10 @@ class Repos
 	# If a branch_name is given, then return the branch_head ID
 	# else just return current HEAD ID
 	def get_head(branch_name=nil)
-
+		$head = File.open(head_dir, 'r'){|f| f.read}
 		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		if branch_name.nil?
-			return $last_commit.snapshot_ID
+			return $head
 		else
 			head = $snapshot_tree.snapshots.find{|x| x.branch_name == branch_name || x.branch_HEAD == true}
 			return head.snapshot_ID
@@ -327,14 +337,14 @@ class Repos
 	# handle merging two files 
 	# snapshot_ID1 is the current branch 
 	def merge(ancestor_ID, snapshot_ID1, snapshot_ID2)
-
+		$head = File.open(head_dir, 'r'){|f| f.read}
 		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		# find two snapshot
 		snapshot_first = $snapshot_tree.find_snapshot(snapshot_ID1)
 		snapshot_second = $snapshot_tree.find_snapshot(snapshot_ID2)
 
 		# create new merged snapshot
-		snapshot = $snapshot_tree.add_snapshot($last_commit + 1)
+		snapshot = $snapshot_tree.add_snapshot($head + 1)
 		# record time
 		snapshot.commit_time = Time.now
 
@@ -349,8 +359,9 @@ class Repos
 		merged_hash = merged_hash.merge!(snapshot_second.repos_hash) { |key, v1, v2| Revlog.merge(v1, v2) }
 		snapshot.repos_hash = merged_hash
 
-		$last_commit = snapshot
+		$head = snapshot.snapshot_ID
 
+		File.open(head_dir, 'w'){ |f| f.write ("#{head}")}
 		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 
 		return snapshot.snapshot_ID
