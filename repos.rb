@@ -1,6 +1,6 @@
 # CSC 253 - DVCS Project 
 # Repos implementation
-# 11/18/2015 
+# 11/20/2015 
 
 # require_relative 'revlog'
 require 'json'
@@ -129,6 +129,8 @@ class Repos
 	#   -------------------------------------------
 
 	def make_snapshot(files_to_be_commits)
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
+
 		if $last_commit.snapshot_ID == nil
 			snapshot = $snapshot_tree.add_snapshot(1)
 			# Record commit time of this commit
@@ -159,6 +161,8 @@ class Repos
 			# Save to hash with it's basename
 			snapshot.repos_hash[file_name] = Revlog.add_file(File.read(file))
 		end
+
+		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 		return snapshot.snapshot_ID
 	end
 
@@ -166,6 +170,7 @@ class Repos
 
 	def restore_snapshot(snapshot_ID)
 
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		snapshot = $snapshot_tree.find_snapshot(snapshot_ID)
 		
 		# # put file_id into file_id_lists
@@ -180,6 +185,8 @@ class Repos
 	# returns all parents of certain node_id
 
 	def history(snapshot_ID)
+
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		# First find that snapshot
 		snapshot = $snapshot_tree.find_snapshot(snapshot_ID)
 		list_of_snapshots = Array.new
@@ -212,6 +219,7 @@ class Repos
 	# Make 1 child from current HEAD 
 	def make_branch(branch_name)
 
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		# Make a Json file in repo named "branches.json"
 		json_dir = File.join(repo_dir, "branches.json")
 		# Record branch_nam and HEAD's snapshot_ID
@@ -234,23 +242,29 @@ class Repos
 		$current_branch = branch_name
 		$last_commit = snapshot_branch
 
+		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
+
+
 	end
 
 	# means delete the whole branch? 
 	def delete_branch(branch_name)
 
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		# Delete all snapshots with this branch name
-		snapshot_tree.snapshots.delete{|x| x.branch_name == branch_name}
+		$snapshot_tree.snapshots.delete{|x| x.branch_name == branch_name}
+		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 	end
 
 	# # Leave this 
 	# def diff_snapshots(node_id1, node_id2)
-
 	# end
 
 	# If a branch_name is given, then return the branch_head ID
 	# else just return current HEAD ID
 	def get_head(branch_name=nil)
+
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		if branch_name.nil?
 			return $last_commit.snapshot_ID
 		else
@@ -261,23 +275,28 @@ class Repos
 
 	# save text file to .octopus/communication
 	def get_latest_snapshots(snapshot_ID)
-		snapshot = findNode(snapshot_ID)
-		latest_snaps = snapshots.find_all {|x| snapshot_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
+
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
+		snapshot = $snapshot_tree.findNode(snapshot_ID)
+		latest_snaps = $snapshot_tree.snapshots.find_all {|x| snapshot_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
 
 		text_file_dir = File.join(comm_dir, "text_file")
 
 		File.open(text_file_dir, 'w'){ |f|
 			f.puts "snapshot{"
-			f.puts "	branch_name => #{snapshot.branch_name},"
+			f.puts "	\"branch_name\" =>"
+			f.puts "		#{snapshot.branch_name},"
 			latest_snaps.each_with_index{ |item,index|
-				f.puts "	snapshot_ID#{index+1} => #{snap.snapshot_ID}"
-				f.puts "		files =>"
+				f.puts "	\"snapshot_ID\"#{index+1} => #{snap.snapshot_ID}"
+				f.puts "		\"files\" =>"
 				i = 1
 				repos_hash.each do |title, id|
-					f.puts "			filename#{i} => #{title}"
+					f.puts "			\"filename\"#{i} => #{title}"
 					f.puts "				#{get_file(title)},"
 					i += 1
 				end
+				f.puts "		\"committed_time\" =>"
+				f.puts "			#{item.commit_time}"
 				f.puts "		},"
 
 			}
@@ -297,15 +316,22 @@ class Repos
 	# read text_file from Push and Pull module
 	# and update snapshots tree
 	def update_tree(text_file)
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
+		# something happened 
 
+
+		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 
 	end
 
-	# handle merging two files
-	def merge(snapshot_ID1, snapshot_ID2)
+	# handle merging two files 
+	# snapshot_ID1 is the current branch 
+	def merge(ancestor_ID, snapshot_ID1, snapshot_ID2)
+
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		# find two snapshot
-		snapshot_first = find_snapshot(snapshot_ID1)
-		snapshot_second = find_snapshot(snapshot_ID2)
+		snapshot_first = $snapshot_tree.find_snapshot(snapshot_ID1)
+		snapshot_second = $snapshot_tree.find_snapshot(snapshot_ID2)
 
 		# create new merged snapshot
 		snapshot = $snapshot_tree.add_snapshot($last_commit + 1)
@@ -320,8 +346,12 @@ class Repos
 		# for repos_hash,
 		# call merge in Revlog to get new hashed ID
 		merged_hash = snapshot_first.repos_hash
-		merged_hash = merged_hash.merge!(snapshot_second.repos_hash) { |key, v1, v2| merge(v1, v2) }
+		merged_hash = merged_hash.merge!(snapshot_second.repos_hash) { |key, v1, v2| Revlog.merge(v1, v2) }
 		snapshot.repos_hash = merged_hash
+
+		$last_commit = snapshot
+
+		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 
 		return snapshot.snapshot_ID
 
@@ -329,6 +359,8 @@ class Repos
 
 	# Get branch head
 	def get_ancestor(snapshot_ID1, snapshot_ID2)
+
+		$snapshot_tree = Marshal.load(File.binread($store_dir))
 		snapshot1 = $snapshot_tree.find_snapshot(snapshot_ID1)
 		snapshot2 = $snapshot_tree.find_snapshot(snapshot_ID2)
 
