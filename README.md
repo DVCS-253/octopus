@@ -25,3 +25,12 @@ Host {{{REMOTE_HOSTNAME}}}
 - Copy the contents of `~/.ssh/id_rsa-octopus-remote.pub` to `~/.ssh/authorized_keys` on the remote
 
 This is recommended for testing, because credentials are not cached and will be asked for during each test otherwise. The remote for the test cases is `127.0.0.1`.
+
+###### `PushPull.clone(remote, directory_name = nil)`
+Copies a remote repository to a new local directory. If a directory name isn't given, the name of the repository on the remote will be used.
+
+###### `PushPull.pull(remote, branch)`
+Pulls new changes from the remote repository's branch to the local repository. The remote should be formatted as `machine.address:/path/to/repo`.
+
+###### `PushPull.push(remote, branch)`
+Pushes new changes from the local repository's branch to a remote repository. The remote should be formatted as `machine.address:/path/to/repo`.
