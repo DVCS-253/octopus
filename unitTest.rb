@@ -172,6 +172,10 @@ class Tests < Test::Unit::TestCase
 		mfile2 = @revlog.add_file(merge_file2.read)
 		merge = @revlog.add_file(merged.read)
 
+		revlog_merged = @revlog.add_file(File.open('revlog_merged.rb').read)
+		revlog_old = @revlog.add_file(File.open('revlog_old.rb').read)
+		revlog_new = @revlog.add_file(File.open('revlog_new.rb').read)
+
 		assert_equal(@revlog.get_file(file1), @revlog.get_file(@revlog.merge(file1, file1)), "Self comparison failure (no ancestor)")
 		# assert_equal(@revlog.get_file(file1), @revlog.get_file(@revlog.merge(file1, file1, ancest)), "Self comparison failure (ancestor)")
 
@@ -181,7 +185,7 @@ class Tests < Test::Unit::TestCase
 		assert_equal(@revlog.get_file(merge), @revlog.get_file(@revlog.merge(file1, file2)), "Complex merge failure (no ancestor)")
 		# assert_equal(@revlog.get_file(merge), @revlog.get_file(@revlog.merge(file1, file2, ancest)), "Complex merge failure (ancestor)")
 
-		# assert_equal(@revlog.get_file(revlog_merged), @revlog.get_file(@revlog.merge(revlog_old, revlog_new)), "Intensive merge failure (no ancestor)")
+		assert_equal(@revlog.get_file(revlog_merged).force_encoding('UTF-8'), @revlog.get_file(@revlog.merge(revlog_old, revlog_new)), "Intensive merge failure (no ancestor)")
 		# assert_equal(@revlog.get_file(revlog_merged), @revlog.get_file(@revlog.merge(revlog_old, revlog_new, revlog_ances)), "Intensive merge failure (ancestor)")
 
 		#Cleanup
