@@ -1,4 +1,4 @@
-require_relative '../repos/repos'
+require_relative '../repo/repos'
 require 'io/console'
 require 'fileutils'
 require 'tempfile'
