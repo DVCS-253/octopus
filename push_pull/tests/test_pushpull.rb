@@ -80,13 +80,6 @@ class TestPushPull < Test::Unit::TestCase
   #
 
 
-  # Initializes the local and remote repositories
-  #
-  def initialize_repos
-    @@repo.init(@local_dir)
-    @@repo.init(@remote_dir)
-  end
-
   # Runs the given block inside the local repo.
   #
   def in_local_repo
@@ -109,6 +102,13 @@ class TestPushPull < Test::Unit::TestCase
     Dir.chdir(@base_dir + @clone_dir)
     yield
     Dir.chdir(@base_dir)
+  end
+
+  # Initializes the local and remote repositories
+  #
+  def initialize_repos
+    in_local_repo { @@workspace.init }
+    in_remote_repo { @@workspace.init }
   end
 
 
