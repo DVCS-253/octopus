@@ -106,11 +106,11 @@ class Tests < Test::Unit::TestCase
 		#itself is unchanged, and that file diffs
 		#involving partial/entire content work properly
 
-		merge_file1 = File.new("merger1", 'w+') #create a test file
+		merge_file1 = File.new("merger1.txt", 'w+') #create a test file
 		merge_file1.puts("file\nanarchy\nNaNarchy")
 		merge_file1.rewind
 
-		merge_file2 = File.new("merger2", 'w+') #create a test file
+		merge_file2 = File.new("merger2.txt", 'w+') #create a test file
 		merge_file2.puts("or else")
 		merge_file2.rewind
 
@@ -127,7 +127,7 @@ class Tests < Test::Unit::TestCase
 		#Cleanup
 		merge_file1.close
 		merge_file2.close
-		File.delete("merger1", "merger2")
+		File.delete("merger1.txt", "merger2.txt")
 
 	end
 	#########################################################
@@ -148,19 +148,19 @@ class Tests < Test::Unit::TestCase
 		#and complex file merges work properly
 		#also does one fully intensive case
 
-		ancestor_file = File.new('ancest1', 'w+') #create a test file
+		ancestor_file = File.new('ancest1.txt', 'w+') #create a test file
 		ancestor_file.puts("file\n")
 		ancestor_file.rewind
 
-		merge_file1 = File.new('merger1', 'w+') #create a test file
+		merge_file1 = File.new('merger1.txt', 'w+') #create a test file
 		merge_file1.puts("file\nanarchy\nNaNarchy")
 		merge_file1.rewind
 
-		merge_file2 = File.new('merger2', 'w+') #create a test file
+		merge_file2 = File.new('merger2.txt', 'w+') #create a test file
 		merge_file2.puts("first\nfile\nanarchy\nNaNarchy")
 		merge_file2.rewind
 
-		merged = File.new('merged', 'w+') #create a test file
+		merged = File.new('merged.txt', 'w+') #create a test file
 		merged.puts("<<<<<<<< ours\nfirst\n========\nsecond\n>>>>>>>> theirs\n")
 		merged.puts("file\n<<<<<<<< ours\nanarchy\n========\nNaNarchy\n>>>>>>>> theirs\n")
 		merged.rewind
@@ -193,7 +193,7 @@ class Tests < Test::Unit::TestCase
 		merge_file1.close
 		merge_file2.close
 		merged.close
-		File.delete('ancest1', 'merger1', 'merger2', 'merged')
+		File.delete('ancest1.txt', 'merger1.txt', 'merger2.txt', 'merged.txt')
 
 	end
 	#########################################################
