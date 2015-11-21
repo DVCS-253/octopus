@@ -293,26 +293,33 @@ class Repos
 
 		text_file_dir = File.join(comm_dir, "text_file")
 
-		File.open(text_file_dir, 'w'){ |f|
-			f.puts "snapshot{"
-			f.puts "	\"branch_name\" =>"
-			f.puts "		#{snapshot.branch_name},"
-			latest_snaps.each_with_index{ |item,index|
-				f.puts "	\"snapshot_ID\"#{index+1} => #{snap.snapshot_ID}"
-				f.puts "		\"files\" =>"
-				i = 1
-				repos_hash.each do |title, id|
-					f.puts "			\"filename\"#{i} => #{title}"
-					f.puts "				#{get_file(title)},"
-					i += 1
-				end
-				f.puts "		\"committed_time\" =>"
-				f.puts "			#{item.commit_time}"
-				f.puts "		},"
+		# File.open(text_file_dir, 'w'){ |f|
+		# 	f.puts "snapshot{"
+		# 	f.puts "	\"branch_name\" =>"
+		# 	f.puts "		#{snapshot.branch_name},"
+		# 	latest_snaps.each_with_index{ |item,index|
+		# 		f.puts "	\"snapshot_ID\"#{index+1} => #{snap.snapshot_ID}"
+		# 		f.puts "		\"files\" =>"
+		# 		i = 1
+		# 		repos_hash.each do |title, id|
+		# 			f.puts "			\"filename\"#{i} => #{title}"
+		# 			f.puts "				#{get_file(title)},"
+		# 			i += 1
+		# 		end
+		# 		f.puts "		\"committed_time\" =>"
+		# 		f.puts "			#{item.commit_time}"
+		# 		f.puts "		},"
 
-			}
-			f.puts "}"
+		# 	}
+		# 	f.puts "}"
+		# }
+
+		text_file = {
+			"branch_name" => "#{snapshot.branch_name}"
 		}
+		
+
+
 
 	end
 
