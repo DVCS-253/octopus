@@ -1,8 +1,8 @@
+require_relative '../workspace/workspace'
+require_relative '../push_pull'
 require 'shellwords'
 require 'fileutils'
 require 'test/unit'
-require_relative '../workspace'
-require_relative '../PushPull'
 
 # Tests public methods of the push/pull module.
 #

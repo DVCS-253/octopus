@@ -1,8 +1,8 @@
+require_relative '../repos/repos'
 require 'io/console'
 require 'fileutils'
 require 'tempfile'
 require 'net/ssh'
-require 'repos'
 require 'json'
 require 'etc'
 
