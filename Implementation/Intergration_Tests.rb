@@ -1,9 +1,9 @@
 require "test/unit"
 
 #Modules 
-require_relative 'PushPull'
+#require_relative 'PushPull'
 require_relative 'RevLog'
-require_relative 'Repos'
+#require_relative 'Repos'
 require_relative 'UserInterface'
 require_relative 'Workspace'
 
@@ -94,4 +94,8 @@ test_hash[:file1] = "filename.dat"
 test_UI_to_Workspace("commit",nil)
 test_UI_to_Workspace("commit",test_hash)
 
-
+test_hash = Hash.new
+test_hash[:branch] = "Jamie_Dev"
+#Repos file not running
+#test_UI_to_Repos("branch".test_hash)
+#test_UI_to_Repos("branch",nil)
