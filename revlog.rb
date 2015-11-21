@@ -7,6 +7,9 @@ class Revlog
 
 	class << Revlog
 
+		def new(*args)
+			raise "Cannot instantiate static class Revlog"
+		end
 
 		# Load new file table
 		def load_table (filename)
