@@ -64,7 +64,7 @@ class UserInterface
 			 	#result = "Invalid command '" + cmd + "'"
 			 end
 			}
-			displayResult(result) if !testCommands
+			displayResult(result) #if !testCommands
 		end
 		return result
 	end
