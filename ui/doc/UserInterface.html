@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class UserInterface - RDoc Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link">Object
+  
+</div>
+
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-displayResult">#displayResult</a>
+    
+    <li ><a href="#method-i-executeCommand">#executeCommand</a>
+    
+    <li ><a href="#method-i-main">#main</a>
+    
+    <li ><a href="#method-i-parseCommand">#parseCommand</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-UserInterface">
+  <h1 id="class-UserInterface" class="class">
+    class UserInterface
+  </h1>
+
+  <section class="description">
+    
+<p>Provides interface to the users in order to execute commands</p>
+
+  </section>
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="AddRE">AddRE
+        
+        <dd>
+        
+      
+        <dt id="AddUsg">AddUsg
+        
+        <dd>
+        
+      
+        <dt id="BranchRE">BranchRE
+        
+        <dd>
+        
+      
+        <dt id="BranchUsg">BranchUsg
+        
+        <dd>
+        
+      
+        <dt id="CheckoutRE">CheckoutRE
+        
+        <dd>
+        
+      
+        <dt id="CheckoutUsg">CheckoutUsg
+        
+        <dd>
+        
+      
+        <dt id="CloneRE">CloneRE
+        
+        <dd>
+        
+      
+        <dt id="CloneUsg">CloneUsg
+        
+        <dd>
+        
+      
+        <dt id="CommitRE">CommitRE
+        
+        <dd>
+        
+      
+        <dt id="CommitUsg">CommitUsg
+        
+        <dd>
+        
+      
+        <dt id="DiffRE">DiffRE
+        
+        <dd>
+        
+      
+        <dt id="DiffUsg">DiffUsg
+        
+        <dd>
+        
+      
+        <dt id="InitRE">InitRE
+        
+        <dd>
+        
+      
+        <dt id="InitUsg">InitUsg
+        
+        <dd>
+        
+      
+        <dt id="MergeRE">MergeRE
+        
+        <dd>
+        
+      
+        <dt id="MergeUsg">MergeUsg
+        
+        <dd>
+        
+      
+        <dt id="PullRE">PullRE
+        
+        <dd>
+        
+      
+        <dt id="PullUsg">PullUsg
+        
+        <dd>
+        
+      
+        <dt id="PushRE">PushRE
+        
+        <dd>
+        
+      
+        <dt id="PushUsg">PushUsg
+        
+        <dd>
+        
+      
+        <dt id="StatusRE">StatusRE
+        
+        <dd>
+        
+      
+        <dt id="StatusUsg">StatusUsg
+        
+        <dd>
+        
+      
+        <dt id="SupportedCmds">SupportedCmds
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-main" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">main</span><span
+            class="method-args">(testCommands)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Entry point of the application. Takes the &#39;command&#39; from user in
+form of program arguments  and pass it to &#39;parseCommand&#39; method
+after basic syntax checking<br> Params:</p>
+
+<pre>- testCommands: commands(String[]), applicable only when called from the unit test module</pre>
+
+<p>Returns:</p>
+
+<pre>- result: output(String) of execution</pre>
+          
+          
+
+          
+          <div class="method-source-code" id="main-source">
+            <pre><span class="ruby-comment"># File UserInterface.rb, line 39</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">main</span>(<span class="ruby-identifier">testCommands</span>)
+        <span class="ruby-keyword">if</span> <span class="ruby-identifier">testCommands</span>
+                <span class="ruby-identifier">command</span> = <span class="ruby-identifier">testCommands</span>
+        <span class="ruby-keyword">else</span> 
+                <span class="ruby-identifier">command</span> = <span class="ruby-constant">ARGV</span>
+        <span class="ruby-keyword">end</span> 
+        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;&quot;</span>
+        <span class="ruby-keyword">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">command</span>.<span class="ruby-identifier">empty?</span>
+                <span class="ruby-identifier">command</span>.<span class="ruby-identifier">each_with_index</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">i</span><span class="ruby-operator">|</span>
+                        <span class="ruby-keyword">if</span> <span class="ruby-identifier">cmd</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&#39; &#39;</span>).<span class="ruby-identifier">length</span><span class="ruby-operator">&gt;</span><span class="ruby-value">1</span>
+                                <span class="ruby-identifier">command</span>[<span class="ruby-identifier">i</span>] = <span class="ruby-string">&#39;&quot;&#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">+</span> <span class="ruby-string">&#39;&quot;&#39;</span>
+                        <span class="ruby-keyword">end</span>
+                }
+                <span class="ruby-identifier">command</span>.<span class="ruby-identifier">each_with_index</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">i</span><span class="ruby-operator">|</span> 
+                        <span class="ruby-keyword">if</span> <span class="ruby-identifier">i</span><span class="ruby-operator">==</span><span class="ruby-value">0</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-constant">SupportedCmds</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">cmd</span>)
+                                <span class="ruby-identifier">result</span> = <span class="ruby-identifier">parseCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">command</span><span class="ruby-operator">*</span><span class="ruby-string">&quot; &quot;</span>)
+                                <span class="ruby-keyword">break</span>
+                        <span class="ruby-keyword">else</span>
+                                <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Invalid command &#39;&quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">+</span> <span class="ruby-string">&quot;&#39;.\nCommands supported : &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">SupportedCmds</span>.<span class="ruby-identifier">to_s</span>
+                     <span class="ruby-comment">#result = &quot;Invalid command &#39;&quot; + cmd + &quot;&#39;&quot;</span>
+                 <span class="ruby-keyword">end</span>
+                }
+                <span class="ruby-identifier">displayResult</span>(<span class="ruby-identifier">result</span>) <span class="ruby-keyword">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">testCommands</span>
+        <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">return</span> <span class="ruby-identifier">result</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-parseCommand" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">parseCommand</span><span
+            class="method-args">(cmd, fullCmd)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Does the command pattern matching and pass it to &#39;parseCommand&#39;
+method after basic syntax checking<br> Params:</p>
+
+<pre>- cmd(String): main command e.g. &#39;init&#39;, on the basis of which further pattern matching is done&lt;br&gt;
+- fullCmd(String): full command along with its parameters</pre>
+
+<p>Returns:</p>
+
+<pre>- result(String): output of execution</pre>
+          
+          
+
+          
+          <div class="method-source-code" id="parseCommand-source">
+            <pre><span class="ruby-comment"># File UserInterface.rb, line 73</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">parseCommand</span>(<span class="ruby-identifier">cmd</span>, <span class="ruby-identifier">fullCmd</span>)
+        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;&quot;</span>
+        <span class="ruby-keyword">if</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;init&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">InitRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;directory&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">InitUsg</span>
+                <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;add&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">AddRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                                <span class="ruby-identifier">files</span> = <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>].<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot; &quot;</span>)
+                                <span class="ruby-identifier">files</span>.<span class="ruby-identifier">each_with_index</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">file</span>,<span class="ruby-identifier">i</span><span class="ruby-operator">|</span> <span class="ruby-identifier">params</span>[(<span class="ruby-string">&quot;file&quot;</span><span class="ruby-operator">+</span>(<span class="ruby-identifier">i</span><span class="ruby-operator">+</span><span class="ruby-value">1</span>).<span class="ruby-identifier">to_s</span>)]= <span class="ruby-identifier">file</span> }
+                        <span class="ruby-keyword">end</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;all&quot;</span>] = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">5</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">AddUsg</span>
+                <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;checkout&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">CheckoutRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;existingBranch&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;createBranch&quot;</span>] = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">4</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;newBranch&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">5</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">5</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;track&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">6</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">6</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">CheckoutUsg</span>
+                <span class="ruby-keyword">end</span>  
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;commit&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">CommitRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;add&quot;</span>] = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;msg&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">5</span>].<span class="ruby-identifier">gsub</span>(<span class="ruby-regexp">/&quot;/</span>,<span class="ruby-string">&#39;&#39;</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">4</span>] <span class="ruby-keyword">and</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">5</span>]
+                        <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">6</span>]
+                                <span class="ruby-identifier">files</span> = <span class="ruby-identifier">matched</span>[<span class="ruby-value">6</span>].<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot; &quot;</span>)
+                                <span class="ruby-identifier">files</span>.<span class="ruby-identifier">each_with_index</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">file</span>,<span class="ruby-identifier">i</span><span class="ruby-operator">|</span> <span class="ruby-identifier">params</span>[(<span class="ruby-string">&quot;file&quot;</span><span class="ruby-operator">+</span>(<span class="ruby-identifier">i</span><span class="ruby-operator">+</span><span class="ruby-value">1</span>).<span class="ruby-identifier">to_s</span>)] = <span class="ruby-identifier">file</span> }
+                        <span class="ruby-keyword">end</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">CommitUsg</span>
+                <span class="ruby-keyword">end</span>  
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;branch&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">BranchRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;all&quot;</span>] = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;delete&quot;</span>] = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">5</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;branch&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">6</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">6</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">BranchUsg</span>
+                <span class="ruby-keyword">end</span>  
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;merge&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">MergeRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;branch&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">MergeUsg</span>
+                <span class="ruby-keyword">end</span>  
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;push&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">PushRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;remote&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;branch&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">4</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">4</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">PushUsg</span>
+                <span class="ruby-keyword">end</span>  
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;pull&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">PullRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;remote&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;branch&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">4</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">4</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">PullUsg</span>
+                <span class="ruby-keyword">end</span>  
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;status&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">StatusRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">StatusUsg</span>
+                <span class="ruby-keyword">end</span>  
+                
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;clone&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">CloneRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;repository&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;directory&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">5</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">5</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">CloneUsg</span>
+                <span class="ruby-keyword">end</span>  
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;diff&quot;</span>
+                <span class="ruby-identifier">matched</span> = <span class="ruby-identifier">fullCmd</span>.<span class="ruby-identifier">match</span> <span class="ruby-constant">DiffRE</span>
+                <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>
+                        <span class="ruby-identifier">params</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;commit1&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">2</span>]
+                        <span class="ruby-identifier">params</span>[<span class="ruby-string">&quot;commit2&quot;</span>] = <span class="ruby-identifier">matched</span>[<span class="ruby-value">4</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">matched</span>[<span class="ruby-value">4</span>]
+                        <span class="ruby-identifier">result</span> = <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>,<span class="ruby-identifier">params</span>)
+                <span class="ruby-keyword">else</span>
+                        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Incorrect format. Expected: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-constant">DiffUsg</span>
+                <span class="ruby-keyword">end</span>  
+        <span class="ruby-keyword">elsif</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;help&quot;</span>
+                <span class="ruby-value">%x`cat help.txt`</span>
+        <span class="ruby-keyword">end</span>
+        <span class="ruby-keyword">return</span> <span class="ruby-identifier">result</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+     <section id="private-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Private Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-displayResult" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">displayResult</span><span
+            class="method-args">(result)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Displays the result of execution of the command<br> Params:</p>
+
+<pre>- result(String): result of the execution</pre>
+
+<p>Returns:</p>
+
+<pre>- result(String): result of the execution to the testing module</pre>
+          
+          
+
+          
+          <div class="method-source-code" id="displayResult-source">
+            <pre><span class="ruby-comment"># File UserInterface.rb, line 215</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">displayResult</span>(<span class="ruby-identifier">result</span>)
+        <span class="ruby-identifier">puts</span> <span class="ruby-identifier">result</span> <span class="ruby-operator">+</span> <span class="ruby-string">&quot;\n\n&quot;</span>
+        <span class="ruby-identifier">result</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-executeCommand" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">executeCommand</span><span
+            class="method-args">(cmd, params)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Acts a method from other module. It will be replaced by actual method from
+other module<br> Params:</p>
+
+<pre>- cmd(String): main command e.g. &#39;init&#39;                          &lt;br&gt;
+- params(Hash): key-value pairs of command parameters and their values</pre>
+
+<p>Returns:</p>
+
+<pre>- result(String): output of execution</pre>
+          
+          
+
+          
+          <div class="method-source-code" id="executeCommand-source">
+            <pre><span class="ruby-comment"># File UserInterface.rb, line 204</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">executeCommand</span>(<span class="ruby-identifier">cmd</span>, <span class="ruby-identifier">params</span>)
+        <span class="ruby-identifier">result</span> = <span class="ruby-string">&quot;Command: &quot;</span><span class="ruby-operator">+</span> <span class="ruby-identifier">cmd</span> <span class="ruby-operator">+</span> <span class="ruby-string">&quot;\nParameters: &quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">params</span>.<span class="ruby-identifier">to_s</span>
+        <span class="ruby-keyword">return</span> <span class="ruby-identifier">result</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="http://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="http://docs.seattlerb.org/rdoc/">RDoc</a> 4.2.0.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+
