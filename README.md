@@ -3,6 +3,9 @@
 ### Push and Pull
 Octopus supports pushing and pulling branches to and from remotes.
 
+#### Dependencies
+This module depends on the Net::SSH gem for Ruby. You can install it with the `Gemfile` by running `bundle install`. If you do not have bundler installed, you can get it with `gem install bundler`.
+
 #### Public Methods
 ###### `PushPull.connect(remote, path)`
 Opens an SSH connection to the remote and changes into the given path. The path is expected to be the location of the repository on the remote.
