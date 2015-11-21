@@ -8,7 +8,6 @@ class Tests < Test::Unit::TestCase
 	# Setup   #
 	###########
 	def setup
-		@revlog = Revlog.new
 		@test_file1 = File.new('test1.txt', 'w') #create a test file
 		@test_file1.puts("first\nfile\nanarchy\n")
 		@test_file1.close
@@ -45,8 +44,8 @@ class Tests < Test::Unit::TestCase
 		#returned are invalid
 		#or the same
 
-		id1 = @revlog.add_file(File.open(@test_file1).read) #call add_file
-		id2 = @revlog.add_file(File.open(@test_file2).read) #call add_file
+		id1 = Revlog.add_file(File.open(@test_file1).read) #call add_file
+		id2 = Revlog.add_file(File.open(@test_file2).read) #call add_file
 		assert_not_equal(id1,id2,"ID's were equal (we broke SHA2)")
 
 	end
@@ -59,14 +58,14 @@ class Tests < Test::Unit::TestCase
 	# get_file #
 	############
 	def test_get_file
-		id1 = @revlog.add_file(File.open(@test_file1).read) #call add_file
-		id2 = @revlog.add_file(File.open(@test_file2).read) #call add_file
+		id1 = Revlog.add_file(File.open(@test_file1).read) #call add_file
+		id2 = Revlog.add_file(File.open(@test_file2).read) #call add_file
 
 		#loads the two files previously stored
 		#fails if retrieved files are not original files
 
-		assert_equal(File.open(@test_file1).read, @revlog.get_file(id1), "Unexpected file loaded (file 1)")
-		assert_equal(File.open(@test_file2).read, @revlog.get_file(id2), "Unexpected file loaded (file 2)")
+		assert_equal(File.open(@test_file1).read, Revlog.get_file(id1), "Unexpected file loaded (file 1)")
+		assert_equal(File.open(@test_file2).read, Revlog.get_file(id2), "Unexpected file loaded (file 2)")
 	end
 	#########################################################
 	# end get_file 											#
@@ -78,15 +77,15 @@ class Tests < Test::Unit::TestCase
 	# delete_file #
 	###############
 	def test_delete_file
-		id1 = @revlog.add_file(File.open(@test_file1).read) #call add_file
-		id2 = @revlog.add_file(File.open(@test_file2).read) #call add_file
+		id1 = Revlog.add_file(File.open(@test_file1).read) #call add_file
+		id2 = Revlog.add_file(File.open(@test_file2).read) #call add_file
 
 		#deletes the file previously stored
 		#fails if deletion exits unsuccessfully
 		#or if the file can be retrieved afterwards
 
-		assert_equal(0, @revlog.delete_file(id1), "File deletion unsuccessful")
-		assert_raise(RuntimeError, "File not properly deleted") {@revlog.get_file(id1)}
+		assert_equal(0, Revlog.delete_file(id1), "File deletion unsuccessful")
+		assert_raise(RuntimeError, "File not properly deleted") {Revlog.get_file(id1)}
 		
 	end
 	#########################################################
@@ -114,15 +113,15 @@ class Tests < Test::Unit::TestCase
 		merge_file2.puts("or else")
 		merge_file2.rewind
 
-		file1 = @revlog.add_file(File.open(@test_file1).read)
-		mfile1 = @revlog.add_file(merge_file1.read)
-		mfile2 = @revlog.add_file(merge_file2.read)
+		file1 = Revlog.add_file(File.open(@test_file1).read)
+		mfile1 = Revlog.add_file(merge_file1.read)
+		mfile2 = Revlog.add_file(merge_file2.read)
 
-		assert_equal([], @revlog.diff_files(file1, file1),  "Self comparison faiure")
+		assert_equal([], Revlog.diff_files(file1, file1),  "Self comparison faiure")
 
-		assert_equal(["first\n","NaNarchy\n"], @revlog.diff_files(file1, mfile1), "Diff failure 1")
+		assert_equal(["first\n","NaNarchy\n"], Revlog.diff_files(file1, mfile1), "Diff failure 1")
 
-		assert_equal(["first\n","file\n","anarchy\n", "or else\n"], @revlog.diff_files(file1, mfile2), "Diff failure 2")
+		assert_equal(["first\n","file\n","anarchy\n", "or else\n"], Revlog.diff_files(file1, mfile2), "Diff failure 2")
 
 		#Cleanup
 		merge_file1.close
@@ -165,28 +164,28 @@ class Tests < Test::Unit::TestCase
 		merged.puts("file\n<<<<<<<< ours\nanarchy\n========\nNaNarchy\n>>>>>>>> theirs\n")
 		merged.rewind
 
-		file1 = @revlog.add_file(File.open(@test_file1).read)
-		file2 = @revlog.add_file(File.open(@test_file2).read)
-		ancest = @revlog.add_file(ancestor_file.read)
-		mfile1 = @revlog.add_file(merge_file1.read)
-		mfile2 = @revlog.add_file(merge_file2.read)
-		merge = @revlog.add_file(merged.read)
+		file1 = Revlog.add_file(File.open(@test_file1).read)
+		file2 = Revlog.add_file(File.open(@test_file2).read)
+		ancest = Revlog.add_file(ancestor_file.read)
+		mfile1 = Revlog.add_file(merge_file1.read)
+		mfile2 = Revlog.add_file(merge_file2.read)
+		merge = Revlog.add_file(merged.read)
 
-		revlog_merged = @revlog.add_file(File.open('revlog_merged.rb').read)
-		revlog_old = @revlog.add_file(File.open('revlog_old.rb').read)
-		revlog_new = @revlog.add_file(File.open('revlog_new.rb').read)
+		revlog_merged = Revlog.add_file(File.open('revlog_merged.rb').read)
+		revlog_old = Revlog.add_file(File.open('revlog_old.rb').read)
+		revlog_new = Revlog.add_file(File.open('revlog_new.rb').read)
 
-		assert_equal(@revlog.get_file(file1), @revlog.get_file(@revlog.merge(file1, file1)), "Self comparison failure (no ancestor)")
-		# assert_equal(@revlog.get_file(file1), @revlog.get_file(@revlog.merge(file1, file1, ancest)), "Self comparison failure (ancestor)")
+		assert_equal(Revlog.get_file(file1), Revlog.get_file(Revlog.merge(file1, file1)), "Self comparison failure (no ancestor)")
+		# assert_equal(Revlog.get_file(file1), Revlog.get_file(Revlog.merge(file1, file1, ancest)), "Self comparison failure (ancestor)")
 
-		assert_equal(@revlog.get_file(mfile2), @revlog.get_file(@revlog.merge(file1, mfile1)), "Simple merge failure (no ancestor)")
-		# assert_equal(@revlog.get_file(mfile2), @revlog.get_file(@revlog.merge(file1, mfile1, ancest)), "Simple merge failure (ancestor)")
+		assert_equal(Revlog.get_file(mfile2), Revlog.get_file(Revlog.merge(file1, mfile1)), "Simple merge failure (no ancestor)")
+		# assert_equal(Revlog.get_file(mfile2), Revlog.get_file(Revlog.merge(file1, mfile1, ancest)), "Simple merge failure (ancestor)")
 
-		assert_equal(@revlog.get_file(merge), @revlog.get_file(@revlog.merge(file1, file2)), "Complex merge failure (no ancestor)")
-		# assert_equal(@revlog.get_file(merge), @revlog.get_file(@revlog.merge(file1, file2, ancest)), "Complex merge failure (ancestor)")
+		assert_equal(Revlog.get_file(merge), Revlog.get_file(Revlog.merge(file1, file2)), "Complex merge failure (no ancestor)")
+		# assert_equal(Revlog.get_file(merge), Revlog.get_file(Revlog.merge(file1, file2, ancest)), "Complex merge failure (ancestor)")
 
-		assert_equal(@revlog.get_file(revlog_merged).force_encoding('UTF-8'), @revlog.get_file(@revlog.merge(revlog_old, revlog_new)), "Intensive merge failure (no ancestor)")
-		# assert_equal(@revlog.get_file(revlog_merged), @revlog.get_file(@revlog.merge(revlog_old, revlog_new, revlog_ances)), "Intensive merge failure (ancestor)")
+		assert_equal(Revlog.get_file(revlog_merged).force_encoding('UTF-8'), Revlog.get_file(Revlog.merge(revlog_old, revlog_new)), "Intensive merge failure (no ancestor)")
+		# assert_equal(Revlog.get_file(revlog_merged), Revlog.get_file(Revlog.merge(revlog_old, revlog_new, revlog_ances)), "Intensive merge failure (ancestor)")
 
 		#Cleanup
 		ancestor_file.close
