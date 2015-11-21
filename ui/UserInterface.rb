@@ -250,4 +250,4 @@ class UserInterface
 end
 
 #'main' method invocation
-UserInterface.new.main(nil)
+#UserInterface.new.main(nil)
