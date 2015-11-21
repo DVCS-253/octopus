@@ -96,9 +96,9 @@ class Repos
 		# Dir.mkdir("/Users/haochen/Desktop/test/.octopus/repo")
 
 		# Created .octopus/repo on current directory
-		Dir.mkdir(File.join(Dir.pwd, ".octopus"), 0700)
-		Dir.mkdir(File.join(Dir.pwd, ".octopus/repo"), 0700)
-		Dir.mkdir(File.join(Dir.pwd, ".octopus/communication"), 0700)
+		# Dir.mkdir(File.join(Dir.pwd, ".octopus"), 0700)
+		# Dir.mkdir(File.join(Dir.pwd, ".octopus/repo"), 0700)
+		# Dir.mkdir(File.join(Dir.pwd, ".octopus/communication"), 0700)
 		$repo_dir = File.join(Dir.pwd, ".octopus/repo")
 		$comm_dir = File.join(Dir.pwd, ".octopus/communication")
 		$head_dir = File.join(repo_dir, ".octopus/head")
