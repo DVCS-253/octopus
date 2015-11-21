@@ -85,10 +85,16 @@ class Revlog
 	def merge(file_id1, file_id2)
 		file1 = get_file(file_id1)
 		file2 = get_file(file_id2)
+
+		#files in this method are actually just
+		#long strings of file content
+
 		#keep files as hash
 		files = {1 => file1.lines, 2 => file2.lines}
+
 		#hash of file lines, for each file
 		file_lines = {1 => Hash.new {|h, k| h[k]=[]}, 2 => Hash.new {|h, k| h[k]=[]}}
+		#hash of current line #, for each file
 		curr_linenos = {1 => 0, 2 => 0}
 
 		#initialize hash
@@ -99,16 +105,22 @@ class Revlog
 		#keep conflict outputs as hash
 		conflict_data = {1 => "<"*8 + " ours", 2 => ">"*8 + " theirs"}
 
-		merged = ""
-		# puts "------" #print
+		merged = "" #output string
 		loop do
+			#initialize lines
 			lines = files.map {|i, file| 
 						curr_linenos[i] += 1 unless file.empty?
 						[i, file.shift] unless file.empty?
 						}.delete_if {|x| x ==nil}
 			lines = lines.to_h
 
-			#helper funcs
+			####################
+			# Helper Functions #
+			####################
+				# => ~i+4 is equivilant to:
+				# => --- 2 if i == 1
+				# => --- 1 if i == 2
+
 			shared_line = lambda { |i| #does lines[i] appear later on in file[~i+4]
 				return file_lines[~i+4][lines[i]].any? {|lineno| lineno >= curr_linenos[~i+4]}
 			}
@@ -151,8 +163,6 @@ class Revlog
 						write_str.call(to_inc, buffer[to_inc], true)
 						get_next_shared.call if lines.all? {|i, line| line == "\n"}
 						to_inc = ~to_inc+4 if lines[~to_inc+4] == "\n"
-						# puts lines #print
-						# puts curr_linenos #print
 					end
 				end
 				merged << conflict_data[1] << "\n"
@@ -162,13 +172,12 @@ class Revlog
 				merged << conflict_data[2] << "\n"
 			}
 
-			# puts lines #print
-			# puts curr_linenos #print
+			##############
+			# Loop Logic #
+			##############
 
-			if(lines[1] == lines[2])		#no change
-				# puts "no" #print
+			if(lines[1] == lines[2])	#no change
 			elsif(shared_line.call(2) and shared_line.call(1)) #mutually occuring lines
-				# puts "swap" #print
 				to_inc = line_diff.call(2) < line_diff.call(1) ? 1 : 2
 				while(lines[to_inc]!=lines[~to_inc+4])
 					merged << lines[to_inc]
@@ -176,16 +185,12 @@ class Revlog
 					curr_linenos[to_inc] += 1
 				end
 			elsif(shared_line.call(2))	#extra lines file 1
-				# puts "file 1" #print
 				write_str.call(1)
 			elsif(shared_line.call(1))	#extra lines file 2
-				# puts "file 2" #print
 				write_str.call(2)
-			else							#conflict
-				# puts "con" #print
+			else						#conflict
 				conflict_write.call
 			end #End if
-			# puts "-" #print
 			merged << lines[1] if lines[1] == lines[2]
 			break if files.all? {|i, file| file.empty?}
 		end #End loop do
