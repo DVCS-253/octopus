@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby 
+
+#to run this file, add the `pwd` to your path.
+#
+require './ui/UserInterface.rb'
+
+UserInterface.new.main(ARGV)
