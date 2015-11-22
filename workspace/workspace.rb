@@ -29,7 +29,6 @@ class Workspace
 			end
 		end	
 	end
-
 	
 
 	#Given a snapshot id, copy the snapshot to the workspace
@@ -81,50 +80,65 @@ class Workspace
 	end
 
 
-
-		
-	def commit(files = nil)
-		workspace = '.octopus/'
+	#Given a list of file, buil a hash table of them
+	#key = path; value = content
+	def build_hash(file_list)
 		results = {}
-		if files == nil
+		file_list.each do |path|
+			content = File.read(path)
+			results[path] = content
+		end
+		return results
+	end
+
+
+	#commit a list of file, a directory or a branch
+	#list contains path of fiels, for example ['workspace/a.rb', 'repos/b.rb', 'test/c.rb']
+	#directory needs to be a existed path, for example 'workspace' or 'workspace/test'
+	def commit(arg = nil)
+		results = {}
+		#commit a branch
+		if arg == nil
 			#obtain a file list contains all files excpet for those under ./.octopus/
 			all_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
-			#obtain the content of listed files
-			all_files.each do |path|
-				#insert into a hashtable, key = path, value = content
-				content = File.read(path)
-				results[path] = content
-			end
+			#build a hash table for the files
+			results = build_hash(all_files)
 			#make a new snapshot and update the head
 			snapshot_id = Repos.make_snapshot(results)
 			Repos.update_head(snapshot_id)
 			return 0 
 		end
+		#commit a list of files
+		if arg.is_a?(Array)
+			arg.each do |f|
+				path = './'+ f
+				content = File.read(path)
+				results[f] = content
+			end
+		#commit a directory
+		elsif File.directory?('./' + arg)
+			path = './' + arg
+			all_files = Dir.glob('./' + arg + '/**/*').select{ |e| File.file?}
+			results = build_hash(all_files)
+		end
 
-		if files.is_a?(Array)
-			files.each do |f|
-				#results[f] = Revlog.hash(f)		###Original implementation!!!
-				results[f] = 1				#for testing
-			end
-		else
-			#results[files] = Revlog.hash(files)		###Original implementation!!!
-			results[files] = 1				#for testing
-		end
-		#head = Repos.get_head()						###Original implementation!!!
-		#current = Repos.restore_snapshot(head)					###Original implementation!!!
-		#file_lst = current.file_lst()						###Original implementation!!!	
-		file_lst = ['Test1.txt', 'Test2.txt', 'Test3.txt']			#for testing
-		file_hash = {'Test1.txt' => 2, 'Test2.txt' => 3, 'Test3.txt' => 4} 	#for testing
-		file_lst.each do |f|
-			if not results.has_key?(f)
-				results[workspace + f] = file_hash[f]
+		#if commit a list or a directory, add last committed files 
+		head = Repos.get_head()
+		snapshot = Repos.restore_snapshot(head)
+		file_hash = snapshot.file_hash	
+		file_hash.each do |path, hash|
+			#add new files from last commit 
+			if not results.has_key?(path)
+				content = Revlog.get_file(hash)
+				results[path] = content
 			end
 		end
-		#snapshot_id = Repost.make_snapshot(results)	###Original implementation!!!
-		#Repost.update_head(snapshot_id)		###Original implementation!!!
-		#return 1					###Original implementation!!!
-		return results 					#for testing
+		#make a new snapshot and update the head 
+		snapshot_id = Repost.make_snapshot(results)
+		Repost.update_head(snapshot_id)
+		return 1			
 	end
+
 
 
 
