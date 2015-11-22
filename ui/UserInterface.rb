@@ -1,6 +1,6 @@
 #Provides interface to the users in order to execute commands
 
-require './workspace/worspace.rb'
+require './workspace/workspace.rb'
 class UserInterface
 	
 	#--List of supported commands
