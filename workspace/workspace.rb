@@ -21,35 +21,38 @@ class Workspace
 	end
 
 
+	#Remove all files and folders under workspace except for ./.octopus
+	def clean
+		all_files = Dir.glob('./*')
+		all_files.each do |f|
+			if f != './.octopus'
+				FileUtils.rm_rf(f)
+			end
+		end	
+	end
 
+	
+
+	#Given a snapshot id, copy the snapshot to the workspace
 	def check_out_snapshot(snapshot_id)
-		workspace = '.octopus/'
-		snapshot = Repos.restore_snapshot(snapshot_id)			
+		#clean the workspace first
+		clean
+		#obtian the snapshot object using retore_snapshot
+		snapshot = Repos.restore_snapshot(snapshot_id)	
+		#obtian the file_hash from the object		
 		file_hash = snapshot.repos_hash
-                file_hash.each do |key, value|
-                        path = key
-			hash = value
+                file_hash.each do |path, hash|
 			#rebuild the directory of the file
 			rebuild_dir(path)
+			#decode the content of a file
                         content = RevLog.get_file(hash)	
-			Dir.mkdir(directory_name) unless File.exists?(directory_name)
-                        File.write(workspace + path, content)
+			#write content
+                        File.write(path, content)
                 end
 	end
 
 
-	def clean
-		all_files = Dir.glob('.octopus/*')
-		all_files.each do |f|
-			if f != '.octopus/revlog' and f != '.octopus/repo' and f != '.octopus/communication'
-				FileUtils.rm_rf(f)
-			end
-		end	
-		#head = Pepos.get_head()  						###Original implementation!!!
-		#check_out_snapshot(head)						###Original implementation!!!
-		check_out_snapshot(1)							#for testing
-		return 0
-	end
+
 
 	def check_out(branch)
 		#head = Repos.get_head(branch)			###Original implementation!!!
