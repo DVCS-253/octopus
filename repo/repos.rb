@@ -101,8 +101,8 @@ class Repos
 		# Dir.mkdir(File.join(Dir.pwd, ".octopus/communication"), 0700)
 		$repo_dir = File.join(Dir.pwd, ".octopus/repo")
 		$comm_dir = File.join(Dir.pwd, ".octopus/communication")
-		$head_dir = File.join(repo_dir, ".octopus/head")
-		$text_file_dir = File.join(comm_dir, "text_file")
+		$head_dir = File.join($repo_dir, "head")
+		$text_file_dir = File.join($comm_dir, "text_file")
 		# Created snapshot_tree
 		$snapshot_tree = Tree.new
 
@@ -111,7 +111,7 @@ class Repos
 		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 		# $last_commit is HEAD
 		# $last_commit = Snapshot.new(nil)
-		File.open(head_dir, 'w'){ |f| f.write ("0")}
+		File.open($head_dir, 'w'){ |f| f.write ("0")}
 
 	end
 
