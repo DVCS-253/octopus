@@ -101,8 +101,8 @@ class Repos
 		# Dir.mkdir(File.join(Dir.pwd, ".octopus/communication"), 0700)
 		$repo_dir = File.join(Dir.pwd, ".octopus/repo")
 		$comm_dir = File.join(Dir.pwd, ".octopus/communication")
-		$head_dir = File.join(repo_dir, ".octopus/head")
-		$text_file_dir = File.join(comm_dir, "text_file")
+		$head_dir = File.join($repo_dir, ".octopus/head")
+		$text_file_dir = File.join($comm_dir, "text_file")
 		# Created snapshot_tree
 		$snapshot_tree = Tree.new
 
