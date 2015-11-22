@@ -111,7 +111,7 @@ class Repos
 		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 		# $last_commit is HEAD
 		# $last_commit = Snapshot.new(nil)
-		File.open(head_dir, 'w'){ |f| f.write ("0")}
+		File.open($head_dir, 'w'){ |f| f.write ("0")}
 
 	end
 
