@@ -1,4 +1,4 @@
-require_relative '../repo/repos'
+require_relative "#{File.dirname(__FILE__)}/../repo/repos"
 require 'io/console'
 require 'fileutils'
 require 'tempfile'

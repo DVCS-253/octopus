@@ -1,5 +1,5 @@
-require_relative '../workspace/workspace'
-require_relative '../push_pull'
+require_relative "#{File.dirname(__FILE__)}/../../workspace/workspace"
+require_relative "#{File.dirname(__FILE__)}/../push_pull"
 require 'shellwords'
 require 'fileutils'
 require 'test/unit'
