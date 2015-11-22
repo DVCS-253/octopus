@@ -141,16 +141,16 @@ class Workspace
 
 
 
-
-
-	#a hash table and content
-	def share_value(hash, v)
-		flag = false
-		hash.each do |key, value|
-			return key if value == v
+	#check if content exists in given hash table 
+	#if yes, return its key
+	#if no, return flase
+	def appear(content_table, content)
+		content_table.each do |path, value|
+			return path if value == content
 		end
 		return false
 	end
+
 
 
 	#add: a file is added if this file exists in workspace and has a new name and new content
@@ -164,46 +164,49 @@ class Workspace
 		rename = []
 		head = Repos.get_head(branch)	
 		snapshot = Repos.restore_snapshot(head)	
+		#file_content is a hashtable for files of last commit, key = path, value = content
 		file_hash = snapshot.file_hash	
-
+		file_content = {}
+		file_hash.each do |path|
+			file_content[path] = Revlog.get_file(path)
+		end
+		#workspace_contetn is a hashtable for files in workspace, key = path, value = content
 		workspace_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
-
-		workspace_hash = {}		
-		workspace_files.each do |f|	
-			workspace_hash[f] = Revlog.hash(f)	
+		workspace_content = {}		
+		workspace_files.each do |path|	
+			workspace_content[path] = File.read(path)	
 		end				
-
-
 		#check every file in workspace
-		workspace_files.each do |f|
-			content = File.read(f)
+		workspace_content.each do |path, content|
 			#if the name appears in last commit
-			if file_hash.has_key?(f)
+			if file_content.has_key?(path)
 				#if the content is changed, then it's updated
-				if Revlog.get_file(file_hash[f]) != content
-					update.push(f)
+				if file_content[path] != content
+					update.push(path)
 				end	
 			#if the name doesn't appear in last commit (could be added or renamed)
 			else
-				#if the content never appers in last commit
-				if not appear(file_hash, content)
-					add.push(f)
+				#if the content doesn't appers in last commit
+				if not appear(file_content, content)
+					add.push(path)
 				end
 			end
 		end
 		#check every file in last commit
-		file_hash.each do |path, hash
-|
-			if not workspace_hash.has_key?(f)
-				new_name = share_value(workspace_hash, file_hash[f])
+		file_content.each do |path, content|
+|			#if a file in last commit doesn't appear in workspace, it could be deleted or renamed
+			if not workspace_content.has_key?(path)
+				#check if the content appears in workspace
+				new_name = appear(workspace_content, content)
+				#if the content appears in workspace, it's renamed
 				if new_name
-					rename.push(f + ' => ' + new_name)
+					rename.push(path + ' => ' + new_name)
+				#else this file is deleted
 				else
-					delete.push(f)
+					delete.push(path)
 				end
 			end
 		end
 		return add, delete, update, rename
 	end
-
 end
