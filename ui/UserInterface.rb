@@ -1,7 +1,10 @@
 #Provides interface to the users in order to execute commands
 
 require "#{File.dirname(__FILE__)}/../workspace/workspace.rb"
+require "#{File.dirname(__FILE__)}/../push_pull/push_pull.rb"
+require "#{File.dirname(__FILE__)}/../repo/repos.rb"
 class UserInterface
+	include PushPull
 	
 	#--List of supported commands
 	SupportedCmds = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone", "update", "diff", "get_latest_snapshot", "get_all_snapshots", "help"]
@@ -106,11 +109,12 @@ class UserInterface
 			matched = fullCmd.match CheckoutRE
 			if matched
 				params = Hash.new
-				params["existingBranch"] = matched[2] if matched[2]
+				existingBranch = matched[2] if matched[2]
+				params["existingBranch"] = existingBranch
 				params["createBranch"] = true if matched[4]
 				params["newBranch"] = matched[5] if matched[5]
 				params["track"] = matched[6] if matched[6]
-				result = executeCommand(cmd,params)
+				result = Workspace.new.check_out(existingBranch)
 			else
 				result = "Incorrect format. Expected: " + CheckoutUsg
 			end	
@@ -124,7 +128,7 @@ class UserInterface
 					files = matched[6].split(" ")
 					files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
 				end
-				result = executeCommand(cmd,params)
+				result = Workspace.new.commit(files)
 			else
 				result = "Incorrect format. Expected: " + CommitUsg
 			end	
@@ -152,9 +156,11 @@ class UserInterface
 			matched = fullCmd.match PushRE
 			if matched
 				params = Hash.new
-				params["remote"] = matched[2] if matched[2]
-				params["branch"] = matched[4] if matched[4]
-				result = executeCommand(cmd,params)
+				remote = matched[2] if matched[2]
+				branch = matched[4] if matched[4]
+				params["remote"] = remote
+				params["branch"] = branch
+				result = PushPull.push(remote,branch)
 			else
 				result = "Incorrect format. Expected: " + PushUsg
 			end	
@@ -162,16 +168,18 @@ class UserInterface
 			matched = fullCmd.match PullRE
 			if matched
 				params = Hash.new
-				params["remote"] = matched[2] if matched[2]
-				params["branch"] = matched[4] if matched[4]
-				result = executeCommand(cmd,params)
+				remote = matched[2] if matched[2]
+				branch = matched[4] if matched[4]
+				params["remote"] = remote
+				params["branch"] = branch
+				result = PushPull.pull(remote,branch)
 			else
 				result = "Incorrect format. Expected: " + PullUsg
 			end	
 		elsif cmd == "status"
 			matched = fullCmd.match StatusRE
 			if matched
-				result = executeCommand(cmd,params)
+				result = Workspace.new.status
 			else
 				result = "Incorrect format. Expected: " + StatusUsg
 			end	
@@ -180,9 +188,11 @@ class UserInterface
 			matched = fullCmd.match CloneRE
 			if matched
 				params = Hash.new
-				params["repository"] = matched[2] if matched[2]
-				params["directory"] = matched[5] if matched[5]
-				result = executeCommand(cmd,params)
+				repository = matched[2] if matched[2]
+				directory = matched[5] if matched[5]
+				params["repository"] = repository
+				params["directory"] = directory
+				result = PushPull.clone(repository,directory)
 			else
 				result = "Incorrect format. Expected: " + CloneUsg
 			end	
@@ -209,15 +219,16 @@ class UserInterface
 			matched = fullCmd.match GetLatestSnapshotRE
 			if matched
 				params = Hash.new
-				params["snapshot_id"] = matched[2] if matched[2]
-				result = executeCommand(cmd,params)
+				snapshot_id =  matched[2] if matched[2]
+				params["snapshot_id"] = snapshot_id
+				result = Repos.new.get_latest_snapshot(snapshot_id)
 			else
 				result = "Incorrect format. Expected: " + GetLatestSnapshotUsg
 			end	
 		elsif cmd == "get_all_snapshots"
 			matched = fullCmd.match GetAllSnapshotRE
 			if matched
-				result = executeCommand(cmd,params)
+				result = Repos.new.get_all_snapshots()
 			else
 				result = "Incorrect format. Expected: " + GetAllSnapshotUsg
 			end	
