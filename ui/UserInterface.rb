@@ -1,6 +1,6 @@
 #Provides interface to the users in order to execute commands
 
-require './workspace/workspace.rb'
+require "#{File.dirname(__FILE__)}/../workspace/workspace.rb"
 class UserInterface
 	
 	#--List of supported commands
