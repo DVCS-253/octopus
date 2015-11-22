@@ -8,7 +8,6 @@ class Workspace
 	#Note: the parameter needs to be a path of a file, not a path of a directory
 	#Example: rebuild_dir('DVCS/test/test_case.rb')
 	#Effect: directory "./DVCS/test/" will be set up, if already existed then do nothing
-
 	def rebuild_dir(path)
 		#split the path with file_seperator
 		hierarchy = path.split('/')
@@ -72,8 +71,10 @@ class Workspace
 		#if branch name doesn't exist, ASSUME RETURN IS NIL
 		head = Repos.get_head(arg)
 		if head == nil
+			#input is a file, checkout the file
 			check_out_file(arg)
 		else
+			#input is a branch name, checkout the head snapshot
 			check_out_snapshot(head)
 		end
 		return 0	
@@ -86,18 +87,20 @@ class Workspace
 		workspace = '.octopus/'
 		results = {}
 		if files == nil
-			all_files = Dir.glob('.octopus/*')
-			all_files.each do |f|
-				if f != '.octopus/revlog' and f != '.octopus/repo' and f != '.octopus/communication'
-					#results[f] = Revlog.hash(f)		###Original implementation!!!
-					results[f] = 1				#for testing
-				end
+			#obtain a file list contains all files excpet for those under ./.octopus/
+			all_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
+			#obtain the content of listed files
+			all_files.each do |path|
+				#insert into a hashtable, key = path, value = content
+				content = File.read(path)
+				results[path] = content
 			end
-			#snapshot_id = Repos.make_snapshot(results) 	###Original implementation!!!
-			#Repos.update_head(snapshot_id)			###Original implementation!!!
-			#return 0  					###Original implementation!!!
-			return results 					#for testing
+			#make a new snapshot and update the head
+			snapshot_id = Repos.make_snapshot(results)
+			Repos.update_head(snapshot_id)
+			return 0 
 		end
+
 		if files.is_a?(Array)
 			files.each do |f|
 				#results[f] = Revlog.hash(f)		###Original implementation!!!
