@@ -142,6 +142,8 @@ class Workspace
 
 
 
+
+	#a hash table and content
 	def share_value(hash, v)
 		flag = false
 		hash.each do |key, value|
@@ -151,46 +153,47 @@ class Workspace
 	end
 
 
-
+	#add: a file is added if this file exists in workspace and has a new name and new content
+	#delete: a file is deleted if this file exists in last committed snapshot and no file in workspace share name and content with it
+	#update: a file is updated if this file exists in last committed snapshot and a file with same name is workspace has different content with it 
+	#rename: a file is renamed if this file exists in last committed snapshot and a file in workspace has same content but different name with it 
 	def status()
 		add = []
 		delete = []
 		update = []
 		rename = []
-		#head = Repos.get_head(branch)						###Original implementation!!!
-		#snapshot = Repos.restore_snapshot(head)				###Original implementation!!!
-		#file_lst = snapshot.file_list()					###Original implementation!!!
-		#file_hash = snapshot.file_hash()					###Original implementation!!!
-	
-		file_lst = ['.octopus/Test1.txt', '.octopus/test2.txt', '.octopus/Test3.txt']				#for testing
-		file_hash = {'.octopus/Test1.txt' => 1, '.octopus/test2.txt' => 2, '.octopus/Test3.txt' => 3} 		#for testing
+		head = Repos.get_head(branch)	
+		snapshot = Repos.restore_snapshot(head)	
+		file_hash = snapshot.file_hash	
 
-		workspace_files = []
-		all_files = Dir.glob('.octopus/*')
-		all_files.each do |f|
-			if f != '.octopus/revlog' and f != '.octopus/repo' and f != '.octopus/communication'
-				workspace_files.push(f)
-			end
-		end
-		#workspace_hash = {}							###Original implementation!!!
-		#workspace_files.each do |f|						###Original implementation!!!
-		#	workspace_hash[f] = Revlog.hash(f)				###Original implementation!!!
-		#end									###Original implementation!!!
-		workspace_hash = {'.octopus/test1.txt' => 3, '.octopus/test2.txt' => 4, '.octopus/est3.txt' => 5}	#for testing 
+		workspace_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
+
+		workspace_hash = {}		
+		workspace_files.each do |f|	
+			workspace_hash[f] = Revlog.hash(f)	
+		end				
 
 
+		#check every file in workspace
 		workspace_files.each do |f|
+			content = File.read(f)
+			#if the name appears in last commit
 			if file_hash.has_key?(f)
-				if file_hash[f] != workspace_hash[f]
+				#if the content is changed, then it's updated
+				if Revlog.get_file(file_hash[f]) != content
 					update.push(f)
-				end
+				end	
+			#if the name doesn't appear in last commit (could be added or renamed)
 			else
-				if not share_value(file_hash, workspace_hash[f])
+				#if the content never appers in last commit
+				if not appear(file_hash, content)
 					add.push(f)
 				end
 			end
 		end
-		file_lst.each do |f|
+		#check every file in last commit
+		file_hash.each do |path, hash
+|
 			if not workspace_hash.has_key?(f)
 				new_name = share_value(workspace_hash, file_hash[f])
 				if new_name
