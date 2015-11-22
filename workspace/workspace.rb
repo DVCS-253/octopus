@@ -1,6 +1,6 @@
 require 'fileutils'
-#require_relative 'RevLog'
-#require_relative 'Repos'
+require_relative 'Revlog'
+require_relative 'Repos'
 
 class Workspace
 
@@ -43,7 +43,7 @@ class Workspace
 			#rebuild the directory of the file
 			rebuild_dir(path)
 			#decode the content of a file
-                        content = RevLog.get_file(hash)	
+                        content = Revlog.get_file(hash)	
 			#write content
                         File.write(path, content)
                 end
@@ -58,7 +58,7 @@ class Workspace
 		file_hash = snapshot.repos_hash
 		#obtain the content of the file
 		hash = file_hash[path]
-		content = RevLog.get_file(hash)
+		content = Revlog.get_file(hash)
 		rebuild_dir(path)
 		File.write(path, content)	
 	end
@@ -125,7 +125,7 @@ class Workspace
 		#if commit a list or a directory, add last committed files 
 		head = Repos.get_head()
 		snapshot = Repos.restore_snapshot(head)
-		file_hash = snapshot.file_hash	
+		file_hash = snapshot.repos_hash	
 		file_hash.each do |path, hash|
 			#add new files from last commit 
 			if not results.has_key?(path)
@@ -165,7 +165,7 @@ class Workspace
 		head = Repos.get_head(branch)	
 		snapshot = Repos.restore_snapshot(head)	
 		#file_content is a hashtable for files of last commit, key = path, value = content
-		file_hash = snapshot.file_hash	
+		file_hash = snapshot.repos_hash	
 		file_content = {}
 		file_hash.each do |path|
 			file_content[path] = Revlog.get_file(path)
