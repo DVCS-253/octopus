@@ -102,6 +102,7 @@ class Repos
 		$repo_dir = File.join(Dir.pwd, ".octopus/repo")
 		$comm_dir = File.join(Dir.pwd, ".octopus/communication")
 		$head_dir = File.join(repo_dir, ".octopus/head")
+		$text_file_dir = File.join(comm_dir, "text_file")
 		# Created snapshot_tree
 		$snapshot_tree = Tree.new
 
@@ -164,7 +165,7 @@ class Repos
 			file_name = File.basename(file)
 			# send contents of each file and get file_id from Revlog
 			# Save to hash with it's basename
-			snapshot.repos_hash[file_name] = Revlog.add_file(File.read(file))
+			snapshot.repos_hash["#{file_name}"] = Revlog.add_file(File.read(file))
 		end
 
 		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
@@ -291,35 +292,18 @@ class Repos
 		snapshot = $snapshot_tree.findNode(snapshot_ID)
 		latest_snaps = $snapshot_tree.snapshots.find_all {|x| snapshot_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
 
-		text_file_dir = File.join(comm_dir, "text_file")
-
-		# File.open(text_file_dir, 'w'){ |f|
-		# 	f.puts "snapshot{"
-		# 	f.puts "	\"branch_name\" =>"
-		# 	f.puts "		#{snapshot.branch_name},"
-		# 	latest_snaps.each_with_index{ |item,index|
-		# 		f.puts "	\"snapshot_ID\"#{index+1} => #{snap.snapshot_ID}"
-		# 		f.puts "		\"files\" =>"
-		# 		i = 1
-		# 		repos_hash.each do |title, id|
-		# 			f.puts "			\"filename\"#{i} => #{title}"
-		# 			f.puts "				#{get_file(title)},"
-		# 			i += 1
-		# 		end
-		# 		f.puts "		\"committed_time\" =>"
-		# 		f.puts "			#{item.commit_time}"
-		# 		f.puts "		},"
-
-		# 	}
-		# 	f.puts "}"
-		# }
-
 		text_file = {
-			"branch_name" => "#{snapshot.branch_name}"
+					"branch_name" => "#{snapshot.branch_name}"
+					}
+		latest_snaps.each_with_index{ |snap,index|
+			text_file["snapshot_#{snap.snapshot_ID}"] = {"committed_time" => "#{snap.commit_time}"}
+			snap.repos_hash.each_with_index do |(file, id), index2|
+				text_file["snapshot_#{snap.snapshot_ID}"]["files_#{index2+1}"] = {"#{file}" => "#{Revlog.get_file(id)}"}
+			end
 		}
-		
 
-
+		snapshots_data = Marshal.dump(text_file)		
+		File.open(text_file_dir, 'wb') { |f| f.puts snapshots_data}
 
 	end
 
@@ -335,10 +319,31 @@ class Repos
 	# and update snapshots tree
 	def update_tree(text_file)
 		$snapshot_tree = Marshal.load(File.binread($store_dir))
-		# something happened 
+		snapshots_data = Marshal.load(File.binread($text_file_dir))
 
+		branch_name = snapshots_data["branch_name"]
+		snapshots_only = snapshots_data.select {|key, value| key.match(/^snapshot_\d+/)}
+		# Simply replace the old branch
+		if $snapshot_tree.branches.include(branch_name)
+			delete_branch(branch_name)
+		end
+		$snapshot_tree.branches.push(branch_name)
+		# snap will be string like "snapshot_1", "snapshot_2"
+		# only get number from it
+		snapshots_only.each_with_index {|(snap, info),index|
+			snapshot = $snapshot_tree.snapshots.add_snapshot(snap.scan(/\d/).join(''))
+			if index == 0
+				snapshot.branch_HEAD = true
+			end
+			snapshot.commit_time = snapshots_only["#{snap}"]["committed_time"]
+			files_only = snapshots_only[snap].select {|key, value| key.match(/^files_\d+/)}
+			files_only.each {|file, contents|
+				snapshot.repos_hash["#{file}"] = Revlog.add_file(contents)
+			}
 
-		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
+		}
+
+	File.open($store_dir, 'wb'){|f| f.write(Marshal.dump($snapshot_tree))}
 
 	end
 
