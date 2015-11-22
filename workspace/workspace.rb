@@ -52,13 +52,30 @@ class Workspace
 	end
 
 
+	#Given a file path, copy the file from current head snapshot	
+	def check_out_file(path)
+		#obtain the head snapshot
+		head = Repos.get_head()
+		snapshot = Repos.restore_snapshot(head)
+		file_hash = snapshot.repos_hash
+		#obtain the content of the file
+		hash = file_hash[path]
+		content = RevLog.get_file(hash)
+		rebuild_dir(path)
+		File.write(path, content)	
+	end
 
 
-	def check_out(branch)
-		#head = Repos.get_head(branch)			###Original implementation!!!
-		#check_out_snapshot(head)			###Original implementation!!!
-
-		check_out_snapshot(1) 				#for testing
+	#checkout a branch or a file
+	#input arg is a branch name or a file path
+	def checkout(arg)
+		#if branch name doesn't exist, ASSUME RETURN IS NIL
+		head = Repos.get_head(arg)
+		if head == nil
+			check_out_file(arg)
+		else
+			check_out_snapshot(head)
+		end
 		return 0	
 	end
 
