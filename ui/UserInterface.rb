@@ -1,4 +1,6 @@
 #Provides interface to the users in order to execute commands
+
+require "#{File.dirname(__FILE__)}/../workspace/workspace.rb"
 class UserInterface
 	
 	#--List of supported commands
@@ -83,7 +85,7 @@ class UserInterface
 			if matched
 				params = Hash.new
 				params["directory"] = matched[2] if matched[2]
-				result = executeCommand(cmd,params)
+				result = Workspace.new.init
 			else
 				result = "Incorrect format. Expected: " + InitUsg
 			end

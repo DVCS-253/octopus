@@ -2,6 +2,6 @@
 
 #to run this file, add the `pwd` to your path.
 #
-require './ui/UserInterface.rb'
+require '/home/hoover/u3/ashanina/Documents/253/octopus/ui/UserInterface.rb'
 
 UserInterface.new.main(ARGV)
