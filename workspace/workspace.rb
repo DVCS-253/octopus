@@ -1,16 +1,25 @@
 require 'fileutils'
-#require_relative 'ReLog'
+#require_relative 'RevLog'
 #require_relative 'Repos'
 
 class Workspace
 
+	#Given a file path, rebuild its dir
+	#Note: the parameter needs to be a path of a file, not a path of a directory
+	#Example: rebuild_dir('DVCS/test/test_case.rb')
+	#Effect: directory "./DVCS/test/" will be set up, if already existed then do nothing
 
-	def init
-		Dir.mkdir('.octopus')
-		Dir.mkdir('.octopus/revlog')
-		Dir.mkdir('.octopus/repo')
-		Dir.mkdir('.octopus/communication')
+	def rebuild_dir(path)
+		#split the path with file_seperator
+		hierarchy = path.split('/')
+		path = './'
+		#ignore the file name 
+		(0..hierarchy.length-2).each do |d|
+			path = path + hierarchy[d] + '/'
+			Dir.mkdir(path) if not File.directory?(path)
+		end
 	end
+
 
 
 	def check_out_snapshot(snapshot_id)
@@ -20,11 +29,10 @@ class Workspace
                 file_hash.each do |key, value|
                         path = key
 			hash = value
+			#rebuild the directory of the file
+			rebuild_dir(path)
                         content = RevLog.get_file(hash)	
-			#how to duild a directory
-			
 			Dir.mkdir(directory_name) unless File.exists?(directory_name)
-			
                         File.write(workspace + path, content)
                 end
 	end
