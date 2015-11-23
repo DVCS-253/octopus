@@ -99,6 +99,7 @@ class Repos
 		# Dir.mkdir(File.join(Dir.pwd, ".octopus"), 0700)
 		# Dir.mkdir(File.join(Dir.pwd, ".octopus/repo"), 0700)
 		# Dir.mkdir(File.join(Dir.pwd, ".octopus/communication"), 0700)
+		p "in repo init"
 		$repo_dir = File.join(Dir.pwd, ".octopus/repo")
 		$comm_dir = File.join(Dir.pwd, ".octopus/communication")
 		$head_dir = File.join($repo_dir, "head")
@@ -397,5 +398,5 @@ class Repos
 end
 
 # Test
-r = Repos.new
-r.init
+# r = Repos.new
+# r.init
