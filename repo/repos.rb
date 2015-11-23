@@ -46,14 +46,14 @@ class Snapshot
 	attr_accessor :snapshot_ID, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD, :branches
 
 	def initialize
-		@repos_hash = Hash.new
-		@parent = Array.new
-		@child = Array.new
+		@repos_hash = {}
+		@parent = []
+		@child = []
 		@root = false
 		@commit_time = Time.new
 		@branch_name = "master"
 		@branch_HEAD = false
-		@branches = Array.new
+		@branches = []
 	end
 
 	def add_child(node)
@@ -138,21 +138,22 @@ class Repos
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
 
-		if @@head.to_i == 0
+		if @@head == "0"
 			p "adding the first snapshot"
 			snapshot = @@snapshot_tree.add_snapshot
 			# Record commit time of this commit
 			snapshot.commit_time = Time.now
 			snapshot.root = true
-			p snapshot.snapshot_ID
-			File.open(@@head_dir, 'w'){ |f| f.write ("#{snapshot.snapshot_ID}")}
+			p snapshot.snapshot_ID.class
+			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
+			# puts Marshal::load(File.binread(@@head_dir))
 		else
+			p "adding the non first snapshot"
 			# latest_branch is the latest commit on this branch
 			# which means find last appearance snapshot with current branch name
 			# just reverse array and find first appearance 
 			r_ids = @@snapshot_tree.snapshots.reverse
-			p "all snapshots #{@@snapshot_tree.snapshots.inspect}"
-			latest_branch = r_ids.find {|x| x.branch_name == snapshot_tree.current_branch}
+			latest_branch = r_ids.find {|x| x.branch_name == @@snapshot_tree.current_branch}
 
 			# add one on last snapshot_ID to make a new one
 			snapshot = @@snapshot_tree.add_snapshot
@@ -162,15 +163,19 @@ class Repos
 			latest_branch.add_child(snapshot)
 			snapshot.add_parent(latest_branch)
 			# Then head becomes this snapshot' ID
-			File.open(@@head_dir, 'w'){ |f| f.write ("#{snapshot.snapshot_ID}")}
+			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		end
 		files_to_be_commits.each do |file_path, content|
 			# get basename, like "a.rb"
 			file_name = File.basename(file_path)
 			# send contents of each file and get file_id from Revlog
 			# Save to hash with it's basename
-			snapshot.repos_hash["#{file_name}"] = Revlog.add_file(content)
+			snapshot.repos_hash["#{file_path}"] = Revlog.add_file(content)
 		end
+
+		p snapshot.branch_name
+		p snapshot.repos_hash.to_a.inspect
+		p "all snapshots #{@@snapshot_tree.snapshots.count}"
 
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
 		return snapshot.snapshot_ID
