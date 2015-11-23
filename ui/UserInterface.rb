@@ -137,14 +137,15 @@ class UserInterface
 			else
 				result = "Incorrect format. Expected: " + CommitUsg
 			end	
-		elsif cmd == "branch"
+		elsif cmd == "branch" # this should accept a branch name also
 			matched = fullCmd.match BranchRE
 			if matched
 				params = Hash.new
 				params["all"] = true if matched[2]
 				params["delete"] = true if matched[5]
 				params["branch"] = matched[6] if matched[6]
-				result = executeCommand(cmd,params)
+				p params.to_a.inspect
+				result = Workspace.branch(params)
 			else
 				result = "Incorrect format. Expected: " + BranchUsg
 			end	

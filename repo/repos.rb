@@ -46,6 +46,7 @@ class Snapshot
 	attr_accessor :snapshot_ID, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD, :branches
 
 	def initialize
+		@snapshot_ID = 0
 		@repos_hash = {}
 		@parent = []
 		@child = []
@@ -179,6 +180,17 @@ class Repos
 
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
 		return snapshot.snapshot_ID
+	end
+
+	def self.add_branch(branchname)
+		@@head = File.open(@@head_dir, 'r'){|f| f.read}
+		h = Marshal::load(File.binread(@@head))
+		new_branch = h.dup
+		new_branch.snapshot_ID = 0
+		new_branch.branch_name = branchname
+		new_branch.add_parent = h
+		@@snapshots.push(new_branch)
+		File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 	end
 
 	# returns a specific snapshot
