@@ -8,10 +8,10 @@ require 'etc'
 
 module PushPull
 
-  @@repo = Repos.new
+  # @@repo = Repos.new
   @@dvcs_dir = '.octopus' # Name of the directory containing the DVCS files
 
-  private_class_method :pull_with_connection
+  # private_class_method :pull_with_connection
 
   # Uses the Net::SSH gem to create an SSH session.
   # The user will be asked for their credentials for the connection,
