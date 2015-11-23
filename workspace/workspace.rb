@@ -149,7 +149,9 @@ class Workspace
 		return 1			
 	end
 
-
+	def branch(branchname)
+		Repos.add_branch(branchname)
+	end
 
 	#check if content exists in given hash table 
 	#if yes, return its key
