@@ -1,8 +1,12 @@
-How to set up:
-  Clone this repo on your computer (use the oct branch)
-  Add the path to this repository to your PATH variable.
+## Installation
+- Clone this repository onto your computer (use the oct branch)
+- Run `bundle install` to install Ruby dependencies.
+  - If you don't have bundler, run `gem install bundler`
+- Add the path to this repository to your `PATH` variable.
   
-How to run:
+## Usage
+  ```
   oct init
-  use oct -help for a full list of commands.
+  oct -help # For a full list of commands
+  ```
 

@@ -6,8 +6,6 @@
 #   Add export PATH=$PATH:/path/to/oct/source to your ~/.bashrc
 #
 
-# to run this file, add the `pwd` to your path.
-#
 require "#{File.dirname(__FILE__)}/ui/UserInterface.rb"
 
 UserInterface.new.main(ARGV)
