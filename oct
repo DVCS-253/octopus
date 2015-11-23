@@ -1,7 +1,13 @@
 #!/usr/bin/env ruby 
 
-#to run this file, add the `pwd` to your path.
 #
-require '/home/hoover/u3/ashanina/Documents/253/octopus/ui/UserInterface.rb'
+# To use Octopus, please add the directory path to this file to your PATH
+# For Bash:
+#   Add export PATH=$PATH:/path/to/oct/source to your ~/.bashrc
+#
+
+# to run this file, add the `pwd` to your path.
+#
+require "#{File.dirname(__FILE__)}/ui/UserInterface.rb"
 
 UserInterface.new.main(ARGV)
