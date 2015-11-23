@@ -1,8 +1,17 @@
 require 'fileutils'
-require_relative 'Revlog'
-require_relative 'Repos'
+require "#{File.dirname(__FILE__)}/../repo/repos.rb"
+require "#{File.dirname(__FILE__)}/../revlog/revlog.rb"
 
 class Workspace
+
+
+	def init
+		p "init"
+		Dir.mkdir('.octopus')
+		Dir.mkdir('.octopus/revlog')
+		Dir.mkdir('.octopus/repo')
+		Dir.mkdir('.octopus/communication')
+	end
 
 	#Given a file path, rebuild its dir
 	#Note: the parameter needs to be a path of a file, not a path of a directory
@@ -194,7 +203,7 @@ class Workspace
 		end
 		#check every file in last commit
 		file_content.each do |path, content|
-|			#if a file in last commit doesn't appear in workspace, it could be deleted or renamed
+			#if a file in last commit doesn't appear in workspace, it could be deleted or renamed
 			if not workspace_content.has_key?(path)
 				#check if the content appears in workspace
 				new_name = appear(workspace_content, content)
