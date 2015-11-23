@@ -14,7 +14,7 @@ class UserInterface
 	AddRE = "add\s*(((\s+(\"[^\s]*\"))*)|(\s+(\.))?)$"
 	CheckoutRE = "checkout\s*(\s+([^\s]*))?\s*(\s+(-b)\s+([^\s]*))?\s*(\s+(--track)\s+([^\s]*/[^\s]*))?$"
 	CommitRE = "commit(\s+(-a))?(\s+(-m)\s+(\"[^\"]*\"))?((\s+([^\s]*))*)$"
-	BranchRE = "branch\s*((\s+(-a))|\s*(\s+(-d)\s+([^\s]*)))?$"
+	BranchRE = "branch\s*(\s*(\s+(-a)\s+([^\s]*))|\s*(\s+(-d)\s+([^\s]*)))?$"
 	MergeRE = "merge\s*(\s+([^\s]*)\s*)*$"
 	PushRE = "push(\s+(origin))?(\s+([^\s]*))$"
 	PullRE = "pull(\s+(origin))?(\s+([^\s]*))$"
@@ -141,11 +141,15 @@ class UserInterface
 			matched = fullCmd.match BranchRE
 			if matched
 				params = Hash.new
-				params["all"] = true if matched[2]
+				add = matched[2]
+				if add
+					branch = matched[4]
+					Workspace.new.branch(branch)
+				#params["add"] = true if matched[2]
+				#params["branch"] = matched[4] if matched[4]
 				params["delete"] = true if matched[5]
 				params["branch"] = matched[6] if matched[6]
-				p params.to_a.inspect
-				result = Workspace.branch(params)
+				
 			else
 				result = "Incorrect format. Expected: " + BranchUsg
 			end	
