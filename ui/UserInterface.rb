@@ -145,6 +145,7 @@ class UserInterface
 				if add
 					branch = matched[4]
 					Workspace.new.branch(branch)
+				end
 				#params["add"] = true if matched[2]
 				#params["branch"] = matched[4] if matched[4]
 				params["delete"] = true if matched[5]
