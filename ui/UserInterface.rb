@@ -127,8 +127,12 @@ class UserInterface
 				params["msg"] = matched[5].gsub(/"/,'') if matched[4] and matched[5]
 				if matched[6]
 					files = matched[6].split(" ")
-					files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
+					# files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
+					files.map! do |file| 
+								file = Dir.pwd + "/" + file
+							end
 				end
+				puts "Files passed for commit #{files.inspect}"
 				result = Workspace.new.commit(files)
 			else
 				result = "Incorrect format. Expected: " + CommitUsg

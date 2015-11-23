@@ -8,7 +8,7 @@ require 'etc'
 
 module PushPull
 
-  @@repo = Repos.new
+  # @@repo = Repos.new
   @@dvcs_dir = '.octopus' # Name of the directory containing the DVCS files
 
   # private_class_method :pull_with_connection

@@ -4,13 +4,13 @@ require "#{File.dirname(__FILE__)}/../revlog/revlog.rb"
 
 class Workspace
 
-
 	def init
 		p "init"
 		Dir.mkdir('.octopus')
 		Dir.mkdir('.octopus/revlog')
 		Dir.mkdir('.octopus/repo')
 		Dir.mkdir('.octopus/communication')
+		Repos.init
 	end
 
 	#Given a file path, rebuild its dir
@@ -119,32 +119,33 @@ class Workspace
 		end
 		#commit a list of files
 		if arg.is_a?(Array)
+			results = {}
 			arg.each do |f|
-				path = './'+ f
-				content = File.read(path)
+				content = File.read(f)
 				results[f] = content
 			end
 		#commit a directory
 		elsif File.directory?('./' + arg)
-			path = './' + arg
 			all_files = Dir.glob('./' + arg + '/**/*').select{ |e| File.file?}
 			results = build_hash(all_files)
 		end
 
 		#if commit a list or a directory, add last committed files 
-		head = Repos.get_head()
-		snapshot = Repos.restore_snapshot(head)
-		file_hash = snapshot.repos_hash	
-		file_hash.each do |path, hash|
-			#add new files from last commit 
-			if not results.has_key?(path)
-				content = Revlog.get_file(hash)
-				results[path] = content
-			end
-		end
+		# head = Repos.get_head
+		# snapshot = Repos.restore_snapshot(head)
+		# file_hash = snapshot.repos_hash	
+		# file_hash.each do |path, hash|
+		# 	#add new files from last commit 
+		# 	if not results.has_key?(path)
+		# 		content = Revlog.get_file(hash)
+		# 		results[path] = content
+		# 	end
+		# end
 		#make a new snapshot and update the head 
-		snapshot_id = Repost.make_snapshot(results)
-		Repost.update_head(snapshot_id)
+		p results.class
+		snapshot_id = Repos.make_snapshot(results)
+		# p "printing head" + snapshot_id
+		# Repos.update_head(snapshot_id) <-- Repos does this
 		return 1			
 	end
 
