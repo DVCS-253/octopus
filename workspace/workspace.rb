@@ -194,7 +194,7 @@ class Workspace
 		end
 		#check every file in last commit
 		file_content.each do |path, content|
-|			#if a file in last commit doesn't appear in workspace, it could be deleted or renamed
+			#if a file in last commit doesn't appear in workspace, it could be deleted or renamed
 			if not workspace_content.has_key?(path)
 				#check if the content appears in workspace
 				new_name = appear(workspace_content, content)
