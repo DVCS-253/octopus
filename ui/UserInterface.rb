@@ -231,8 +231,10 @@ class UserInterface
 			matched = fullCmd.match UpdateRE
 			if matched
 				params = Hash.new
-				params["textfile"] = matched[2] if matched[2]
-				result = executeCommand(cmd,params)
+				textfile = matched[2] if matched[2]
+				params["textfile"] = textfile
+				Repos.new.update_tree(textfile)
+				#result = executeCommand(cmd,params)
 			else
 				result = "Incorrect format. Expected: " + UpdateUsg
 			end	
