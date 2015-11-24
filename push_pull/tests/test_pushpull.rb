@@ -158,7 +158,7 @@ class TestPushPull < Test::Unit::TestCase
 
     # Pull into the empty local repo and assert for correctness
     in_local_repo {
-      PushPull.pull(@remote_url)
+      PushPull.pull(@remote_url, 'master')
 
       assert_equal(Repos.get_head(), remote_head,
                    'Head of local repo is not same as head of remote.')
@@ -183,7 +183,7 @@ class TestPushPull < Test::Unit::TestCase
 
     # Pull from local and create a commit history on the remote for file 1 and 2
     in_remote_repo {
-      PushPull.pull(@local_url)
+      PushPull.pull(@local_url, 'master')
 
       # Modify file 1 and commit the changes
       File.write(@files[0], @remote_file_contents[0])
@@ -198,7 +198,7 @@ class TestPushPull < Test::Unit::TestCase
 
     # Pull into the local repository
     in_local_repo {
-      PushPull.pull(@remote_url)
+      PushPull.pull(@remote_url, 'master')
 
       assert_equal(Repos.get_head(), remote_head,
                    'Head of local repo is not same as head of remote.')
@@ -233,7 +233,7 @@ class TestPushPull < Test::Unit::TestCase
     # Assert that pulling from the remote with uncommitted local changes raises an exception
     in_local_repo {
       assert_raise do
-        PushPull.pull(@remote_url)
+        PushPull.pull(@remote_url, 'master')
       end
     }
   end
@@ -285,7 +285,7 @@ class TestPushPull < Test::Unit::TestCase
       @@workspace.commit(@files[0])
 
       local_head = Repos.get_head()
-      PushPull.push(@remote_url)
+      PushPull.push(@remote_url, 'master')
     }
 
     # Assert that the remote is identical to the local
@@ -313,7 +313,7 @@ class TestPushPull < Test::Unit::TestCase
 
     in_local_repo {
       # Pull the remote into the empty local repo
-      PushPull.pull(@remote_url)
+      PushPull.pull(@remote_url, 'master')
 
       # Modify file 1 and commit the changes
       File.write(@files[0], @local_file_contents[0])
@@ -325,7 +325,7 @@ class TestPushPull < Test::Unit::TestCase
 
       # Push the changes from local to the remote
       local_head = Repos.get_head()
-      PushPull.push(@remote_url)
+      PushPull.push(@remote_url, 'master')
     }
 
     # Assert that the commit history and staged files are correct on the remote
@@ -363,7 +363,7 @@ class TestPushPull < Test::Unit::TestCase
     # Assert that pushing to the remote with uncommitted changes raises an exception
     in_local_repo {
       assert_raise do
-        PushPull.push(@remote_url)
+        PushPull.push(@remote_url, 'master')
       end
     }
   end
