@@ -190,9 +190,11 @@ class UserInterface
 		elsif cmd == "status"
 			matched = fullCmd.match StatusRE
 			if matched
-				add, delete, update, rename = Workspace.new.status
-				puts "in UI #{add.inspect}"
-				#result = [add, delete, update, rename].flatten
+				files = Workspace.new.status
+				puts "->Uncommitted files/directories(#{files.size}):" if files.size>0
+				files.each_with_index{|file,i| 
+				puts "    "+red(file.to_s)
+				}
 			else
 				result = "Incorrect format. Expected: " + StatusUsg
 			end	
@@ -275,6 +277,17 @@ class UserInterface
 		p
 		p
 		result
+	end
+
+	#To colorize the output based on the color code
+	private
+	def colorize(text, color_code)
+  		"\e[#{color_code}m#{text}\e[0m"
+	end
+	
+	#To colorize the output to red
+	private
+	def red(text); colorize(text, 31); end 
 	end
 end
 
