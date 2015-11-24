@@ -1,8 +1,17 @@
 require 'fileutils'
-require_relative 'Revlog'
-require_relative 'Repos'
+require "#{File.dirname(__FILE__)}/../repo/repos.rb"
+require "#{File.dirname(__FILE__)}/../revlog/revlog.rb"
 
 class Workspace
+
+	def init
+		p "init"
+		Dir.mkdir('.octopus')
+		Dir.mkdir('.octopus/revlog')
+		Dir.mkdir('.octopus/repo')
+		Dir.mkdir('.octopus/communication')
+		Repos.init
+	end
 
 	#Given a file path, rebuild its dir
 	#Note: the parameter needs to be a path of a file, not a path of a directory
@@ -110,45 +119,65 @@ class Workspace
 		end
 		#commit a list of files
 		if arg.is_a?(Array)
+			results = {}
 			arg.each do |f|
-				path = './'+ f
-				content = File.read(path)
+				content = File.read(f)
 				results[f] = content
 			end
 		#commit a directory
 		elsif File.directory?('./' + arg)
-			path = './' + arg
 			all_files = Dir.glob('./' + arg + '/**/*').select{ |e| File.file?}
 			results = build_hash(all_files)
 		end
 
 		#if commit a list or a directory, add last committed files 
-		head = Repos.get_head()
-		snapshot = Repos.restore_snapshot(head)
-		file_hash = snapshot.repos_hash	
-		file_hash.each do |path, hash|
-			#add new files from last commit 
-			if not results.has_key?(path)
-				content = Revlog.get_file(hash)
-				results[path] = content
-			end
-		end
+		# head = Repos.get_head
+		# snapshot = Repos.restore_snapshot(head)
+		# file_hash = snapshot.repos_hash	
+		# file_hash.each do |path, hash|
+		# 	#add new files from last commit 
+		# 	if not results.has_key?(path)
+		# 		content = Revlog.get_file(hash)
+		# 		results[path] = content
+		# 	end
+		# end
 		#make a new snapshot and update the head 
-		snapshot_id = Repost.make_snapshot(results)
-		Repost.update_head(snapshot_id)
+		p results.class
+		snapshot_id = Repos.make_snapshot(results)
+		# p "printing head" + snapshot_id
+		# Repos.update_head(snapshot_id) <-- Repos does this
 		return 1			
 	end
 
-
+	# def branch(branchname)
+	# 	Repos.add_branch(branchname)
+	# end
 
 	#check if content exists in given hash table 
 	#if yes, return its key
 	#if no, return flase
-	def appear(content_table, content)
-		content_table.each do |path, value|
-			return path if value == content
-		end
-		return false
+	#def appear(content_table, content)
+	#	content_table.each do |path, value|
+	#		return path if value == content
+	#	end
+	#	return false
+	#end
+
+
+
+	def status
+		uncommitted = []
+		workspace_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
+		
+	
+		workspace_file.each do |path|
+			content = File.read(path)
+			time = File.mtime(path).to_s
+			file_id = Digest::SHA2.hexdigest(content + time)
+			uncommitted.push(path) if Revlog.get_file(file_id) == 'Revlog: File not found'
+		end		
+
+		return uncommitted
 	end
 
 
@@ -157,56 +186,58 @@ class Workspace
 	#delete: a file is deleted if this file exists in last committed snapshot and no file in workspace share name and content with it
 	#update: a file is updated if this file exists in last committed snapshot and a file with same name is workspace has different content with it 
 	#rename: a file is renamed if this file exists in last committed snapshot and a file in workspace has same content but different name with it 
-	def status()
-		add = []
-		delete = []
-		update = []
-		rename = []
-		head = Repos.get_head(branch)	
-		snapshot = Repos.restore_snapshot(head)	
-		#file_content is a hashtable for files of last commit, key = path, value = content
-		file_hash = snapshot.repos_hash	
-		file_content = {}
-		file_hash.each do |path|
-			file_content[path] = Revlog.get_file(path)
-		end
-		#workspace_contetn is a hashtable for files in workspace, key = path, value = content
-		workspace_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
-		workspace_content = {}		
-		workspace_files.each do |path|	
-			workspace_content[path] = File.read(path)	
-		end				
-		#check every file in workspace
-		workspace_content.each do |path, content|
-			#if the name appears in last commit
-			if file_content.has_key?(path)
-				#if the content is changed, then it's updated
-				if file_content[path] != content
-					update.push(path)
-				end	
-			#if the name doesn't appear in last commit (could be added or renamed)
-			else
-				#if the content doesn't appers in last commit
-				if not appear(file_content, content)
-					add.push(path)
-				end
-			end
-		end
-		#check every file in last commit
-		file_content.each do |path, content|
-|			#if a file in last commit doesn't appear in workspace, it could be deleted or renamed
-			if not workspace_content.has_key?(path)
-				#check if the content appears in workspace
-				new_name = appear(workspace_content, content)
-				#if the content appears in workspace, it's renamed
-				if new_name
-					rename.push(path + ' => ' + new_name)
-				#else this file is deleted
-				else
-					delete.push(path)
-				end
-			end
-		end
-		return add, delete, update, rename
-	end
+	
+	#def status
+	#	add = []
+	#	delete = []
+	#	update = []
+	#	rename = []
+	#	head = Repos.get_head	
+	#	snapshot = Repos.restore_snapshot(head)	
+	#	#file_content is a hashtable for files of last commit, key = path, value = content
+	#	file_hash = snapshot.repos_hash	
+	#	file_content = {}
+	#	file_hash.each do |path|
+	#		p path
+	#		file_content[path] = Revlog.get_file(path[1])
+	#	end
+	#	#workspace_contetn is a hashtable for files in workspace, key = path, value = content
+	#	workspace_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
+	#	workspace_content = {}		
+	#	workspace_files.each do |path|	
+	#		workspace_content[path] = File.read(path)	
+	#	end				
+	#	#check every file in workspace
+	#	workspace_content.each do |path, content|
+	#		#if the name appears in last commit
+	#		if file_content.has_key?(path)
+	#			#if the content is changed, then it's updated
+	#			if file_content[path] != content
+	#				update.push(path)
+	#			end	
+	#		#if the name doesn't appear in last commit (could be added or renamed)
+	#		else
+	#			#if the content doesn't appers in last commit
+	#			if not appear(file_content, content)
+	#				add.push(path)
+	#			end
+	#		end
+	#	end
+	#	#check every file in last commit
+	#	file_content.each do |path, content|
+	#		#if a file in last commit doesn't appear in workspace, it could be deleted or renamed
+	#		if not workspace_content.has_key?(path)
+	#			#check if the content appears in workspace
+	#			new_name = appear(workspace_content, content)
+	#			#if the content appears in workspace, it's renamed
+	#			if new_name
+	#				rename.push(path + ' => ' + new_name)
+	#			#else this file is deleted
+	#			else
+	#				delete.push(path)
+	#			end
+	#		end
+	#	end
+	#	return add, delete, update, rename
+	#end
 end
