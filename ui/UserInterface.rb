@@ -266,17 +266,6 @@ class UserInterface
 		return result
 	end
 
-	#To colorize the output based on the color code
-	private
-	def colorize(text, color_code)
-		"\e[#{color_code}m#{text}\e[0m"
-	end
-	
-	#To colorize the output to red
-	private
-	def red(text); colorize(text, 31); end 
-end
-
 	#Displays the result of execution of the command<br><br>
 	#Params:
 	# - result(String): result of the execution
@@ -286,6 +275,18 @@ end
 	def displayResult(result)
 		puts result
 	end
+
+	#To colorize the output based on the color code
+	private
+	def colorize(text, color_code)
+		"\e[#{color_code}m#{text}\e[0m"
+	end
+	
+	#To colorize the output to red
+	private
+	def red(text) 
+		colorize(text, 31)
+	end 
 end
 
 #'main' method invocation
