@@ -5,12 +5,12 @@ require "#{File.dirname(__FILE__)}/../revlog/revlog.rb"
 class Workspace
 
 	def init
-		p "init"
 		Dir.mkdir('.octopus')
 		Dir.mkdir('.octopus/revlog')
 		Dir.mkdir('.octopus/repo')
 		Dir.mkdir('.octopus/communication')
 		Repos.init
+		return "Initialized octopus repository"
 	end
 
 	#Given a file path, rebuild its dir

@@ -88,7 +88,6 @@ class UserInterface
 			if matched
 				params = Hash.new
 				params["directory"] = matched[2] if matched[2]
-				p "about to call init"
 				result = Workspace.new.init
 			else
 				result = "Incorrect format. Expected: " + InitUsg
@@ -273,7 +272,7 @@ class UserInterface
 	# - result(String): result of the execution to the testing module
 	private
 	def displayResult(result)
-		puts result
+		puts "🐙  => " + result
 	end
 
 	#To colorize the output based on the color code

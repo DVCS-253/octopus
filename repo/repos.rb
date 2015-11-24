@@ -111,7 +111,6 @@ class Repos
 		# Dir.mkdir(File.join(Dir.pwd, ".octopus"), 0700)
 		# Dir.mkdir(File.join(Dir.pwd, ".octopus/repo"), 0700)
 		# Dir.mkdir(File.join(Dir.pwd, ".octopus/communication"), 0700)
-		p "in repo init"
 		
 		# Created snapshot_tree
 		@@snapshot_tree = Tree.new
