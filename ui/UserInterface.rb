@@ -143,7 +143,7 @@ class UserInterface
 				add = matched[2]
 				if add
 					branch = matched[4]
-					Workspace.new.branch(branch)
+					Repos.make_branch(branch)
 				end
 				#params["add"] = true if matched[2]
 				#params["branch"] = matched[4] if matched[4]
@@ -190,10 +190,11 @@ class UserInterface
 			matched = fullCmd.match StatusRE
 			if matched
 				files = Workspace.new.status
-				puts "->Uncommitted files/directories(#{files.size}):" if files.size>0
+				puts "  Uncommitted files/directories(#{files.size}):" if files.size>0
 				files.each_with_index{|file,i| 
 					puts "    "+red(file.to_s)
 				}
+				result = "Current branch: "
 			else
 				result = "Incorrect format. Expected: " + StatusUsg
 			end	
