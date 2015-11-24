@@ -138,8 +138,6 @@ module PushPull
     # The directory name is the name of the repository by default
     directory_name = directory_name.nil? ? File.basename(remote) : directory_name
 
-    puts directory_name + ' | ' + Dir.entries(Dir.pwd).to_s + ' | ' + Dir.exists?(directory_name).to_s
-
     # Ensure the directory does not already exist
     raise 'Destination for clone already exists' if Dir.exists?(directory_name)
 
