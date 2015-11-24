@@ -87,7 +87,7 @@ module PushPull
     address, path = remote.split(':', 2)
 
     self.connect(address, path) { |ssh|
-      pull_with_connection(remote, path, ssh)
+      pull_with_connection(branch, ssh)
     }
   end
 
