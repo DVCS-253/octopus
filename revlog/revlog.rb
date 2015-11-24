@@ -26,6 +26,7 @@ class Revlog
 		# Returns:
 		# string file_id:: id of the hashed contents
 		def add_file (contents)
+			load_table(@json_file)
 			#generate hash for file contents
 			file_id = Digest::SHA2.hexdigest(contents)
 			@file_table[file_id.to_sym] = contents	#store file
@@ -206,3 +207,29 @@ class Revlog
 	end
 
 end #End class Revlog
+
+
+##########Initial Revlog################
+#              {}
+#Then do (these were done one by one using command line, not all at once)
+#Revlog::add_file("hello1")
+#Revlog::add_file("hello2")
+#Revlog::add_file("hello3")
+#Revlog::add_file("hello4")
+#Revlog::add_file("hello5")
+#Revlog::add_file("hello6")
+#Revlog::add_file("hello10")
+#Revlog::add_file("hello2004")
+#Revlog::add_file("hello13242")
+
+### end revlog
+
+# {"91e9240f415223982edc345532630710e94a7f52cd5f48f5ee1afc555078f0ab":"hello1",
+# "87298cc2f31fba73181ea2a9e6ef10dce21ed95e98bdac9c4e1504ea16f486e4":"hello2",
+# "47ea70cf08872bdb4afad3432b01d963ac7d165f6b575cd72ef47498f4459a90":"hello3",
+# "e361a57a7406adee653f1dcff660d84f0ca302907747af2a387f67821acfce33":"hello4",
+# "8dfe82d9a72ad831e48e524a38ad111f206ef08c39aa5847db26df034ee3b57d":"hello5",
+# "196373310827669cb58f4c688eb27aabc40e600dc98615bd329f410ab7430cff":"hello6",
+# "5bd2b246632eb0cfee5e5c8754ccd8c17853ce304e9f406a27ae66962e6a0548":"hello10",
+# "f0088b4d67ce358b0fe52e78a3849b9ca0b6cc2c420ea3f3000db76b0b532cd4":"hello2004",
+# "a68fd37e3b17abccceac4cca4f4da1b80ed7b616cca1d9940178bd440b5d0969":"hello13242"}
