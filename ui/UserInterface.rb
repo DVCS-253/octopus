@@ -30,7 +30,7 @@ class UserInterface
 	AddUsg = 'add ([.] | ["file1"] ["file2"] ...)'
 	CheckoutUsg = 'checkout [-b] [branch] [--track origin/branch]'
 	CommitUsg = 'commit [-a] [-m "msg"] ["file1"]["file2"] ...'
-	BranchUsg = 'branch ([-a] | [-d branch])'
+	BranchUsg = 'branch ([-a branch] | [-d branch])'
 	MergeUsg = 'merge [branch]'
 	PushUsg = 'push [origin] [branch]'
 	PullUsg = 'pull [origin] [branch]'
@@ -274,9 +274,6 @@ class UserInterface
 	private
 	def displayResult(result)
 		puts result
-		p
-		p
-		result
 	end
 
 	#To colorize the output based on the color code

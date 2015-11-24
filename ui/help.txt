@@ -25,7 +25,7 @@
                <file>... Commit specified <file>
     
 5 branch :  List, create, or delete branches
-  usage :   branch ([-a] | [-d branch])
+  usage :   branch ([-a branch] | [-d branch])
   parameters : 
              -a List both remote-tracking branches and local branches.
              -d Delete a branch
