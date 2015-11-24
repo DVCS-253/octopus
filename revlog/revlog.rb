@@ -11,13 +11,16 @@ class Revlog
 			raise "Cannot instantiate static class Revlog"
 		end
 
+		def init
+
+		end
 		# Load new file table
 		def load_table (filename)
 			new_table = File.open(filename)
 			@file_table = JSON.load(new_table)
+			puts "file table #{@file_table}"
 			new_table.close
 		end
-
 
 		# Stores the specified file in a
 		# hash table {file_id => file_contents}
@@ -26,7 +29,9 @@ class Revlog
 		# Returns:
 		# string file_id:: id of the hashed contents
 		def add_file (contents)
-			load_table(@json_file)
+			if File.exist?(@json_file)
+				load_table(@json_file)
+			end
 			#generate hash for file contents
 			file_id = Digest::SHA2.hexdigest(contents)
 			@file_table[file_id.to_sym] = contents	#store file
