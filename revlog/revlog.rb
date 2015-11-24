@@ -21,6 +21,16 @@ class Revlog
 			puts "file table #{@file_table}"
 		end
 
+		# Generate a hash code for the
+		# specified contents and time stamp
+		# Parameters:
+		# contents_and_time:: [file contents, last modified] to be hashed
+		# Returns:
+		# file_id:: id of the hashed contents
+		def gen_id (contents_and_time)
+			return Digest::SHA2.hexdigest(contents_and_time[0].to_s + contents_and_time[1].to_s)
+		end
+
 		# Stores the specified file in a
 		# hash table {file_id => file_contents}
 		# Parameters:
@@ -30,7 +40,7 @@ class Revlog
 		def add_file (contents_and_time)
 			load_table(@json_file)
 			#generate hash for file contents
-			file_id = Digest::SHA2.hexdigest(contents_and_time[0].to_s + contents_and_time[1].to_s)
+			file_id = gen_id(contents_and_time)
 			p "file table here: " + @file_table.inspect
 			@file_table[file_id.to_s] = contents_and_time	#store file
 			p "file table here: " + @file_table.inspect
