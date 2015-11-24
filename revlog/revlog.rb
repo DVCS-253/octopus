@@ -25,17 +25,20 @@ class Revlog
 		# Stores the specified file in a
 		# hash table {file_id => file_contents}
 		# Parameters:
-		# contents:: file_contents to be hashed
+		# contents:: [file_contents, commit time] to be hashed
 		# Returns:
 		# string file_id:: id of the hashed contents
-		def add_file (contents)
+		def add_file (contents_and_time)
 			if File.exist?(@json_file)
 				load_table(@json_file)
 			end
 			#generate hash for file contents
-			file_id = Digest::SHA2.hexdigest(contents)
-			@file_table[file_id.to_sym] = contents	#store file
+			file_id = Digest::SHA2.hexdigest(contents_and_time[0].to_s + contents_and_time[1].to_s)
+			p "file table here: " + @file_table.inspect
+			@file_table[file_id.to_s] = contents_and_time	#store file
+			p "file table here: " + @file_table.inspect
 			database = File.open(@json_file, 'w')
+
 			JSON.dump(@file_table, database) #update hashfile
 			database.close
 			return file_id
@@ -49,8 +52,11 @@ class Revlog
 		# Returns:
 		# string contents:: the contents retrieved from file_id
 		def get_file (file_id)
-			raise "Revlog Error: No such file" if @file_table[file_id.to_sym] == nil #if trying to get a nonexistant file
-			return @file_table[file_id.to_sym]
+			if File.exist?(@json_file)
+				load_table(@json_file)
+			end
+			return "Revlog: File not found" if @file_table[file_id.to_s].nil? #if trying to get a nonexistant file
+			return @file_table[file_id.to_s][0]
 		end
 
 		# Deletes the file associated with
@@ -61,8 +67,11 @@ class Revlog
 		# Returns:
 		# int exit_code:: 0 if exited successfully
 		def delete_file (file_id)
-			raise "Revlog Error: No such file" if @file_table[file_id.to_sym] == nil	#if trying to delete a nonexistant file
-			@file_table[file_id.to_sym] = nil
+			if File.exist?(@json_file)
+				load_table(@json_file)
+			end
+			raise "Revlog Error: No such file" if @file_table[file_id.to_s] == nil	#if trying to delete a nonexistant file
+			@file_table[file_id.to_s] = nil
 			database = File.open(@json_file, 'w')
 			JSON.dump(@file_table, database) #update hashfile
 			database.close

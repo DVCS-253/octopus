@@ -169,7 +169,7 @@ class Workspace
 	#delete: a file is deleted if this file exists in last committed snapshot and no file in workspace share name and content with it
 	#update: a file is updated if this file exists in last committed snapshot and a file with same name is workspace has different content with it 
 	#rename: a file is renamed if this file exists in last committed snapshot and a file in workspace has same content but different name with it 
-	def status()
+	def status
 		add = []
 		delete = []
 		update = []

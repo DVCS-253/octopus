@@ -177,9 +177,10 @@ class Repos
 		files_to_be_commits.each do |file_path, content|
 			# get basename, like "a.rb"
 			file_name = File.basename(file_path)
+			file_time = File.mtime(file_path)
 			# send contents of each file and get file_id from Revlog
 			# Save to hash with it's basename
-			snapshot.repos_hash["#{file_path}"] = Revlog.add_file(content)
+			snapshot.repos_hash["#{file_path}"] = Revlog.add_file([content, file_time])
 		end
 
 		p snapshot.branch_name
