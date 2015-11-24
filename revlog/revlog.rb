@@ -1,5 +1,6 @@
 require 'digest/sha2'
 require 'json'
+require 'time'
 
 class Revlog
 	@file_table = Hash.new # Hash table to store all file contents
@@ -23,7 +24,7 @@ class Revlog
 		# Stores the specified file in a
 		# hash table {file_id => file_contents}
 		# Parameters:
-		# contents_and_time:: [file contents, add time] to be hashed
+		# contents_and_time:: [file contents, last modified] to be hashed
 		# Returns:
 		# file_id:: id of the hashed contents
 		def add_file (contents_and_time)
@@ -40,7 +41,7 @@ class Revlog
 
 		# Retrieves the file associated with
 		# the specified file_id from the
-		# hash table {file_id => [file contents, add time]}
+		# hash table {file_id => [file contents, last modified]}
 		# Parameters:
 		# file_id:: file_id used for retrieval
 		# Returns:
@@ -53,7 +54,7 @@ class Revlog
 
 		# Retrieves the time stamp associated with
 		# the specified file_id from the
-		# hash table {file_id => [file contents, add time]}
+		# hash table {file_id => [file contents, last modified]}
 		# Parameters:
 		# file_id:: file_id used for retrieval
 		# Returns:
@@ -66,7 +67,7 @@ class Revlog
 
 		# Deletes the file and time associated with
 		# the specified file_id from the
-		# hash table {file_id => [file contents, add time]}
+		# hash table {file_id => [file contents, last modified]}
 		# Parameters:
 		# file_id:: file_id used for retrieval
 		# Returns:
@@ -100,7 +101,7 @@ class Revlog
 		# the id of a file which is
 		# either the successful merge
 		# or the conflict file
-		# hash table {file_id => [file contents, add time]}
+		# hash table {file_id => [file contents, last modified]}
 		# Parameters:
 		# file_id1:: file_id for first file
 		# file_id2:: file_id for second file
@@ -218,7 +219,7 @@ class Revlog
 				merged << lines[1] if lines[1] == lines[2]
 				break if files.all? {|i, file| file.empty?}
 			end #End loop do
-			return add_file(merged)
+			return add_file([merged,Time.now])
 		end #End merge
 	end #End metaclass Revlog
 
