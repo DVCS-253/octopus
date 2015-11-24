@@ -39,11 +39,29 @@ class Tree
 		raise "Unable to find Snapshot with snapshot_id #{snapshot_ID}"
 	end
 
-	def add_snapshot
+	def add_snapshot(commit_msg, root, branch_name, latest_branch=nil)
 		snapshot = Snapshot.new()
+
+		# Record commit time of this commit
+		snapshot.commit_time = Time.now
+
+		# Record the commit msg
+		snapshot.commit_msg = commit_msg
+
+		# Record the branch name
+		snapshot.branch_name = branch_name
+
+		# Record if is the root
+		snapshot.root = root
+		# 
+		if !latest_branch.nil?
+			latest_branch.add_child(snapshot)
+			snapshot.add_parent(latest_branch)
+		end
+
 		snapshot.snapshot_ID = Marshal::dump(snapshot) 
 		@snapshots.push(snapshot)
-		return snapshot
+		snapshot
 	end
 
 end
@@ -52,14 +70,9 @@ class Snapshot
 	attr_accessor :snapshot_ID, :commit_msg, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD, :branches
 
 	def initialize
-		@snapshot_ID = 0
 		@repos_hash = {}
 		@parent = []
 		@child = []
-		@root = false
-		@commit_time = Time.new
-		@branch_name = "master"
-		@branch_HEAD = false
 		@branches = []
 	end
 
@@ -101,6 +114,7 @@ class Repos
 	@@head_dir = File.join(@@repo_dir, "head")
 	@@text_file_dir = File.join(@@comm_dir, "text_file")
 	@@store_dir = File.join(@@repo_dir, "store")
+	@@branch_dir = ".octopus/repo/branches"
 
 	def self.init
 		# For testing
@@ -146,33 +160,37 @@ class Repos
 
 		if @@head == "0"
 			p "adding the first snapshot"
-			snapshot = @@snapshot_tree.add_snapshot
-			# Record commit time of this commit
-			snapshot.commit_time = Time.now
-			snapshot.root = true
-			p snapshot.snapshot_ID.class
+			snapshot = @@snapshot_tree.add_snapshot(commit_msg, true, "master")
+
+			p "printing first snapshot"
+			p snapshot
+			p snapshot.snapshot_ID
+
 			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
-			# puts Marshal::load(File.binread(@@head_dir))
+			# Updating the branch file -> by default the branch name is master
+			update_branch_file("master", snapshot.snapshot_ID)
 		else
 			p "adding the non first snapshot"
+			head_snapshot = Marshal.load(File.binread(@@head_dir))
+			current_branch = head_snapshot.branch_name
+			p head_snapshot
+			puts "current branch " + current_branch
+
 			# latest_branch is the latest commit on this branch
 			# which means find last appearance snapshot with current branch name
 			# just reverse array and find first appearance 
 			r_ids = @@snapshot_tree.snapshots.reverse
-			latest_branch = r_ids.find {|x| x.branch_name == @@snapshot_tree.current_branch}
+			# latest_commit = r_ids.find {|x| x.branch_name == @@snapshot_tree.current_branch}
+			latest_commit = r_ids.find {|x| x.branch_name == current_branch}
+			# # Record branch name
+			# snapshot.branch_name = @@snapshot_tree.current_branch
 
 			# add new snapshot
-			snapshot = @@snapshot_tree.add_snapshot
-			# Record commit time of this commit
-			snapshot.commit_time = Time.now
+			snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, current_branch, latest_commit)
 
-			# Record the commit msg
-			snapshot.commit_msg = commit_msg
-			# Record branch name
-			snapshot.branch_name = @@snapshot_tree.current_branch
+			# Updating the branch file
+			update_branch_file("master", snapshot.snapshot_ID)
 
-			latest_branch.add_child(snapshot)
-			snapshot.add_parent(latest_branch)
 			# Then head becomes this snapshot' ID
 			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		end
@@ -255,10 +273,29 @@ class Repos
 
 	end
 
+	def self.update_branch_file(branch_name, head)
+		# Record branch_name and HEAD's snapshot_ID
+		branch_table = load_branch_file (@@branch_dir)
+		branch_table[branch_name] = head
+		puts "branch table: #{branch_table.to_a.inspect}"
+		File.open(@@branch_dir, 'wb'){|f| f.write(Marshal.dump(branch_table))}
+		branch_table2 = load_branch_file (@@branch_dir)
+		branch_table2[branch_name] = head
+		puts "Testing branch table: "
+		puts branch_table[branch_name] == branch_table2[branch_name]
+	end
+
+	def self.load_branch_file (filename)	
+		if File.file? (filename)
+			branch_table = Marshal.load(File.binread(filename))
+		else
+			branch_table = {}
+		end
+	end
+
 	# Make 1 child from current HEAD 
 	def self.make_branch(branch_name)
-
-		@@snapshot_tree = Marshal.load(File.binread($store_dir))
+		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
 		# Make a Json file in repo named "branches.json"
 		json_dir = File.join(@@repo_dir, "branches.json")
@@ -379,7 +416,7 @@ class Repos
 
 		}
 
-	File.open($store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
+		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
 
 	end
 
