@@ -49,7 +49,7 @@ class Tree
 end
 
 class Snapshot
-	attr_accessor :snapshot_ID, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD, :branches
+	attr_accessor :snapshot_ID, :commit_msg, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD, :branches
 
 	def initialize
 		@snapshot_ID = 0
@@ -139,7 +139,7 @@ class Repos
 	#  |"c.rb" => "file_id of c.rb get from Revlog"|
 	#   -------------------------------------------
 
-	def self.make_snapshot(files_to_be_commits)
+	def self.make_snapshot(files_to_be_commits, commit_msg=nil)
 		p files_to_be_commits.class
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
@@ -165,6 +165,9 @@ class Repos
 			snapshot = @@snapshot_tree.add_snapshot
 			# Record commit time of this commit
 			snapshot.commit_time = Time.now
+
+			# Record the commit msg
+			snapshot.commit_msg = commit_msg
 			# Record branch name
 			snapshot.branch_name = @@snapshot_tree.current_branch
 
