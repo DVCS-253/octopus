@@ -1,4 +1,5 @@
 require_relative "#{File.dirname(__FILE__)}/../repo/repos"
+require_relative "#{File.dirname(__FILE__)}/../workspace/workspace"
 require 'io/console'
 require 'fileutils'
 require 'tempfile'
@@ -8,7 +9,6 @@ require 'etc'
 
 module PushPull
 
-  # @@repo = Repos.new
   @@dvcs_dir = '.octopus' # Name of the directory containing the DVCS files
 
   # private_class_method :pull_with_connection
@@ -62,7 +62,7 @@ module PushPull
     self.connect(address, path) { |ssh|
       remote_head = ssh.exec! "oct get_head #{branch}"
 
-      local_changes = @@repo.get_latest_snapshots(remote_head)
+      local_changes = Repos.get_latest_snapshots(remote_head)
 
       # Raise an exception if local changes could not be calculated
       raise 'Local is not up to date, please pull and try again' if !local_changes
@@ -95,11 +95,13 @@ module PushPull
   # An exception is raised if the remote does not have the local HEAD in its history,
   # or if the given branch does not exist locally or on the remote.
   #
+  # This method should be considered private.
+  #
   # @param [string] branch The name of the branch to pull.
   # @param [Net::SSH] ssh The ssh connection object to use.
   #
-  def pull_with_connection(branch, ssh)
-    local_head = @@repo.get_head(branch)
+  def self.pull_with_connection(branch, ssh)
+    local_head = Repos.get_head(branch)
 
     # Calling either of these `oct func` methods updates
     # the #{@@dvcs_dir}/communication/text_file file on the remote
@@ -121,7 +123,7 @@ module PushPull
       file.write(ssh.exec! "cat #{@@dvcs_dir}/communication/text_file")
 
       # Update our local snapshot tree
-      @@repo.update_tree(file.path)
+      Repos.update_tree(file.path)
     }
   end
 
@@ -134,7 +136,9 @@ module PushPull
   #
   def self.clone(remote, directory_name = nil)
     # The directory name is the name of the repository by default
-    directory_name = directory_name.nil? ? 'clone' : File.basename(remote)
+    directory_name = directory_name.nil? ? File.basename(remote) : directory_name
+
+    puts directory_name + ' | ' + Dir.entries(Dir.pwd).to_s + ' | ' + Dir.exists?(directory_name).to_s
 
     # Ensure the directory does not already exist
     raise 'Destination for clone already exists' if Dir.exists?(directory_name)
@@ -142,16 +146,24 @@ module PushPull
     Dir.mkdir(directory_name)
 
     # Initialize the new repository
-    Dir.chdir(directory_name)
-    @@repo.init()
+    Dir.chdir(directory_name) {
+      Workspace.new.init
 
-    self.connect(remote, path) { |ssh|
-      # Obtain a list of branches on the remote
-      branches = JSON.parse(ssh.exec! "cat #{@@dvcs_dir}/repo/branches")
+      # Splits 127.0.0.1:/path/to/repo into 127.0.0.1 and /path/to/repo
+      address, path = remote.split(':', 2)
+      self.connect(address, path) { |ssh|
+        # Obtain a list of branches on the remote
+        # TODO I need a real way to get all branch names
+        snapshot = Marshal.load(ssh.exec! "cat #{path}/#{@@dvcs_dir}/repo/head")
+        branches = snapshot.branches
 
-      # Pull each branch
-      branches.keys.each { |branch|
-        pull_with_connection(remote, branch, ssh)
+        # Always include the master branch
+        branches.push('master') unless branches.include?('master')
+
+        # Pull each branch
+        branches.each { |branch|
+          self.pull_with_connection(branch, ssh)
+        }
       }
     }
   end
