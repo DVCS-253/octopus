@@ -11,71 +11,72 @@ class Revlog
 			raise "Cannot instantiate static class Revlog"
 		end
 
-		def init
-
-		end
-		# Load new file table
+		# Loads a new file_table from file
+		# Parameters:
+		# filename:: filename to load table from (should be a json)
 		def load_table (filename)
-			new_table = File.open(filename)
-			@file_table = JSON.load(new_table)
+			File.open(filename) {|file|
+				@file_table = JSON.load(file)} if File.file? (filename)
 			puts "file table #{@file_table}"
-			new_table.close
 		end
 
 		# Stores the specified file in a
 		# hash table {file_id => file_contents}
 		# Parameters:
-		# contents:: [file_contents, commit time] to be hashed
+		# contents_and_time:: [file contents, add time] to be hashed
 		# Returns:
-		# string file_id:: id of the hashed contents
-
+		# file_id:: id of the hashed contents
 		def add_file (contents_and_time)
-			if File.exist?(@json_file)
-				load_table(@json_file)
-			end
+			load_table(@json_file)
 			#generate hash for file contents
 			file_id = Digest::SHA2.hexdigest(contents_and_time[0].to_s + contents_and_time[1].to_s)
 			p "file table here: " + @file_table.inspect
 			@file_table[file_id.to_s] = contents_and_time	#store file
 			p "file table here: " + @file_table.inspect
-			database = File.open(@json_file, 'w')
-
-			JSON.dump(@file_table, database) #update hashfile
-			database.close
+			File.open(@json_file, 'w') {|file|
+				JSON.dump(@file_table, file)} #update hashfile
 			return file_id
 		end
 
 		# Retrieves the file associated with
 		# the specified file_id from the
-		# hash table {file_id => file_contents}
+		# hash table {file_id => [file contents, add time]}
 		# Parameters:
 		# file_id:: file_id used for retrieval
 		# Returns:
-		# string contents:: the contents retrieved from file_id
+		# contents:: the contents retrieved from file_id
 		def get_file (file_id)
-			if File.exist?(@json_file)
-				load_table(@json_file)
-			end
+			load_table(@json_file)
 			return "Revlog: File not found" if @file_table[file_id.to_s].nil? #if trying to get a nonexistant file
 			return @file_table[file_id.to_s][0]
 		end
 
-		# Deletes the file associated with
+		# Retrieves the time stamp associated with
 		# the specified file_id from the
-		# hash table {file_id => file_contents}
+		# hash table {file_id => [file contents, add time]}
 		# Parameters:
 		# file_id:: file_id used for retrieval
 		# Returns:
-		# int exit_code:: 0 if exited successfully
+		# time:: the time retrieved from file_id
+		def get_time (file_id)
+			load_table(@json_file)
+			return "Revlog: File not found" if @file_table[file_id.to_s].nil? #if trying to get a nonexistant file
+			return @file_table[file_id.to_s][1]
+		end
+
+		# Deletes the file and time associated with
+		# the specified file_id from the
+		# hash table {file_id => [file contents, add time]}
+		# Parameters:
+		# file_id:: file_id used for retrieval
+		# Returns:
+		# exit_code:: 0 if exited successfully
 		def delete_file (file_id)
-			if File.exist?(@json_file)
-				load_table(@json_file)
-			end
+			load_table(@json_file)
 			raise "Revlog Error: No such file" if @file_table[file_id.to_s] == nil	#if trying to delete a nonexistant file
 			@file_table[file_id.to_s] = nil
-			database = File.open(@json_file, 'w')
-			JSON.dump(@file_table, database) #update hashfile
-			database.close
+			File.open(@json_file, 'w') {|file|
+				JSON.dump(@file_table, file)} #update hashfile
 			return 0
 		end
 
@@ -85,7 +86,7 @@ class Revlog
 		# file_id1:: file_id for first file
 		# file_id2:: file_id for second file
 		# Returns:
-		# array diffs:: list of differences by line
+		# diffs:: array of differences by line
 		def diff_files(file_id1, file_id2)
 			file1 = get_file(file_id1)
 			file2 = get_file(file_id2)
@@ -99,12 +100,12 @@ class Revlog
 		# the id of a file which is
 		# either the successful merge
 		# or the conflict file
-		# hash table {file_id => file}
+		# hash table {file_id => [file contents, add time]}
 		# Parameters:
 		# file_id1:: file_id for first file
 		# file_id2:: file_id for second file
 		# Returns:
-		# string file_id:: id of the merged file
+		# file_id:: id of the merged file
 		def merge(file_id1, file_id2)
 			file1 = get_file(file_id1)
 			file2 = get_file(file_id2)
@@ -219,32 +220,6 @@ class Revlog
 			end #End loop do
 			return add_file(merged)
 		end #End merge
-	end
+	end #End metaclass Revlog
 
 end #End class Revlog
-
-
-##########Initial Revlog################
-#              {}
-#Then do (these were done one by one using command line, not all at once)
-#Revlog::add_file("hello1")
-#Revlog::add_file("hello2")
-#Revlog::add_file("hello3")
-#Revlog::add_file("hello4")
-#Revlog::add_file("hello5")
-#Revlog::add_file("hello6")
-#Revlog::add_file("hello10")
-#Revlog::add_file("hello2004")
-#Revlog::add_file("hello13242")
-
-### end revlog
-
-# {"91e9240f415223982edc345532630710e94a7f52cd5f48f5ee1afc555078f0ab":"hello1",
-# "87298cc2f31fba73181ea2a9e6ef10dce21ed95e98bdac9c4e1504ea16f486e4":"hello2",
-# "47ea70cf08872bdb4afad3432b01d963ac7d165f6b575cd72ef47498f4459a90":"hello3",
-# "e361a57a7406adee653f1dcff660d84f0ca302907747af2a387f67821acfce33":"hello4",
-# "8dfe82d9a72ad831e48e524a38ad111f206ef08c39aa5847db26df034ee3b57d":"hello5",
-# "196373310827669cb58f4c688eb27aabc40e600dc98615bd329f410ab7430cff":"hello6",
-# "5bd2b246632eb0cfee5e5c8754ccd8c17853ce304e9f406a27ae66962e6a0548":"hello10",
-# "f0088b4d67ce358b0fe52e78a3849b9ca0b6cc2c420ea3f3000db76b0b532cd4":"hello2004",
-# "a68fd37e3b17abccceac4cca4f4da1b80ed7b616cca1d9940178bd440b5d0969":"hello13242"}
