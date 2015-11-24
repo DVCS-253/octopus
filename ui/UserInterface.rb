@@ -13,7 +13,7 @@ class UserInterface
 	InitRE = "init(\s+([^\s]*))?$"
 	AddRE = "add\s*(((\s+(\"[^\s]*\"))*)|(\s+(\.))?)$"
 	CheckoutRE = "checkout\s*(\s+([^\s]*))?\s*(\s+(-b)\s+([^\s]*))?\s*(\s+(--track)\s+([^\s]*/[^\s]*))?$"
-	CommitRE = "commit(\s+(-a))?(\s+(-m)\s+(\"[^\"]*\"))?((\s+([^\s]*))*)$"
+	CommitRE = "commit(\s+(-a))?(\s+(-m)\s+([^\s]*))?((\s+([^\s]*))*)$"
 	BranchRE = "branch\s*(\s*(\s+(-a)\s+([^\s]*))|\s*(\s+(-d)\s+([^\s]*)))?$"
 	MergeRE = "merge\s*(\s+([^\s]*)\s*)*$"
 	PushRE = "push(\s+(origin))?(\s+([^\s]*))$"
@@ -123,16 +123,21 @@ class UserInterface
 			if matched
 				params = Hash.new
 				params["add"] = true if matched[2]
-				params["msg"] = matched[5].gsub(/"/,'') if matched[4] and matched[5]
+				message = matched[5].gsub(/"/,'') if matched[4] and matched[5]
+				params["msg"] = message
 				if matched[6]
-					files = matched[6].split(" ")
+					if matched[6] == " ."
+						files = nil
+					else
+						files = matched[6].split(" ")
 					# files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
 					files.map! do |file| 
 						file = Dir.pwd + "/" + file
 					end
 				end
-				puts "Files passed for commit #{files.inspect}"
-				result = Workspace.new.commit(files)
+			end
+			puts "Files passed for commit #{files.inspect}"
+				result = Workspace.new.commit(files)  #replace by commit(files, message) once the commit method supports it 
 			else
 				result = "Incorrect format. Expected: " + CommitUsg
 			end	

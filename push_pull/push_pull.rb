@@ -107,12 +107,12 @@ module PushPull
     # the #{@@dvcs_dir}/communication/text_file file on the remote
     if local_head.nil?
       # Get the entire history if our locally history is empty
-      if ssh.exec! "oct func get_all_snapshots" == 'error'
+      if ssh.exec! "oct get_all_snapshots" == 'error'
         raise 'Remote has no commit history'
       end
     else
       # Get the history since our latest local snapshot
-      if ssh.exec! "oct func get_latest_snapshot #{local_head}" == 'error'
+      if ssh.exec! "oct get_latest_snapshot #{local_head}" == 'error'
         raise 'Local commit history is not present on remote'
       end
     end
