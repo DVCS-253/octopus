@@ -129,8 +129,8 @@ class UserInterface
 					files = matched[6].split(" ")
 					# files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
 					files.map! do |file| 
-								file = Dir.pwd + "/" + file
-							end
+						file = Dir.pwd + "/" + file
+					end
 				end
 				puts "Files passed for commit #{files.inspect}"
 				result = Workspace.new.commit(files)
@@ -190,7 +190,11 @@ class UserInterface
 		elsif cmd == "status"
 			matched = fullCmd.match StatusRE
 			if matched
-				result = Workspace.new.status
+				files = Workspace.new.status
+				puts "->Uncommitted files/directories(#{files.size}):" if files.size>0
+				files.each_with_index{|file,i| 
+					puts "    "+red(file.to_s)
+				}
 			else
 				result = "Incorrect format. Expected: " + StatusUsg
 			end	
@@ -261,6 +265,17 @@ class UserInterface
 		return result
 	end
 
+	#To colorize the output based on the color code
+	private
+	def colorize(text, color_code)
+		"\e[#{color_code}m#{text}\e[0m"
+	end
+	
+	#To colorize the output to red
+	private
+	def red(text); colorize(text, 31); end 
+end
+
 	#Displays the result of execution of the command<br><br>
 	#Params:
 	# - result(String): result of the execution
@@ -269,9 +284,6 @@ class UserInterface
 	private
 	def displayResult(result)
 		puts result
-		p
-		p
-		result
 	end
 end
 
