@@ -190,7 +190,9 @@ class UserInterface
 		elsif cmd == "status"
 			matched = fullCmd.match StatusRE
 			if matched
-				result = Workspace.new.status
+				add, delete, update, rename = Workspace.new.status
+				puts "in UI #{add.inspect}"
+				#result = [add, delete, update, rename].flatten
 			else
 				result = "Incorrect format. Expected: " + StatusUsg
 			end	
@@ -233,6 +235,7 @@ class UserInterface
 				snapshot_id =  matched[2] if matched[2]
 				params["snapshot_id"] = snapshot_id
 				result = Repos.new.get_latest_snapshot(snapshot_id)
+				p 
 			else
 				result = "Incorrect format. Expected: " + GetLatestSnapshotUsg
 			end	
