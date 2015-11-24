@@ -29,9 +29,7 @@ class Revlog
 		# Returns:
 		# string file_id:: id of the hashed contents
 		def add_file (contents)
-			if File.exist?(@json_file)
-				load_table(@json_file)
-			end
+			load_table(@json_file) if File.file?(@json_file)
 			#generate hash for file contents
 			file_id = Digest::SHA2.hexdigest(contents)
 			@file_table[file_id.to_sym] = contents	#store file
