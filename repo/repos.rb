@@ -96,8 +96,8 @@ class Repos
 
 	# Initialize the repo directory
 
-	@@repo_dir = File.join(Dir.pwd, ".octopus/repo")
-	@@comm_dir = File.join(Dir.pwd, ".octopus/communication")
+	@@repo_dir = ".octopus/repo"
+	@@comm_dir = ".octopus/communication"
 	@@head_dir = File.join(@@repo_dir, "head")
 	@@text_file_dir = File.join(@@comm_dir, "text_file")
 	@@store_dir = File.join(@@repo_dir, "store")
