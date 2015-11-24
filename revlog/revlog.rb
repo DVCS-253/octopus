@@ -28,6 +28,7 @@ class Revlog
 		# contents:: [file_contents, commit time] to be hashed
 		# Returns:
 		# string file_id:: id of the hashed contents
+
 		def add_file (contents_and_time)
 			if File.exist?(@json_file)
 				load_table(@json_file)
