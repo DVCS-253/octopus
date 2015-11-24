@@ -24,8 +24,14 @@ class Tree
 	end	
 
 	def find_snapshot(snapshot_ID)
+		# time we are looking for
+		p "old id" + snapshot_ID
+		s = Marshal::load(snapshot_ID)
+		p "looking for" + s.commit_time.to_s
 		for snapshot in @snapshots
-			if snapshot.snapshot_ID == snapshot_ID
+			p snapshot.commit_time.to_s
+			if snapshot.commit_time.to_s == s.commit_time.to_s
+				p "FOUND"
 				return snapshot
 			end
 		end

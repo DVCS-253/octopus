@@ -149,9 +149,9 @@ class Workspace
 		return 1			
 	end
 
-	def branch(branchname)
-		Repos.add_branch(branchname)
-	end
+	# def branch(branchname)
+	# 	Repos.add_branch(branchname)
+	# end
 
 	#check if content exists in given hash table 
 	#if yes, return its key
@@ -174,13 +174,14 @@ class Workspace
 		delete = []
 		update = []
 		rename = []
-		head = Repos.get_head(branch)	
+		head = Repos.get_head	
 		snapshot = Repos.restore_snapshot(head)	
 		#file_content is a hashtable for files of last commit, key = path, value = content
 		file_hash = snapshot.repos_hash	
 		file_content = {}
 		file_hash.each do |path|
-			file_content[path] = Revlog.get_file(path)
+			p path
+			file_content[path] = Revlog.get_file(path[1])
 		end
 		#workspace_contetn is a hashtable for files in workspace, key = path, value = content
 		workspace_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
