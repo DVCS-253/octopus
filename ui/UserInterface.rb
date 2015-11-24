@@ -30,7 +30,7 @@ class UserInterface
 	AddUsg = 'add ([.] | ["file1"] ["file2"] ...)'
 	CheckoutUsg = 'checkout [-b] [branch] [--track origin/branch]'
 	CommitUsg = 'commit [-a] [-m "msg"] ["file1"]["file2"] ...'
-	BranchUsg = 'branch ([-a] | [-d branch])'
+	BranchUsg = 'branch ([-a branch] | [-d branch])'
 	MergeUsg = 'merge [branch]'
 	PushUsg = 'push [origin] [branch]'
 	PullUsg = 'pull [origin] [branch]'
@@ -145,6 +145,7 @@ class UserInterface
 				if add
 					branch = matched[4]
 					Workspace.new.branch(branch)
+				end
 				#params["add"] = true if matched[2]
 				#params["branch"] = matched[4] if matched[4]
 				params["delete"] = true if matched[5]

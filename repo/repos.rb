@@ -156,10 +156,12 @@ class Repos
 			r_ids = @@snapshot_tree.snapshots.reverse
 			latest_branch = r_ids.find {|x| x.branch_name == @@snapshot_tree.current_branch}
 
-			# add one on last snapshot_ID to make a new one
+			# add new snapshot
 			snapshot = @@snapshot_tree.add_snapshot
 			# Record commit time of this commit
 			snapshot.commit_time = Time.now
+			# Record branch name
+			snapshot.branch_name = @@snapshot_tree.current_branch
 
 			latest_branch.add_child(snapshot)
 			snapshot.add_parent(latest_branch)
@@ -216,15 +218,15 @@ class Repos
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		# First find that snapshot
 		snapshot = @@snapshot_tree.find_snapshot(snapshot_ID)
-		list_of_snapshots = Array.new
+		@@list_of_snapshots = Array.new
 		history_helper(snapshot)
-		# add root snapshot_id, which is 1 to list of ids.
-		list_of_snapshots << 1
+		# add root snapshot_id
+		@@list_of_snapshots << @@snapshot_tree.snapshots[0].snapshot_ID
 		# since this method will duplicate count snapshots
 		# use .uniq to remove any duplicate
-		list_of_snapshots = list_of_snapshots.uniq
+		@@list_of_snapshots = @@list_of_snapshots.uniq
 
-		return list_of_snapshots
+		return @@list_of_snapshots
 	end
 
 	# helper to find all histories
@@ -232,7 +234,7 @@ class Repos
 		while snapshot.root != true
 			# If only one parent, just add it to list
 			if snapshot.parent.length == 1
-				list_of_snapshots << snapshot.parent[0].snapshot_ID
+				@@list_of_snapshots << snapshot.parent[0].snapshot_ID
 				snapshot = snapshot.parent[0]
 			else
 				# a snapshot has at most two parents
@@ -241,6 +243,7 @@ class Repos
 				history_helper(snapshot.parent[1])
 			end
 		end
+
 	end
 
 	# Make 1 child from current HEAD 
@@ -250,28 +253,30 @@ class Repos
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
 		# Make a Json file in repo named "branches.json"
 		json_dir = File.join(@@repo_dir, "branches.json")
-		# Record branch_nam and HEAD's snapshot_ID
+		# Record branch_name and HEAD's snapshot_ID
 		jhash = {"#{branch_name}" => "#{@@head}"}
 		File.open(json_dir, "w") do |f|
 			f.write(jhash.to_json)
 		end
 
-		snapshot_branch = @@snapshot_tree.add_snapshot(@@head + 1)
+		# Add snapshot, which is the head of new branch to snapshot_tree
+		snapshot_branch = @@snapshot_tree.add_snapshot
 		snapshot_branch.branch_name = branch_name
 		snapshot_branch.branch_HEAD = true
 
+		# Find current head
 		@@head_snapshot = @@snapshot_tree.find_snapshot(@@head)
 
 		@@head_snapshot.add_child(snapshot_branch)
 		snapshot_branch.add_parent(@@head_snapshot)
+		# Copy repos_hash from current head
 		snapshot_branch.repos_hash = @@head_snapshot.repos_hash
-
+		# Means current head has a child with branch's name branch_name
 		@@head_snapshot.branches.push(branch_name)
 
-		# transfer to this branch
+		# transfer current branch to this branch
 		@@snapshot_tree.current_branch = branch_name
-		@@head_snapshot = snapshot_branch
-		@@head = @@head_snapshot.snapshot_ID
+		@@head = snapshot_branch.snapshot_ID
 
 		# update "head" and "store"
 		File.open(@@head_dir, 'w'){ |f| f.write ("#{@@head}")}
@@ -301,8 +306,8 @@ class Repos
 		if branch_name.nil?
 			return head
 		else
-			head = @@snapshot_tree.snapshots.find{|x| x.branch_name == branch_name || x.branch_HEAD == true}
-			return head.snapshot_ID
+			branch_head = @@snapshot_tree.snapshots.find{|x| x.branch_name == branch_name || x.branch_HEAD == true}
+			return branch_head.snapshot_ID
 		end
 	end
 
@@ -370,7 +375,7 @@ class Repos
 	end
 
 	# handle merging two files 
-	# snapshot_ID1 is the current branch 
+	# Assume snapshot_ID1 here is the current branch 
 	def self.merge(ancestor_ID, snapshot_ID1, snapshot_ID2)
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
 		@@snapshot_tree = Marshal.load(File.binread($store_dir))
@@ -379,7 +384,9 @@ class Repos
 		snapshot_second = @@snapshot_tree.find_snapshot(snapshot_ID2)
 
 		# create new merged snapshot
-		snapshot = @@snapshot_tree.add_snapshot(@@head + 1)
+		snapshot = @@snapshot_tree.add_snapshot
+		# record branch name
+		snapshot.branch_name = snapshot_first.branch_name
 		# record time
 		snapshot.commit_time = Time.now
 
