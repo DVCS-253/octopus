@@ -146,12 +146,12 @@ class Workspace
 		snapshot_id = Repos.make_snapshot(results)
 		# p "printing head" + snapshot_id
 		# Repos.update_head(snapshot_id) <-- Repos does this
-		return 1			
+		if arg.size == 1
+			return "1 file was commited"
+		else
+			return arg.size.to_s + " files were committed"
+		end			
 	end
-
-	# def branch(branchname)
-	# 	Repos.add_branch(branchname)
-	# end
 
 	#check if content exists in given hash table 
 	#if yes, return its key
@@ -169,7 +169,7 @@ class Workspace
 		uncommitted = []
 		workspace_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
 			
-		workspace_file.each do |path|
+		workspace_files.each do |path|
 			content = File.read(path)
 			time = File.mtime(path).to_s
 			file_id = Digest::SHA2.hexdigest(content + time)
