@@ -89,6 +89,7 @@ class UserInterface
 				params = Hash.new
 				params["directory"] = matched[2] if matched[2]
 				result = Workspace.new.init
+				Workspace.new.commit(nil)
 			else
 				result = "Incorrect format. Expected: " + InitUsg
 			end
