@@ -190,8 +190,6 @@ class Repos
 
 			# add new snapshot
 			snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, current_branch, parent)
-			# Updating the branch file
-			update_branch_file(current_branch, snapshot.snapshot_ID)
 
 			# Then head becomes this snapshot' ID
 			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
@@ -205,6 +203,9 @@ class Repos
 			# Save to hash with it's basename
 			snapshot.repos_hash[file_path.to_s] = Revlog.add_file([content, file_time])
 		end
+
+		# Updating the branch file
+		update_branch_file(current_branch, snapshot.snapshot_ID)
 
 		p snapshot.branch_name
 		p snapshot.repos_hash.to_a.inspect
