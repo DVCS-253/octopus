@@ -19,12 +19,16 @@ class Workspace
 	#Effect: directory "./DVCS/test/" will be set up, if already existed then do nothing
 	def rebuild_dir(path)
 		#split the path with file_seperator
-		hierarchy = path.split('/')
-		path = './'
 		#ignore the file name 
-		(0..hierarchy.length-2).each do |d|
-			path = path + hierarchy[d] + '/'
-			Dir.mkdir(path) if not File.directory?(path)
+		d = path.split("/")
+		d.pop
+		puts "TESTING D"
+		puts d.inspect
+		dpath = "/"+d.join("/")
+		unless File.file?(dpath)
+			unless File.directory?(dpath)
+				FileUtils.mkdir(dpath)
+			end
 		end
 	end
 
@@ -56,6 +60,7 @@ class Workspace
 			#write content
 	        File.write(path, content)
 	    end
+	    "done!"
 	end
 
 	def check_out_branch(branch_name)
@@ -73,7 +78,7 @@ class Workspace
 		hash = file_hash[path]
 		content = Revlog.get_file(hash)
 		rebuild_dir(path)
-		File.write(path, content)	
+		File.write(File.basename(path), content)	
 	end
 
 

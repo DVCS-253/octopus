@@ -200,13 +200,14 @@ class Repos
 			# Then head becomes this snapshot' ID
 			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		end
+
 		files_to_be_commits.each do |file_path, content|
 			# get basename, like "a.rb"
 			file_name = File.basename(file_path)
 			file_time = File.mtime(file_path)
 			# send contents of each file and get file_id from Revlog
 			# Save to hash with it's basename
-			snapshot.repos_hash["#{file_path}"] = Revlog.add_file([content, file_time])
+			snapshot.repos_hash[file_path.to_s] = Revlog.add_file([content, file_time])
 		end
 
 		p snapshot.branch_name
@@ -221,9 +222,9 @@ class Repos
 	def self.test_snapshot_tree
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		p "TESTING SNAPSHOT TREE"
-		# unless @@snapshot_tree.snapshots.nil?
-		# 	puts  @@snapshot_tree.snapshots.inspect
-		# end
+		unless @@snapshot_tree.snapshots.nil?
+			puts  @@snapshot_tree.snapshots[0].repos_hash.to_a.inspect
+		end
 		
 	end
 
