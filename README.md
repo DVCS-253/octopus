@@ -68,5 +68,14 @@ back to the last state of your original branch "master". Here is how the followi
 As shown above - please be aware that checking out different branches will remove any uncommited files from
 your current working directory.
 
+## Ia a problem occurs...
+You can delete .octopus file and start over!
+  ```
+  rm -r .octopus
+  ```
+
+## Notes
+Please note that some commands that are not supported here right now may be fully functional and tested independentely by the corresponding module. Please browse through 5 modules - more information on the is provided in each modele's README. 
 
 
+Cheers!
