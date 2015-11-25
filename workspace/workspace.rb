@@ -22,7 +22,6 @@ class Workspace
 		#ignore the file name 
 		d = path.split("/")
 		d.pop
-		puts "TESTING D"
 		puts d.inspect
 		dpath = "/"+d.join("/")
 		unless File.file?(dpath)

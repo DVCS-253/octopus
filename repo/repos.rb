@@ -327,6 +327,8 @@ class Repos
 		# Update the parent
 		parent.add_child(head_snapshot)
 
+		@@snapshot_tree.snapshots.push(head_snapshot)
+
 		# Update branch file
 		update_branch_file(branch_name, head_snapshot.snapshot_ID)
 
