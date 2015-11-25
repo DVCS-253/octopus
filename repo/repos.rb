@@ -170,9 +170,8 @@ class Repos
 			p snapshot
 			p snapshot.snapshot_ID
 
-			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 			# Updating the branch file -> by default the branch name is master
-			update_branch_file("master", snapshot.snapshot_ID)
+
 		else
 			p "adding the non first snapshot"
 			head_snapshot = Marshal.load(File.binread(@@head_dir))
@@ -188,8 +187,6 @@ class Repos
 			# add new snapshot
 			snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, current_branch, parent)
 
-			# Then head becomes this snapshot' ID
-			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		end
 
 		files_to_be_commits.each do |file_path, content|
@@ -208,12 +205,14 @@ class Repos
 
 		# Updating the branch file
 		puts "testing repo hash"
-		update_branch_file(current_branch, snapshot.snapshot_ID)
+		update_branch_file(snapshot.branch_name, snapshot.snapshot_ID)
 
 		p snapshot.branch_name
 		p snapshot.repos_hash.to_a.inspect
 		p "all snapshots #{@@snapshot_tree.snapshots.count}"
 
+		# Then head becomes this snapshot' ID
+		File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
 		test_snapshot_tree
 		get_latest_snapshots(@@snapshot_tree.snapshots[0].snapshot_ID)
