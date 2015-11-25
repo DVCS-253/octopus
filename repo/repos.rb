@@ -58,8 +58,7 @@ class Tree
 			latest_commit.add_child(snapshot)
 			snapshot.add_parent(latest_commit)
 		end
-
-		snapshot.snapshot_ID = Marshal::dump(snapshot) 
+ 
 		@snapshots.push(snapshot)
 		snapshot
 	end
@@ -209,6 +208,7 @@ class Repos
 		puts snapshot.repos_hash.to_a.inspect
 		update_branch_file(current_branch, snapshot.snapshot_ID)
 
+		snapshot.snapshot_ID = Marshal::dump(snapshot)
 		p snapshot.branch_name
 		p snapshot.repos_hash.to_a.inspect
 		p "all snapshots #{@@snapshot_tree.snapshots.count}"
