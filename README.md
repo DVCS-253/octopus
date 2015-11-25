@@ -19,15 +19,18 @@
   ```
   
   **Commit**
-  
+  You can commit a file, or a number of files together with a required commit message:
   ```
   oct commit -m [commit message] a.txt b.txt
   ```
   
   **Status**
-  
+  At any point in time you can check the status of your repository. 
+  A list of uncommitted files (files that are either new or changed) will be displayed:
   ```
   oct status
   ```
+  
+  **Branch**
   
 
