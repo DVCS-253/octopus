@@ -134,9 +134,17 @@ class UserInterface
 					else
 						files = matched[6].split(" ")
 					# files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
+					base_dir = File.read('.octopus/base_dir')
+					puts base_dir
 					files.map! do |file| 
-						file = Dir.pwd + "/" + file
+						file = file.gsub(/"#{base_dir}"/, "")
+						if (file.match(/\A\//))
+							file = file.gsub(/\A\//, "")
+						end
+						file
 					end
+					puts files.inspect
+					Workspace.new.commit(files, message)
 				end
 			end
 			puts "Files passed for commit #{files.inspect}"

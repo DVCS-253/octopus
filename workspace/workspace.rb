@@ -4,12 +4,16 @@ require "#{File.dirname(__FILE__)}/../revlog/revlog.rb"
 
 class Workspace
 
+	@@base_dir = '.octopus/base_dir'
+
 	def init
+		@repo_directory = Dir.pwd
 		Dir.mkdir('.octopus')
 		Dir.mkdir('.octopus/revlog')
 		Dir.mkdir('.octopus/repo')
 		Dir.mkdir('.octopus/communication')
 		Repos.init
+		File.open(@@base_dir, 'w'){ |f| f.write ("#{Dir.pwd}")}
 		return "Initialized octopus repository"
 	end
 
@@ -26,7 +30,7 @@ class Workspace
 		dpath = "/"+d.join("/")
 		unless File.file?(dpath)
 			unless File.directory?(dpath)
-				FileUtils.mkdir(dpath)
+				FileUtils.mkdir(File.read('.octopus/base_dir') + dpath)
 			end
 		end
 	end
