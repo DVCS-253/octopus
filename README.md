@@ -1,3 +1,6 @@
+## Documentation
+For a full documentation please check [here](https://docs.google.com/document/d/15nhO8Gd22VIENqxUBeEXDIvDkKBUW-H59sufeJj0I3w/edit?usp=sharing)
+
 ## Installation
 - Clone this repository onto your computer (use the oct branch)
 - Run `bundle install` to install Ruby dependencies.
