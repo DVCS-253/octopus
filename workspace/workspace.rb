@@ -104,7 +104,7 @@ class Workspace
 	#commit a list of file, a directory or a branch
 	#list contains path of fiels, for example ['workspace/a.rb', 'repos/b.rb', 'test/c.rb']
 	#directory needs to be a existed path, for example 'workspace' or 'workspace/test'
-	def commit(arg = nil)
+	def commit(arg = nil, commit_msg)
 		results = {}
 		#commit a branch
 		if arg == nil
