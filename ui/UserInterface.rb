@@ -89,7 +89,7 @@ class UserInterface
 				params = Hash.new
 				params["directory"] = matched[2] if matched[2]
 				result = Workspace.new.init
-				Workspace.new.commit(nil)
+				# Workspace.new.commit(nil)
 			else
 				result = "Incorrect format. Expected: " + InitUsg
 			end
@@ -115,7 +115,7 @@ class UserInterface
 				params["createBranch"] = true if matched[4]
 				params["newBranch"] = matched[5] if matched[5]
 				params["track"] = matched[6] if matched[6]
-				result = Workspace.new.check_out(existingBranch)
+				result = Workspace.new.check_out_branch(existingBranch)
 			else
 				result = "Incorrect format. Expected: " + CheckoutUsg
 			end	
@@ -138,7 +138,7 @@ class UserInterface
 				end
 			end
 			puts "Files passed for commit #{files.inspect}"
-				result = Workspace.new.commit(files)  #replace by commit(files, message) once the commit method supports it 
+				result = Workspace.new.commit(files, message)  #replace by commit(files, message) once the commit method supports it 
 			else
 				result = "Incorrect format. Expected: " + CommitUsg
 			end	

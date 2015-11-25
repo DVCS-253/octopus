@@ -44,20 +44,24 @@ class Workspace
 	def check_out_snapshot(snapshot_id)
 		#clean the workspace first
 		clean
-		#obtian the snapshot object using retore_snapshot
+		#obtain the snapshot object using retore_snapshot
 		snapshot = Repos.restore_snapshot(snapshot_id)	
 		#obtian the file_hash from the object		
 		file_hash = snapshot.repos_hash
-                file_hash.each do |path, hash|
+        file_hash.each do |path, hash|
 			#rebuild the directory of the file
 			rebuild_dir(path)
 			#decode the content of a file
-                        content = Revlog.get_file(hash)	
+	        content = Revlog.get_file(hash)	
 			#write content
-                        File.write(path, content)
-                end
+	        File.write(path, content)
+	    end
 	end
 
+	def check_out_branch(branch_name)
+		snapshot_ID = Repos.get_head(branch_name)
+		check_out_snapshot(snapshot_ID)
+	end
 
 	#Given a file path, copy the file from current head snapshot	
 	def check_out_file(path)

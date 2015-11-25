@@ -19,13 +19,13 @@ class Tree
 	attr_accessor :snapshots, :current_branch
 
 	def initialize()
-		@snapshots = Array.new
+		@snapshots = []
 		@current_branch = "master"
 	end	
 
 	def find_snapshot(snapshot_ID)
 		# time we are looking for
-		p "old id" + snapshot_ID
+		p "old id" + snapshot_ID.to_s
 		s = Marshal::load(snapshot_ID)
 		p "looking for" + s.commit_time.to_s
 		for snapshot in @snapshots
@@ -39,8 +39,8 @@ class Tree
 		raise "Unable to find Snapshot with snapshot_id #{snapshot_ID}"
 	end
 
-	def add_snapshot(commit_msg, root, branch_name, latest_branch=nil)
-		snapshot = Snapshot.new()
+	def add_snapshot(commit_msg, root, branch_name, latest_commit=nil)
+		snapshot = Snapshot.new
 
 		# Record commit time of this commit
 		snapshot.commit_time = Time.now
@@ -54,9 +54,9 @@ class Tree
 		# Record if is the root
 		snapshot.root = root
 		# 
-		if !latest_branch.nil?
-			latest_branch.add_child(snapshot)
-			snapshot.add_parent(latest_branch)
+		if !latest_commit.nil?
+			latest_commit.add_child(snapshot)
+			snapshot.add_parent(latest_commit)
 		end
 
 		snapshot.snapshot_ID = Marshal::dump(snapshot) 
@@ -67,13 +67,13 @@ class Tree
 end
 
 class Snapshot
-	attr_accessor :snapshot_ID, :commit_msg, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD, :branches
+	attr_accessor :snapshot_ID, :commit_msg, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD
 
 	def initialize
 		@repos_hash = {}
 		@parent = []
 		@child = []
-		@branches = []
+		@snapshot_ID = 0
 	end
 
 	def add_child(node)
@@ -81,6 +81,12 @@ class Snapshot
 	end
 
 	def add_parent(node)
+		@parent.push(node)
+	end
+
+	# for branching
+	def add_single_parent(node)
+		@parent = []
 		@parent.push(node)
 	end
 end
@@ -180,16 +186,16 @@ class Repos
 			# which means find last appearance snapshot with current branch name
 			# just reverse array and find first appearance 
 			r_ids = @@snapshot_tree.snapshots.reverse
+			parent = restore_snapshot(@@head)
 			# latest_commit = r_ids.find {|x| x.branch_name == @@snapshot_tree.current_branch}
-			latest_commit = r_ids.find {|x| x.branch_name == current_branch}
+			# latest_commit = r_ids.find {|x| x.branch_name == current_branch}
 			# # Record branch name
 			# snapshot.branch_name = @@snapshot_tree.current_branch
 
 			# add new snapshot
-			snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, current_branch, latest_commit)
-
+			snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, current_branch, parent)
 			# Updating the branch file
-			update_branch_file("master", snapshot.snapshot_ID)
+			update_branch_file(current_branch, snapshot.snapshot_ID)
 
 			# Then head becomes this snapshot' ID
 			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
@@ -208,22 +214,20 @@ class Repos
 		p "all snapshots #{@@snapshot_tree.snapshots.count}"
 
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
+		test_snapshot_tree
 		return snapshot.snapshot_ID
 	end
 
-	def self.add_branch(branchname)
-		@@head = File.open(@@head_dir, 'r'){|f| f.read}
-		h = Marshal::load(File.binread(@@head))
-		new_branch = h.dup
-		new_branch.snapshot_ID = 0
-		new_branch.branch_name = branchname
-		new_branch.add_parent = h
-		@@snapshots.push(new_branch)
-		File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
+	def self.test_snapshot_tree
+		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
+		p "TESTING SNAPSHOT TREE"
+		# unless @@snapshot_tree.snapshots.nil?
+		# 	puts  @@snapshot_tree.snapshots.inspect
+		# end
+		
 	end
 
 	# returns a specific snapshot
-
 	def self.restore_snapshot(snapshot_ID)
 
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
@@ -293,41 +297,39 @@ class Repos
 		end
 	end
 
+	def self.update_head_file(snapshot_ID)
+		File.open(@@head_dir, 'wb'){ |f| f.write (snapshot_ID)}
+	end
+
 	# Make 1 child from current HEAD 
 	def self.make_branch(branch_name)
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
-		@@head = File.open(@@head_dir, 'r'){|f| f.read}
-		# Make a Json file in repo named "branches.json"
-		json_dir = File.join(@@repo_dir, "branches.json")
-		# Record branch_name and HEAD's snapshot_ID
-		jhash = {"#{branch_name}" => "#{@@head}"}
-		File.open(json_dir, "w") do |f|
-			f.write(jhash.to_json)
-		end
+		head_snapshot = Marshal.load(File.binread(@@head_dir))
 
-		# Add snapshot, which is the head of new branch to snapshot_tree
-		snapshot_branch = @@snapshot_tree.add_snapshot
-		snapshot_branch.branch_name = branch_name
-		snapshot_branch.branch_HEAD = true
+		# Find the old head snapshot
+		parent = restore_snapshot(File.binread(@@head_dir))
+		head_snapshot.commit_time = Time.now
+		head_snapshot.add_single_parent(parent)
+		# head_snapshot.branch_HEAD = true
 
-		# Find current head
-		@@head_snapshot = @@snapshot_tree.find_snapshot(@@head)
-
-		@@head_snapshot.add_child(snapshot_branch)
-		snapshot_branch.add_parent(@@head_snapshot)
-		# Copy repos_hash from current head
-		snapshot_branch.repos_hash = @@head_snapshot.repos_hash
-		# Means current head has a child with branch's name branch_name
-		@@head_snapshot.branches.push(branch_name)
+		# changing the branch name
+		head_snapshot.branch_name = branch_name
 
 		# transfer current branch to this branch
 		@@snapshot_tree.current_branch = branch_name
-		@@head = snapshot_branch.snapshot_ID
 
-		# update "head" and "store"
-		File.open(@@head_dir, 'w'){ |f| f.write ("#{@@head}")}
+		# Update snapshot ID		
+		head_snapshot.snapshot_ID = 0
+		head_snapshot.snapshot_ID = Marshal::dump(head_snapshot)
+		update_head_file(head_snapshot.snapshot_ID)
+
+		# Update the parent
+		parent.add_child(head_snapshot)
+
+		# Update branch file
+		update_branch_file(branch_name, head_snapshot.snapshot_ID)
+
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
-
 
 	end
 
@@ -348,12 +350,12 @@ class Repos
 	# else just return current HEAD ID
 	def self.get_head(branch_name=nil)
 		head = File.open(@@head_dir, 'r'){|f| f.read}
-		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
+		
 		if branch_name.nil?
 			return head
 		else
-			branch_head = @@snapshot_tree.snapshots.find{|x| x.branch_name == branch_name || x.branch_HEAD == true}
-			return branch_head.snapshot_ID
+			branch_table = load_branch_file(@@branch_dir)
+			branch_table[branch_name]
 		end
 	end
 
