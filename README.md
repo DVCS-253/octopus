@@ -8,6 +8,9 @@ For a full documentation please check [here](https://docs.google.com/document/d/
 - Add the path to this repository to your `PATH` variable inside `~./cshrc` file.
   
 ## Usage
+
+**Use at your own descretion! Do not put any important files inside octopus repo.** 
+
 You have two options for setting up octopus repository.
 You can either create a repository from scratch:
   ```
