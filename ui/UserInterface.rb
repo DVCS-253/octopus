@@ -24,6 +24,7 @@ class UserInterface
 	UpdateRE = "update(\s+([^\s]*))?$"
 	GetLatestSnapshotRE = "get_latest_snapshot\s*(\s+([^\s]*)\s*)*$"
 	GetAllSnapshotRE = "get_all_snapshots$"
+	GetHeadRE = "get_head\s*(\s+([^\s]*)\s*)*$"
 	
 	#--Correct usage of the commands
 	InitUsg = 'init ["directory"]'
@@ -40,6 +41,7 @@ class UserInterface
 	UpdateUsg = 'update ["textfile"]'
 	GetLatestSnapshotUsg = 'get_latest_snapshot [snapshot_id]' #returns error/success
 	GetAllSnapshotUsg = 'get_all_snapshots' #returns error/success
+	GetHeadUsg = 'get_all_snapshots' #returns error/success
 	
 	#Entry point of the application. Takes the 'command' from user in form of program arguments 
 	#and pass it to 'parseCommand' method after basic syntax checking<br><br>
@@ -251,10 +253,33 @@ class UserInterface
 			end	
 		elsif cmd == "get_all_snapshots"
 			matched = fullCmd.match GetAllSnapshotRE
+			msg = ""
 			if matched
 				result = Repos.new.get_all_snapshots()
+				if result
+					msg = "success"
+				else
+					msg = "error"
+				end
 			else
 				result = "Incorrect format. Expected: " + GetAllSnapshotUsg
+			end	
+			msg
+		elsif cmd == "get_head"
+			matched = fullCmd.match GetHeadRE
+			msg = ""
+			if matched
+				params = Hash.new
+				branchname = matched[2] if matched[2]
+				params["branch"] = branchname
+				result = Repos.get_head(branchname)
+				if result
+					msg = "success"
+				else
+					msg = "error"
+				end
+			else
+				result = "Incorrect format. Expected: " + GetLatestSnapshotUsg
 			end	
 		elsif cmd == "help"
 			`cat help.txt`
