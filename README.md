@@ -5,9 +5,8 @@
 - Add the path to this repository to your `PATH` variable inside `~./cshrc` file.
   
 ## Usage
-  You have two options for setting up octopus repository.
-
-  You can either create a repository from scratch:
+You have two options for setting up octopus repository.
+You can either create a repository from scratch:
   ```
   oct init
   oct -help # For a full list of commands
@@ -19,7 +18,7 @@
   ```
   
   **Commit**
-  You can commit a file, or a number of files together with a required commit message:
+  - You can commit a file, or a number of files together with a required commit message:
   ```
   oct commit -m [commit message] a.txt b.txt
   ```
