@@ -1,6 +1,6 @@
 # CSC 253 - DVCS Project 
 # Repos implementation
-# 11/20/2015 
+# 11/25/2015 
 
 # require_relative 'revlog'
 require 'json'
@@ -8,10 +8,8 @@ require 'json'
 # For Tree structrue
 # Tree class and Snapshot class (represents nodes in the tree)
 
-
-# Snapshot(node) has snapshot_ID, repos_hash with file_title and file_id
-# parent(last commit), child (next commit)
-
+# Tree initialized an array to keep snapshots and current_branch to indicate 
+# what is the current branch
 class Tree
 	# $last_commit = nil
 	# $current_branch = "master"
@@ -23,6 +21,7 @@ class Tree
 		@current_branch = "master"
 	end	
 
+	# use Marshal to load snapshot ID and find that commit_time
 	def find_snapshot(snapshot_ID)
 		# time we are looking for
 		s = Marshal::load(snapshot_ID)
@@ -35,6 +34,7 @@ class Tree
 		return nil
 	end
 
+	#  Attributes in every snapshot
 	def add_snapshot(commit_msg, root, branch_name, latest_commit=nil)
 		snapshot = Snapshot.new
 
@@ -60,10 +60,12 @@ class Tree
 
 end
 
+# More like interaction stuff among snapshots
 class Snapshot
-	attr_accessor :snapshot_ID, :commit_msg, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD
+	attr_accessor :snapshot_ID, :repos_hash, :parent, :child, :branch_HEAD
 
 	def initialize
+		# To save file and file_id, interact with Revlog
 		@repos_hash = {}
 		@parent = []
 		@child = []
@@ -283,8 +285,8 @@ class Repos
 		File.open(@@head_dir, 'wb'){ |f| f.write (snapshot_ID)}
 	end
 
-	def self.get_branches
-		branch_table = load_branch_file
+	def self.get_branches(filename)
+		branch_table = load_branch_file(filename)
 		arr = []
 		branch_table.each do |branch_name, head|
 			arr << branch_name
@@ -418,7 +420,7 @@ class Repos
 
 	# handle merging two files 
 	# Assume snapshot_ID1 here is the current branch 
-	def self.merge(ancestor_ID, snapshot_ID1, snapshot_ID2)
+	def self.merge(ancestor_ID=nil, snapshot_ID1, snapshot_ID2)
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
 		@@snapshot_tree = Marshal.load(File.binread($store_dir))
 		# find two snapshot
@@ -426,15 +428,9 @@ class Repos
 		snapshot_second = @@snapshot_tree.find_snapshot(snapshot_ID2)
 
 		# create new merged snapshot
-		snapshot = @@snapshot_tree.add_snapshot
-		# record branch name
-		snapshot.branch_name = snapshot_first.branch_name
-		# record time
-		snapshot.commit_time = Time.now
+		snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, snapshot_first.branch_name, snapshot_first)
 
-		snapshot.add_parent(snapshot_first)
 		snapshot.add_parent(snapshot_second)
-		snapshot_first.add_child(snapshot)
 		snapshot_second.add_child(snapshot)
 
 		# for repos_hash,
@@ -445,23 +441,35 @@ class Repos
 
 		@@head = snapshot.snapshot_ID
 
-		File.open(@@head_dir, 'w'){ |f| f.write ("#{@@head}")}
+		update_head_file(@@head)
 		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
 
 		return snapshot.snapshot_ID
 
 	end
 
-	# Get branch head
+	# Get latest common ancestor
 	def self.get_ancestor(snapshot_ID1, snapshot_ID2)
 
 		@@snapshot_tree = Marshal.load(File.binread($store_dir))
 		snapshot1 = @@snapshot_tree.find_snapshot(snapshot_ID1)
 		snapshot2 = @@snapshot_tree.find_snapshot(snapshot_ID2)
 
-		ancestor = @@snapshot_tree.snapshots.find{|x| x.branch_HEAD == true || x.branches.include?(snapshot1.branch_name) && x.branches.include?(snapshot2.branch_name)}
+		his_snapshot1 = history(snapshot1)
+		his_snapshot2 = history(snapshot2)
 
-		return ancestor
+		# log(n^2) unefficient, will update
+		# find first common snapshot 
+		for snapshot1 in his_snapshot1
+			for snapshot2 in his_snapshot2
+				if snapshot1.commit_time.to_s = snapshot2.commit_time.to_s
+					return snapshot1
+				end
+			end
+		end
+
+		# no ancestor
+		return nil
 
 	end
 
