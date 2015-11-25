@@ -240,13 +240,13 @@ class UserInterface
 			else
 				result = "Incorrect format. Expected: " + UpdateUsg
 			end	
-		elsif cmd == "get_latest_snapshot"
+		elsif cmd == "get_latest_snapshot" # unused by push and pull
 			matched = fullCmd.match GetLatestSnapshotRE
 			if matched
 				params = Hash.new
 				snapshot_id =  matched[2] if matched[2]
 				params["snapshot_id"] = snapshot_id
-				result = Repos.new.get_latest_snapshot(snapshot_id)
+				result = Repos.new.get_latest_snapshots(snapshot_id)
 				p 
 			else
 				result = "Incorrect format. Expected: " + GetLatestSnapshotUsg

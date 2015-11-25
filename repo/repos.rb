@@ -354,8 +354,8 @@ class Repos
 	# In order to send latest snapshots from the common ancestor
 	# snapshot_ID, head.branch_name and snapshot_ID.branch_name
 	# should be the same, otherwise throw an error string
+	# Output: an array of Marshall snapshot ids
 	def self.get_latest_snapshots(snapshot_ID)
-
 		snapshot_ancestor = Marshal.load(snapshot_ID)
 		head = Marshal.load(get_head)
 
@@ -376,7 +376,6 @@ class Repos
 
 	# return "store" in /repo
 	# Use Marshal.load to open "store"
-
 	def self.get_all_snapshots
 		all_snapshots = Marshal.load(File.binread(@@store_dir))
 		return all_snapshots
@@ -385,32 +384,27 @@ class Repos
 	# read text_file from Push and Pull module
 	# and update snapshots tree
 	def self.update_tree(text_file)
-		@@snapshot_tree = Marshal.load(File.binread($store_dir))
-		snapshots_data = Marshal.load(File.binread($text_file_dir))
+		head = Marshal.load(File.binread(@@head_dir))
+		head_snapshot = restore_snapshot(head)
+		snapshots_data = Marshal.load(File.binread(text_file))
+		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 
-		branch_name = snapshots_data["branch_name"]
-		snapshots_only = snapshots_data.select {|key, value| key.match(/^snapshot_\d+/)}
-		# Simply replace the old branch
-		if @@snapshot_tree.branches.include(branch_name)
-			delete_branch(branch_name)
+		snapshots_data.each do |snapshot|
+			@@snapshot_tree.snapshots.push(snapshot)
 		end
-		@@snapshot_tree.branches.push(branch_name)
-		# snap will be string like "snapshot_1", "snapshot_2"
-		# only get number from it
-		snapshots_only.each_with_index {|(snap, info),index|
-			snapshot = @@snapshot_tree.snapshots.add_snapshot(snap.scan(/\d/).join(''))
-			if index == 0
-				snapshot.branch_HEAD = true
-			end
-			snapshot.commit_time = snapshots_only["#{snap}"]["committed_time"]
-			files_only = snapshots_only[snap].select {|key, value| key.match(/^files_\d+/)}
-			files_only.each {|file, contents|
-				snapshot.repos_hash["#{file}"] = Revlog.add_file(contents)
-			}
 
-		}
+		# Connect the ancestor head to the first element in the snapshot data and vice versa
+		first_element = find_snapshot(snapshots_data[0].snapshot_ID)
+		head_snapshot.add_child(first_element)
+		first_element.add_parent(head_snapshot)
 
-		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
+		# Reset the head and the branch file
+		new_id = find_snapshot(snapshots_data.last.snapshot_ID)
+		update_head_file(new_id)
+		update_branch_file(head_snapshot.branch_name, new_id)
+
+		# Store the updates tree array
+		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
 
 	end
 
