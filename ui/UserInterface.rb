@@ -255,7 +255,7 @@ class UserInterface
 			matched = fullCmd.match GetAllSnapshotRE
 			msg = ""
 			if matched
-				result = Repos.new.get_all_snapshots()
+				result = Repos.get_all_snapshots()
 				if result
 					msg = "success"
 				else
@@ -306,7 +306,7 @@ class UserInterface
 	# - result(String): result of the execution to the testing module
 	private
 	def displayResult(result)
-		puts "🐙  => " + result
+		puts result.to_s
 	end
 
 	#To colorize the output based on the color code
