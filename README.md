@@ -75,7 +75,7 @@ You can delete .octopus file and start over!
   ```
 
 ## Notes
-Please note that some commands that are not supported here right now may be fully functional and tested independentely by the corresponding module. Please browse through 5 modules - more information on the is provided in each modele's README. 
+Please note that some commands that are not supported here right now may be fully functional and tested independentely by the corresponding module. Please browse through 5 modules - more information on them is provided in each modele's README. 
 
 
 Cheers!
