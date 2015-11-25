@@ -59,7 +59,6 @@ class Tree
 			snapshot.add_parent(latest_commit)
 		end
  
-		@snapshots.push(snapshot)
 		snapshot
 	end
 
@@ -184,7 +183,6 @@ class Repos
 			# latest_branch is the latest commit on this branch
 			# which means find last appearance snapshot with current branch name
 			# just reverse array and find first appearance 
-			r_ids = @@snapshot_tree.snapshots.reverse
 			parent = restore_snapshot(@@head)
 
 			# add new snapshot
@@ -209,6 +207,7 @@ class Repos
 		update_branch_file(current_branch, snapshot.snapshot_ID)
 
 		snapshot.snapshot_ID = Marshal::dump(snapshot)
+		@@snapshot_tree.snapshots.push(snapshot)
 		p snapshot.branch_name
 		p snapshot.repos_hash.to_a.inspect
 		p "all snapshots #{@@snapshot_tree.snapshots.count}"
