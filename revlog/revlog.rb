@@ -8,6 +8,21 @@ class Revlog
 
 	class << Revlog
 
+		###########
+		# Methods #
+		###########
+		# new (overwritten)
+		# load_table
+		# gen_id
+		# add_file
+		# get_file
+		# get_time
+		# delete_file
+		# diff_files
+		# merge
+
+		# As Revlog is static, it makes
+		# no sense to instantiate it
 		def new(*args)
 			raise "Cannot instantiate static class Revlog"
 		end
@@ -104,7 +119,7 @@ class Revlog
 			file1 = file1.lines
 			file2 = file2.lines
 
-			return ((file1 - file2) + (file2-file1))
+			return ((file1 - file2) + (file2-file1)) #union of set differences
 		end
 
 		# Merges two files, returning
