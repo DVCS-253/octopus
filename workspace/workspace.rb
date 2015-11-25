@@ -104,7 +104,12 @@ class Workspace
 	#commit a list of file, a directory or a branch
 	#list contains path of fiels, for example ['workspace/a.rb', 'repos/b.rb', 'test/c.rb']
 	#directory needs to be a existed path, for example 'workspace' or 'workspace/test'
-	def commit(arg = nil, commit_msg)
+	def commit(arg = nil, commit_msg = nil)
+		#There has to be a message
+		if commit_msg == nil
+			return "Please include a commit message"	
+		end
+
 		results = {}
 		#commit a branch
 		if arg == nil
@@ -113,7 +118,7 @@ class Workspace
 			#build a hash table for the files
 			results = build_hash(all_files)
 			#make a new snapshot and update the head
-			snapshot_id = Repos.make_snapshot(results)
+			snapshot_id = Repos.make_snapshot(results, commit_msg)
 			Repos.update_head(snapshot_id)
 			return 0 
 		end
@@ -143,7 +148,7 @@ class Workspace
 		# end
 		#make a new snapshot and update the head 
 		p results.class
-		snapshot_id = Repos.make_snapshot(results)
+		snapshot_id = Repos.make_snapshot(results, commit_msg)
 		# p "printing head" + snapshot_id
 		# Repos.update_head(snapshot_id) <-- Repos does this
 		if arg.size == 1
@@ -164,7 +169,8 @@ class Workspace
 	#end
 
 
-
+	#new version of status
+	#using commit time instead of file content
 	def status
 		uncommitted = []
 		workspace_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
