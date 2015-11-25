@@ -215,6 +215,7 @@ class UserInterface
 				directory = matched[5] if matched[5]
 				params["repository"] = repository
 				params["directory"] = directory
+				puts params.inspect
 				result = PushPull.clone(repository,directory)
 			else
 				result = "Incorrect format. Expected: " + CloneUsg

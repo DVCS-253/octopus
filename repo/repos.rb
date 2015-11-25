@@ -289,6 +289,15 @@ class Repos
 		File.open(@@head_dir, 'wb'){ |f| f.write (snapshot_ID)}
 	end
 
+	def self.get_branches
+		branch_table = load_branch_file
+		arr = []
+		branch_table.each do |branch_name, head|
+			arr << branch_name
+		end
+		arr
+	end
+
 	# Make 1 child from current HEAD 
 	def self.make_branch(branch_name)
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))

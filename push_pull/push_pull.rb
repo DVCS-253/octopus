@@ -10,6 +10,8 @@ require 'etc'
 module PushPull
 
   @@dvcs_dir = '.octopus' # Name of the directory containing the DVCS files
+  @@repo_dir = ".octopus/repo"
+  @@revlog_dir = ".octopus/revlog"
 
   # private_class_method :pull_with_connection
 
@@ -23,9 +25,11 @@ module PushPull
   # @yieldparam [Net::SSH] ssh The ssh connection object.
   #
   def self.connect(remote, path)
+    name_machine, folder = remote.split(":")
+    user, machine = name_machine.split("@")
     begin
       # Attempt to login as the current user with a key
-      ssh = Net::SSH.start(remote, Etc.getlogin)
+      ssh = Net::SSH.start(machine, user)
     rescue
       begin
         print 'Username: '
@@ -145,24 +149,33 @@ module PushPull
 
     # Initialize the new repository
     Dir.chdir(directory_name) {
-      Workspace.new.init
+      workspace = Workspace.new
+      workspace.init
 
       # Splits 127.0.0.1:/path/to/repo into 127.0.0.1 and /path/to/repo
       address, path = remote.split(':', 2)
       self.connect(address, path) { |ssh|
         # Obtain a list of branches on the remote
         # TODO I need a real way to get all branch names
-        snapshot = Marshal.load(ssh.exec! "cat #{path}/#{@@dvcs_dir}/repo/head")
-        branches = snapshot.branches
+        @head_file = (ssh.exec! "cat #{path}/#{@@dvcs_dir}/repo/head")
+        @store_file = (ssh.exec! "cat #{path}/#{@@dvcs_dir}/repo/store")
+        @revlog_file = (ssh.exec! "cat #{path}/#{@@dvcs_dir}/revlog/revlog.json")
+        @branch_file = (ssh.exec! "cat #{path}/#{@@dvcs_dir}/repo/branches")
 
-        # Always include the master branch
-        branches.push('master') unless branches.include?('master')
+        # # Always include the master branch
+        # branches.push('master') unless branches.include?('master')
 
-        # Pull each branch
-        branches.each { |branch|
-          self.pull_with_connection(branch, ssh)
-        }
+        # # Pull each branch
+        # branches.each { |branch|
+        #   self.pull_with_connection(branch, ssh)
+        # }
       }
+
+      File.open("#{@@repo_dir}/head", 'wb'){|f| f.write(@head_file)}
+      File.open("#{@@repo_dir}/store", 'wb'){|f| f.write(@store_file)}
+      File.open("#{@@repo_dir}/branches", 'wb'){|f| f.write(@branch_file)}
+      File.open("#{@@revlog_dir}/revlog.json", 'wb'){|f| f.write(@revlog_file)}
+      workspace.check_out_branch("master")
     }
   end
 end
