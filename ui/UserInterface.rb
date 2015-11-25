@@ -135,7 +135,7 @@ class UserInterface
 						files = matched[6].split(" ")
 					# files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
 					base_dir = File.read('.octopus/base_dir')
-					puts base_dir
+					# puts base_dir
 					files.map! do |file| 
 						file = file.gsub(/"#{base_dir}"/, "")
 						if (file.match(/\A\//))
@@ -143,11 +143,11 @@ class UserInterface
 						end
 						file
 					end
-					puts files.inspect
+					# puts files.inspect
 					Workspace.new.commit(files, message)
 				end
 			end
-			puts "Files passed for commit #{files.inspect}"
+			# puts "Files passed for commit #{files.inspect}"
 				result = Workspace.new.commit(files, message)  #replace by commit(files, message) once the commit method supports it 
 			else
 				result = "Incorrect format. Expected: " + CommitUsg
@@ -159,7 +159,7 @@ class UserInterface
 				add = matched[2]
 				if add
 					branch = matched[4]
-					Repos.make_branch(branch)
+					result = Repos.make_branch(branch)
 				end
 				#params["add"] = true if matched[2]
 				#params["branch"] = matched[4] if matched[4]
@@ -179,17 +179,22 @@ class UserInterface
 				result = "Incorrect format. Expected: " + MergeUsg
 			end	
 		elsif cmd == "push"
-			matched = fullCmd.match PushRE
-			if matched
-				params = Hash.new
-				remote = matched[2] if matched[2]
-				branch = matched[4] if matched[4]
-				params["remote"] = remote
-				params["branch"] = branch
-				result = PushPull.push(remote,branch)
-			else
-				result = "Incorrect format. Expected: " + PushUsg
-			end	
+			# matched = fullCmd.match PushRE
+			# if matched
+			# 	params = Hash.new
+			# 	remote = matched[2] if matched[2]
+			# 	branch = matched[4] if matched[4]
+			# 	params["remote"] = remote
+			# 	params["branch"] = branch
+			# 	result = PushPull.push(remote,branch)
+			# else
+			# 	result = "Incorrect format. Expected: " + PushUsg
+			# end
+			r = fullCmd.split
+			# r0 = remote, r1 = branch
+			puts r.inspect
+			result = PushPull.push(r[1],r[2])
+
 		elsif cmd == "pull"
 			matched = fullCmd.match PullRE
 			if matched
@@ -210,7 +215,7 @@ class UserInterface
 				files.each_with_index{|file,i| 
 					puts "    "+red(file.to_s)
 				}
-				result = "Current branch: "
+				result = "Current branch: " + Repos.get_current_branch
 			else
 				result = "Incorrect format. Expected: " + StatusUsg
 			end	
@@ -223,7 +228,7 @@ class UserInterface
 				directory = matched[5] if matched[5]
 				params["repository"] = repository
 				params["directory"] = directory
-				puts params.inspect
+				# puts params.inspect
 				result = PushPull.clone(repository,directory)
 			else
 				result = "Incorrect format. Expected: " + CloneUsg

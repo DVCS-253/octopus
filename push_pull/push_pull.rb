@@ -6,6 +6,7 @@ require 'tempfile'
 require 'net/ssh'
 require 'json'
 require 'etc'
+require 'shellwords'
 
 module PushPull
 
@@ -39,11 +40,9 @@ module PushPull
       
         ssh = Net::SSH.start(remote, username, :password => password)
       rescue
-        raise 'Unable to connect to remote'
+        return 'Unable to connect to remote'
       end
     end
-
-    ssh.exec "cd #{path}"
 
     if block_given?
       yield ssh
@@ -64,18 +63,36 @@ module PushPull
     address, path = remote.split(':', 2)
 
     self.connect(address, path) { |ssh|
-      remote_head = ssh.exec! "oct get_head #{branch}"
+      # This was not working
+      # remote_head = ssh.exec! "oct get_head #{branch}"
 
-      local_changes = Repos.get_latest_snapshots(remote_head)
+      # Collect the branch file
+      @branch_file = (ssh.exec! "cat #{path}/#{@@dvcs_dir}/repo/branches")
+      branch_table = Marshal.load(@branch_file)
+      remote_head = branch_table[branch]
+      # puts "from push"
+      # puts remote_head
+
+      Repos.get_latest_snapshots(remote_head)
+      marshal_local = File.read('.octopus/communication/text_file').to_s
 
       # Raise an exception if local changes could not be calculated
-      raise 'Local is not up to date, please pull and try again' if !local_changes
+      return 'Local is not up to date, please pull and try again' if !marshal_local
 
       # Copy the contents of the local file to remote/#{@@dvcs_dir}/communication/text_file
-      ssh.exec "echo #{Shellwords.shellescape(IO.read(local_changes))} > #{@@dvcs_dir}/communication/text_file"
+      ssh.exec "echo #{marshal_local} > #{@@dvcs_dir}/communication/text_file"
 
       # Merge the new snapshots into the remote
-      ssh.exec "oct update_tree #{@@dvcs_dir}/communication/text_file"
+      ssh.exec "oct update #{@@dvcs_dir}/communication/text_file"
+
+      # This is not working... when you ssh into the remote, you do not get to the right directory and
+      # so all the ssh.exec are failing.
+
+      # where_are_we = ssh.exec "pwd"
+      # puts where_are_we
+
+      # Updating remote workspace directory
+      ssh.exec "oct checkout #{branch}"
     }
   end
 
@@ -143,7 +160,7 @@ module PushPull
     directory_name = directory_name.nil? ? File.basename(remote) : directory_name
 
     # Ensure the directory does not already exist
-    raise 'Destination for clone already exists' if Dir.exists?(directory_name)
+    return 'Destination for clone already exists' if Dir.exists?(directory_name)
 
     Dir.mkdir(directory_name)
 
@@ -177,5 +194,6 @@ module PushPull
       File.open("#{@@revlog_dir}/revlog.json", 'wb'){|f| f.write(@revlog_file)}
       workspace.check_out_branch("master")
     }
+    return "You have succesfully cloned from #{remote}"
   end
 end

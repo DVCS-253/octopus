@@ -25,13 +25,9 @@ class Tree
 
 	def find_snapshot(snapshot_ID)
 		# time we are looking for
-		p "old id" + snapshot_ID.to_s
 		s = Marshal::load(snapshot_ID)
-		p "looking for" + s.commit_time.to_s
 		for snapshot in @snapshots
-			p snapshot.commit_time.to_s
 			if snapshot.commit_time.to_s == s.commit_time.to_s
-				p "FOUND"
 				return snapshot
 			end
 		end
@@ -158,26 +154,26 @@ class Repos
 	#   -------------------------------------------
 
 	def self.make_snapshot(files_to_be_commits, commit_msg=nil)
-		p files_to_be_commits.class
+		# p files_to_be_commits.class
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
 
 		if @@head == "0"
-			p "adding the first snapshot"
+			# p "adding the first snapshot"
 			snapshot = @@snapshot_tree.add_snapshot(commit_msg, true, "master")
 
-			p "printing first snapshot"
-			p snapshot
-			p snapshot.snapshot_ID
+			# p "printing first snapshot"
+			# p snapshot
+			# p snapshot.snapshot_ID
 
 			# Updating the branch file -> by default the branch name is master
 
 		else
-			p "adding the non first snapshot"
+			# p "adding the non first snapshot"
 			head_snapshot = Marshal.load(File.binread(@@head_dir))
 			current_branch = head_snapshot.branch_name
-			p head_snapshot
-			puts "current branch " + current_branch
+			# p head_snapshot
+			# puts "current branch " + current_branch
 
 			# latest_branch is the latest commit on this branch
 			# which means find last appearance snapshot with current branch name
@@ -198,23 +194,22 @@ class Repos
 			snapshot.repos_hash[file_path.to_s] = Revlog.add_file([content, file_time])
 		end
 
-		puts snapshot.repos_hash.to_a.inspect
+		# puts snapshot.repos_hash.to_a.inspect
 
 		snapshot.snapshot_ID = Marshal::dump(snapshot)
 		@@snapshot_tree.snapshots.push(snapshot)
 
 		# Updating the branch file
-		puts "testing repo hash"
 		update_branch_file(snapshot.branch_name, snapshot.snapshot_ID)
 
-		p snapshot.branch_name
-		p snapshot.repos_hash.to_a.inspect
-		p "all snapshots #{@@snapshot_tree.snapshots.count}"
+		# p snapshot.branch_name
+		# p snapshot.repos_hash.to_a.inspect
+		# p "all snapshots #{@@snapshot_tree.snapshots.count}"
 
 		# Then head becomes this snapshot' ID
 		File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
-		test_snapshot_tree
+		# test_snapshot_tree
 		get_latest_snapshots(@@snapshot_tree.snapshots[0].snapshot_ID)
 		return snapshot.snapshot_ID
 	end
@@ -272,12 +267,8 @@ class Repos
 		# Record branch_name and HEAD's snapshot_ID
 		branch_table = load_branch_file (@@branch_dir)
 		branch_table[branch_name] = head
-		puts "branch table: #{branch_table.to_a.inspect}"
+		# puts "branch table: #{branch_table.to_a.inspect}"
 		File.open(@@branch_dir, 'wb'){|f| f.write(Marshal.dump(branch_table))}
-		branch_table2 = load_branch_file (@@branch_dir)
-		branch_table2[branch_name] = head
-		puts "Testing branch table: "
-		puts branch_table[branch_name] == branch_table2[branch_name]
 	end
 
 	def self.load_branch_file (filename)	
@@ -332,7 +323,7 @@ class Repos
 		update_branch_file(branch_name, head_snapshot.snapshot_ID)
 
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
-
+		return "In a new branch"
 	end
 
 	# means delete the whole branch? 
@@ -361,6 +352,11 @@ class Repos
 		end
 	end
 
+	def self.get_current_branch
+		head = Marshal.load(get_head)
+		head.branch_name
+	end
+
 
 	# save text file to .octopus/communication
 	# In order to send latest snapshots from the common ancestor
@@ -381,7 +377,7 @@ class Repos
 			latest_snaps.each do |x|
 				array << x.snapshot_ID
 			end
-			puts array.inspect
+			# puts array.inspect
 			File.open(@@text_file_dir, 'wb'){|f| f.write(Marshal.dump(array))}
 		end
 	end

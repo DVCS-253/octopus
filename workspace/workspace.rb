@@ -26,7 +26,6 @@ class Workspace
 		#ignore the file name 
 		d = path.split("/")
 		d.pop
-		puts d.inspect
 		dpath = "/"+d.join("/")
 		unless File.file?(dpath)
 			unless File.directory?(dpath)
@@ -54,13 +53,13 @@ class Workspace
 		#obtain the snapshot object using retore_snapshot
 		snapshot = Marshal.load(snapshot_id) # used to be load a file, but this is more efficient	
 		#obtian the file_hash from the object		
-		puts "snapshot:"
-		puts snapshot
-		puts snapshot.branch_name
-		puts snapshot.commit_msg
-		puts snapshot.parent[0].repos_hash.to_a.inspect
+		# puts "snapshot:"
+		# puts snapshot
+		# puts snapshot.branch_name
+		# puts snapshot.commit_msg
+		# puts snapshot.parent[0].repos_hash.to_a.inspect
 		file_hash = snapshot.repos_hash
-		puts snapshot.repos_hash.to_a.inspect
+		# puts snapshot.repos_hash.to_a.inspect
         file_hash.each do |path, hash|
 			#rebuild the directory of the file
 			rebuild_dir(path)
@@ -74,8 +73,8 @@ class Workspace
 
 	def check_out_branch(branch_name)
 		snapshot_ID = Repos.get_head(branch_name)
-		puts "id:"
-		puts snapshot_ID
+		# puts "id:"
+		# puts snapshot_ID
 		check_out_snapshot(snapshot_ID)
 	end
 
@@ -167,7 +166,7 @@ class Workspace
 		# 	end
 		# end
 		#make a new snapshot and update the head 
-		p results.class
+		# p results.class
 		snapshot_id = Repos.make_snapshot(results, commit_msg)
 		# p "printing head" + snapshot_id
 		# Repos.update_head(snapshot_id) <-- Repos does this
