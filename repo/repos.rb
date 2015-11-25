@@ -201,13 +201,15 @@ class Repos
 			snapshot.repos_hash[file_path.to_s] = Revlog.add_file([content, file_time])
 		end
 
-		# Updating the branch file
-		puts "testing repo hash"
 		puts snapshot.repos_hash.to_a.inspect
-		update_branch_file(current_branch, snapshot.snapshot_ID)
 
 		snapshot.snapshot_ID = Marshal::dump(snapshot)
 		@@snapshot_tree.snapshots.push(snapshot)
+
+		# Updating the branch file
+		puts "testing repo hash"
+		update_branch_file(current_branch, snapshot.snapshot_ID)
+
 		p snapshot.branch_name
 		p snapshot.repos_hash.to_a.inspect
 		p "all snapshots #{@@snapshot_tree.snapshots.count}"
