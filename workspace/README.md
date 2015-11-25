@@ -8,22 +8,23 @@
 - Repos.update_head : update the head of the branch. Called in commit
 - Repos.make_snapshot : make a new snapshot given committed files. Called in commit.
 
-**List of involved Revlog funtions: **
+**List of involved Revlog funtions:**
 Revlog.get_file : given a file_id to get its content. Called in status, check_out_snapshot, check_out_file
 
 **List of functions:**
-1. init :public function, initialize workspace
-2. rebuild_dir(path) : rebuild a path in workspace
-3. check_out_snapshot(snapshot_id) : checke out a snapshot given its ID
-4. check_out_file(path) : check out a file given its expected location in workspace
-5. checkout(arg) : public function, check out a branch, it could check out the current newest snapshot or given a branch name
-6. build_hash(file_list): build a hash for a list of files. key = file_path, key = file_content
-7. commit(arg = nil, commit_msg = nil) : public function, commit whole workspace, a directory or a file, a commit message is required
-8. status : public function, return current uncommitted files 
-9. clean : remove all the files in workspace expect for files under ./.octpus
+- init :public function, initialize workspace
+- rebuild_dir(path) : rebuild a path in workspace
+- check_out_snapshot(snapshot_id) : checke out a snapshot given its ID
+- check_out_file(path) : check out a file given its expected location in workspace
+- checkout(arg) : public function, check out a branch, it could check out the current newest snapshot or given a branch name
+- build_hash(file_list): build a hash for a list of files. key = file_path, key = file_content
+- commit(arg = nil, commit_msg = nil) : public function, commit whole workspace, a directory or a file, a commit message is required
+- status : public function, return current uncommitted files 
+- clean : remove all the files in workspace expect for files under ./.octpus
 
 **Test cases and assumptions**
 To test my module without other modules, I fixed the output of other modules in workspace_testversion.rb, and test the functions in workspace_testversion.
+
 All the commented codes in workspace_testversion are outputs from other modules. All the faked output are commented as "#testing". 
 
 
