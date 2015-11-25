@@ -206,7 +206,7 @@ class Repos
 
 		# Updating the branch file
 		puts "testing repo hash"
-		puts snapshot.repos_hash.to_a.extract
+		puts snapshot.repos_hash.to_a.inspect
 		update_branch_file(current_branch, snapshot.snapshot_ID)
 
 		p snapshot.branch_name
