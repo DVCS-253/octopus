@@ -35,8 +35,8 @@ class Tree
 				return snapshot
 			end
 		end
-
-		raise "Unable to find Snapshot with snapshot_id #{snapshot_ID}"
+		# Returns nil if the snapshot cannot be found
+		return nil
 	end
 
 	def add_snapshot(commit_msg, root, branch_name, latest_commit=nil)
@@ -187,10 +187,6 @@ class Repos
 			# just reverse array and find first appearance 
 			r_ids = @@snapshot_tree.snapshots.reverse
 			parent = restore_snapshot(@@head)
-			# latest_commit = r_ids.find {|x| x.branch_name == @@snapshot_tree.current_branch}
-			# latest_commit = r_ids.find {|x| x.branch_name == current_branch}
-			# # Record branch name
-			# snapshot.branch_name = @@snapshot_tree.current_branch
 
 			# add new snapshot
 			snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, current_branch, parent)
@@ -216,6 +212,7 @@ class Repos
 
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
 		test_snapshot_tree
+		get_latest_snapshots(@@snapshot_tree.snapshots[0].snapshot_ID)
 		return snapshot.snapshot_ID
 	end
 
@@ -225,22 +222,12 @@ class Repos
 		unless @@snapshot_tree.snapshots.nil?
 			puts  @@snapshot_tree.snapshots[0].repos_hash.to_a.inspect
 		end
-		
 	end
 
 	# returns a specific snapshot
 	def self.restore_snapshot(snapshot_ID)
-
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		snapshot = @@snapshot_tree.find_snapshot(snapshot_ID)
-		
-		# # put file_id into file_id_lists
-		# file_id_lists = Array.new
-		# snapshot.repos_hash.each do |file_dir, file_id|
-		# 	file_id_lists << file_id
-		# end
-
-		return snapshot
 	end
 
 	# returns all parents of certain node_id
@@ -364,32 +351,34 @@ class Repos
 
 
 	# save text file to .octopus/communication
+	# In order to send latest snapshots from the common ancestor
+	# snapshot_ID, head.branch_name and snapshot_ID.branch_name
+	# should be the same, otherwise throw an error string
 	def self.get_latest_snapshots(snapshot_ID)
 
-		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
-		snapshot = @@snapshot_tree.findNode(snapshot_ID)
-		latest_snaps = @@snapshot_tree.snapshots.find_all {|x| snapshot_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
+		snapshot_ancestor = Marshal.load(snapshot_ID)
+		head = Marshal.load(get_head)
 
-		text_file = {
-					"branch_name" => "#{snapshot.branch_name}"
-					}
-		latest_snaps.each_with_index{ |snap,index|
-			text_file["snapshot_#{snap.snapshot_ID}"] = {"committed_time" => "#{snap.commit_time}"}
-			snap.repos_hash.each_with_index do |(file, id), index2|
-				text_file["snapshot_#{snap.snapshot_ID}"]["files_#{index2+1}"] = {"#{file}" => "#{Revlog.get_file(id)}"}
+		if snapshot_ancestor.branch_name != head.branch_name
+			return "error from get last snapshots - unmatched branch name"
+		else
+			@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
+			latest_snaps = @@snapshot_tree.snapshots.find_all {|x| snapshot_ancestor.commit_time.to_i < x.commit_time.to_i  && snapshot_ancestor.branch_name == x.branch_name}
+
+			array = []
+			latest_snaps.each do |x|
+				array << x.snapshot_ID
 			end
-		}
-
-		snapshots_data = Marshal.dump(text_file)		
-		File.open(text_file_dir, 'wb') { |f| f.puts snapshots_data}
-
+			puts array.inspect
+			File.open(@@text_file_dir, 'wb'){|f| f.write(Marshal.dump(array))}
+		end
 	end
 
 	# return "store" in /repo
 	# Use Marshal.load to open "store"
 
 	def self.get_all_snapshots
-		all_snapshots = Marshal.load(File.binread($store_dir))
+		all_snapshots = Marshal.load(File.binread(@@store_dir))
 		return all_snapshots
 	end
 

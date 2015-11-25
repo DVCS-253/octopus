@@ -306,7 +306,7 @@ class UserInterface
 	# - result(String): result of the execution to the testing module
 	private
 	def displayResult(result)
-		puts result.to_s
+		puts " 🐙  => " + result.to_s
 	end
 
 	#To colorize the output based on the color code
