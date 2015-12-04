@@ -11,18 +11,15 @@ module PushPull
 
   @@dvcs_dir = '.octopus' # Name of the directory containing the DVCS files
 
-  # private_class_method :pull_with_connection
-
   # Uses the Net::SSH gem to create an SSH session.
   # The user will be asked for their credentials for the connection,
   # unless they have a key configured for the connection.
   #
   # @param [string] remote The address of the remote machine to connect to.
-  # @param [string] path The path to the corresponding repo on the remote.
   # @yield [ssh] Custom block for utilizing the connection.
   # @yieldparam [Net::SSH] ssh The ssh connection object.
   #
-  def self.connect(remote, path)
+  def self.connect(remote)
     begin
       # Attempt to login as the current user with a key
       ssh = Net::SSH.start(remote, Etc.getlogin)
@@ -38,8 +35,6 @@ module PushPull
         raise 'Unable to connect to remote'
       end
     end
-
-    ssh.exec "cd #{path}"
 
     if block_given?
       yield ssh
@@ -59,8 +54,8 @@ module PushPull
     # Splits 127.0.0.1:/path/to/repo into 127.0.0.1 and /path/to/repo
     address, path = remote.split(':', 2)
 
-    self.connect(address, path) { |ssh|
-      remote_head = ssh.exec! "oct get_head #{branch}"
+    self.connect(address) { |ssh|
+      remote_head = ssh.exec! "cd #{path} && oct get_head #{branch}"
 
       local_changes = Repos.get_latest_snapshots(remote_head)
 
@@ -68,10 +63,10 @@ module PushPull
       raise 'Local is not up to date, please pull and try again' if !local_changes
 
       # Copy the contents of the local file to remote/#{@@dvcs_dir}/communication/text_file
-      ssh.exec "echo #{Shellwords.shellescape(IO.read(local_changes))} > #{@@dvcs_dir}/communication/text_file"
+      ssh.exec "echo #{Shellwords.shellescape(IO.read(local_changes))} > #{path}#{@@dvcs_dir}/communication/text_file"
 
       # Merge the new snapshots into the remote
-      ssh.exec "oct update_tree #{@@dvcs_dir}/communication/text_file"
+      ssh.exec "cd #{path} && oct update_tree #{@@dvcs_dir}/communication/text_file"
     }
   end
 
@@ -86,8 +81,8 @@ module PushPull
     # Splits 127.0.0.1:/path/to/repo into 127.0.0.1 and /path/to/repo
     address, path = remote.split(':', 2)
 
-    self.connect(address, path) { |ssh|
-      pull_with_connection(branch, ssh)
+    self.connect(address) { |ssh|
+      pull_with_connection(branch, path, ssh)
     }
   end
 
@@ -98,21 +93,22 @@ module PushPull
   # This method should be considered private.
   #
   # @param [string] branch The name of the branch to pull.
+  # @param [string] path The path to the repo on the remote.
   # @param [Net::SSH] ssh The ssh connection object to use.
   #
-  def self.pull_with_connection(branch, ssh)
+  def self.pull_with_connection(branch, path, ssh)
     local_head = Repos.get_head(branch)
 
     # Calling either of these `oct func` methods updates
     # the #{@@dvcs_dir}/communication/text_file file on the remote
     if local_head.nil?
       # Get the entire history if our locally history is empty
-      if ssh.exec! "oct get_all_snapshots" == 'error'
+      if ssh.exec!("cd #{path} && oct get_all_snapshots") == 'error'
         raise 'Remote has no commit history'
       end
     else
       # Get the history since our latest local snapshot
-      if ssh.exec! "oct get_latest_snapshot #{local_head}" == 'error'
+      if ssh.exec! "cd #{path} && oct get_latest_snapshot #{local_head}" == 'error'
         raise 'Local commit history is not present on remote'
       end
     end
@@ -120,7 +116,7 @@ module PushPull
     # Merge the new remote snapshots into the local repo
     TempFile.open('snapshots_to_merge') { |file|
       # Copy over the file contents from the remote
-      file.write(ssh.exec! "cat #{@@dvcs_dir}/communication/text_file")
+      file.write(ssh.exec! "cat #{path}#{@@dvcs_dir}/communication/text_file")
 
       # Update our local snapshot tree
       Repos.update_tree(file.path)
@@ -149,7 +145,7 @@ module PushPull
 
       # Splits 127.0.0.1:/path/to/repo into 127.0.0.1 and /path/to/repo
       address, path = remote.split(':', 2)
-      self.connect(address, path) { |ssh|
+      self.connect(address) { |ssh|
         # Obtain a list of branches on the remote
         # TODO I need a real way to get all branch names
         snapshot = Marshal.load(ssh.exec! "cat #{path}/#{@@dvcs_dir}/repo/head")
@@ -160,7 +156,7 @@ module PushPull
 
         # Pull each branch
         branches.each { |branch|
-          self.pull_with_connection(branch, ssh)
+          self.pull_with_connection(branch, path, ssh)
         }
       }
     }
