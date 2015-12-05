@@ -24,7 +24,7 @@ class Revlog
 		# As Revlog is static, it makes
 		# no sense to instantiate it
 		def new(*args)
-			raise "Cannot instantiate static class Revlog"
+			return "Cannot instantiate static class Revlog"
 		end
 
 		# Loads a new file_table from file
@@ -33,7 +33,7 @@ class Revlog
 		def load_table (filename)
 			File.open(filename) {|file|
 				@file_table = JSON.load(file)} if File.file? (filename)
-			puts "file table #{@file_table}"
+			# puts "file table #{@file_table}"
 		end
 
 		# Generate a hash code for the
@@ -56,9 +56,9 @@ class Revlog
 			load_table(@json_file)
 			#generate hash for file contents
 			file_id = gen_id(contents_and_time)
-			p "file table here: " + @file_table.inspect
+			# p "file table here: " + @file_table.inspect
 			@file_table[file_id.to_s] = contents_and_time	#store file
-			p "file table here: " + @file_table.inspect
+			# p "file table here: " + @file_table.inspect
 			File.open(@json_file, 'w') {|file|
 				JSON.dump(@file_table, file)} #update hashfile
 			return file_id
@@ -99,7 +99,7 @@ class Revlog
 		# exit_code:: 0 if exited successfully
 		def delete_file (file_id)
 			load_table(@json_file)
-			raise "Revlog Error: No such file" if @file_table[file_id.to_s] == nil	#if trying to delete a nonexistant file
+			return "Revlog Error: No such file" if @file_table[file_id.to_s] == nil	#if trying to delete a nonexistant file
 			@file_table[file_id.to_s] = nil
 			File.open(@json_file, 'w') {|file|
 				JSON.dump(@file_table, file)} #update hashfile

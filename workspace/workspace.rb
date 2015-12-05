@@ -4,12 +4,16 @@ require "#{File.dirname(__FILE__)}/../revlog/revlog.rb"
 
 class Workspace
 
+	@@base_dir = '.octopus/base_dir'
+
 	def init
+		@repo_directory = Dir.pwd
 		Dir.mkdir('.octopus')
 		Dir.mkdir('.octopus/revlog')
 		Dir.mkdir('.octopus/repo')
 		Dir.mkdir('.octopus/communication')
 		Repos.init
+		File.open(@@base_dir, 'w'){ |f| f.write ("#{Dir.pwd}")}
 		return "Initialized octopus repository"
 	end
 
@@ -22,12 +26,10 @@ class Workspace
 		#ignore the file name 
 		d = path.split("/")
 		d.pop
-		puts "TESTING D"
-		puts d.inspect
 		dpath = "/"+d.join("/")
 		unless File.file?(dpath)
 			unless File.directory?(dpath)
-				FileUtils.mkdir(dpath)
+				FileUtils.mkdir(File.read('.octopus/base_dir') + dpath)
 			end
 		end
 	end
@@ -49,9 +51,15 @@ class Workspace
 		#clean the workspace first
 		clean
 		#obtain the snapshot object using retore_snapshot
-		snapshot = Repos.restore_snapshot(snapshot_id)	
+		snapshot = Marshal.load(snapshot_id) # used to be load a file, but this is more efficient	
 		#obtian the file_hash from the object		
+		# puts "snapshot:"
+		# puts snapshot
+		# puts snapshot.branch_name
+		# puts snapshot.commit_msg
+		# puts snapshot.parent[0].repos_hash.to_a.inspect
 		file_hash = snapshot.repos_hash
+		# puts snapshot.repos_hash.to_a.inspect
         file_hash.each do |path, hash|
 			#rebuild the directory of the file
 			rebuild_dir(path)
@@ -65,6 +73,8 @@ class Workspace
 
 	def check_out_branch(branch_name)
 		snapshot_ID = Repos.get_head(branch_name)
+		# puts "id:"
+		# puts snapshot_ID
 		check_out_snapshot(snapshot_ID)
 	end
 
@@ -142,6 +152,9 @@ class Workspace
 		elsif File.directory?('./' + arg)
 			all_files = Dir.glob('./' + arg + '/**/*').select{ |e| File.file?}
 			results = build_hash(all_files)
+    #commit a file
+    else
+      results[arg] =  File.read(arg)
 		end
 
 		#if commit a list or a directory, add last committed files 
@@ -156,7 +169,7 @@ class Workspace
 		# 	end
 		# end
 		#make a new snapshot and update the head 
-		p results.class
+		# p results.class
 		snapshot_id = Repos.make_snapshot(results, commit_msg)
 		# p "printing head" + snapshot_id
 		# Repos.update_head(snapshot_id) <-- Repos does this

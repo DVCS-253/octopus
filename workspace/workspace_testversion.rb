@@ -34,7 +34,7 @@ class Workspace
 	
 
 	def check_out_snapshot(snapshot_id)
-		clean
+		#clean
 		#snapshot = Repos.restore_snapshot(snapshot_id)	
 		#file_hash = snapshot.repos_hash
 		file_hash = {"test1.txt"=>1, "test2.txt"=>2, "test3.txt"=>3} #testing
