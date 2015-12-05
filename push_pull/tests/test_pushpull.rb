@@ -173,7 +173,7 @@ class TestPushPull < Test::Unit::TestCase
   # Tests pulling from a remote repo to a local repo with committed changes.
   # This test asserts that commit history and staged files are preserved.
   #
-  def dont_test_pull_into_committed_repo
+  def test_pull_into_committed_repo
     initialize_repos
     remote_head = nil
 
@@ -193,7 +193,7 @@ class TestPushPull < Test::Unit::TestCase
 
       # Create file 2 and commit it
       File.write(@files[1], @remote_file_contents[1])
-      Workspace.new.commit(@files[1], '')
+      Workspace.new.commit([@files[0], @files[1]], '')
 
       remote_head = Repos.get_head()
     }
@@ -287,28 +287,24 @@ class TestPushPull < Test::Unit::TestCase
       Workspace.new.commit(@files[0], '')
 
       local_head = Repos.get_head()
-    puts '----'
-    puts '----'
-    puts '----'
+
       PushPull.push("#{@current_user}@#{@remote_url}", 'master')
-      puts Dir.entries( Dir.pwd ).to_s
     }
 
     # Assert that the remote is identical to the local
     in_remote_repo {
-      puts Dir.entries( Dir.pwd ).to_s
-      #assert_equal(Repos.get_head(), local_head,
-                   #'Head of remote repo is not same as head of local.')
+      assert_equal(Repos.get_head(), local_head,
+                   'Head of remote repo is not same as head of local.')
 
-      #assert_equal(@local_file_contents[0], File.read(@files[0]),
-                   #'File contents were not preserved when pushing to remote.')
+      assert_equal(@local_file_contents[0], File.read(@files[0]),
+                   'File contents were not preserved when pushing to remote.')
     }
   end
 
   # Tests pushing to a remote repo with committed changes from a local repo.
   # This test asserts that commit history and staged files are preserved.
   #
-  def dont_test_push_to_committed_repo
+  def test_push_to_committed_repo
     initialize_repos
     local_head = nil
 
@@ -328,7 +324,7 @@ class TestPushPull < Test::Unit::TestCase
 
       # Create and commit file 2
       File.write(@files[1], @local_file_contents[1])
-      Workspace.new.commit(@files[1], '')
+      Workspace.new.commit([@files[0], @files[1]], '')
 
       # Push the changes from local to the remote
       local_head = Repos.get_head()
@@ -337,7 +333,7 @@ class TestPushPull < Test::Unit::TestCase
 
     # Assert that the commit history and staged files are correct on the remote
     in_remote_repo {
-      assert_equal(Repos.get_head(), local_head,
+      assert_equal(Marshal.load(Repos.get_head), Marshal.load(local_head),
                    'Head of remote repo is not same as head of local.')
 
       # Ensure the changes to file 1 were merged correctly
@@ -353,7 +349,7 @@ class TestPushPull < Test::Unit::TestCase
   # Tests pushing to a remote repo with uncommitted changes from a local repo.
   # This test asserts that an exception is raised.
   #
-  def dont_test_push_to_uncommitted_repo
+  def test_push_to_uncommitted_repo
     initialize_repos
 
     # Create and stage file 1 with uncommitted changes on the remote
