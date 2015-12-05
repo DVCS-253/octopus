@@ -161,7 +161,7 @@ module PushPull
     directory_name = directory_name.nil? ? File.basename(remote) : directory_name
 
     # Ensure the directory does not already exist
-    return 'Destination for clone already exists' if Dir.exists?(directory_name)
+    raise 'Destination for clone already exists' if Dir.exists?(directory_name)
 
     Dir.mkdir(directory_name)
 
@@ -194,6 +194,5 @@ module PushPull
       File.open("#{@@revlog_dir}/revlog.json", 'wb'){|f| f.write(@revlog_file)}
       workspace.check_out_branch("master")
     }
-    return "You have succesfully cloned from #{remote}"
   end
 end
