@@ -168,7 +168,23 @@ class UserInterface
 				add = matched[2]
 				if add
 					branch = matched[4]
+					puts "adding branch name add=#{add} and branch=#{branch}"
 					result = Repos.make_branch(branch)
+				else
+					branches = Repos.get_all_branches_names
+					unless branches.nil?
+						current_branch = Repos.get_current_branch
+						puts "🐙  => You have #{branches.count} active branches"
+						branches.each do |branch_name|
+							if branch_name == current_branch
+								colored_output = colorize("*#{branch_name}", 32)
+								puts colored_output 
+							else
+								puts branch_name
+							end
+						end
+					end
+					result = "done"
 				end
 				#params["add"] = true if matched[2]
 				#params["branch"] = matched[4] if matched[4]
@@ -260,7 +276,7 @@ class UserInterface
 				params = Hash.new
 				textfile = matched[2] if matched[2]
 				params["textfile"] = textfile
-				Repos.update_tree(textfile)
+				Repos.update_tree(textfile) #textfile will be a filename
 				#result = executeCommand(cmd,params)
 			else
 				result = "Incorrect format. Expected: " + UpdateUsg
@@ -350,7 +366,7 @@ class UserInterface
 	# - result(String): result of the execution to the testing module
 	private
 	def displayResult(result)
-    print " 🐙  => " if @print_octopus
+    	print " 🐙  => " if @print_octopus
 		puts result.to_s
 	end
 
