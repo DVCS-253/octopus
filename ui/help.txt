@@ -1,36 +1,36 @@
-	
+  
 1 init  :   Create an empty Git repository or reinitialize an existing one
   usage :   init ["directory"]
-	
-	
+  
+  
 2 add :     Add files contents to the index
   usage :   add ([.] | ["file1"] ["file2"] ...)
   parameters : 
                 .  Add all files contents to the index
                 <file>... Add specified file contents to the index
-		
+    
 3 checkout :    Switch branches or restore working tree files
   usage :       checkout [-b] [branch] [--track origin/branch]
   parameters :
                 -b <branch>  Create a new branch named <branch>
                 <branch>  Switch to <branch>
-                --track	  When creating a new branch, 
+                --track   When creating a new branch, 
                   set up "upstream" configuration.
-		
+    
 4 commit :   Record changes to the repository
   usage :    commit [-a] [-m "msg"] ["file1"]["file2"] ...
   parameters :
                -a  Automatically stage files that have been modified and deleted
-               -m <msg>	Use the given <msg> as the commit message
+               -m <msg> Use the given <msg> as the commit message
                <file>... Commit specified <file>
-		
+    
 5 branch :  List, create, or delete branches
   usage :   branch ([-a branch] | [-d branch])
   parameters : 
-             -a	List both remote-tracking branches and local branches.
-             -d	Delete a branch
+             -a List both remote-tracking branches and local branches.
+             -d Delete a branch
              <branchname>  The name of the branch to create or delete.
-		
+    
 6 merge :    Join two or more development histories together
   usage :    merge [branch]
   parameters :
@@ -42,13 +42,13 @@
   parameters :
               origin <repository> The "remote" repository that is 
                   destination of a push operation
-		
+    
 8 pull :    Fetch from and integrate with another repository or a local branch
   usage :   pull [origin] [branch]
   parameters : 
               origin <repository> The "remote" repository that is the 
               source of a fetch or pull operation
-		
+    
 9 status:    Show the working tree status
   usage :    status
 

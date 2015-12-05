@@ -1,5 +1,6 @@
 require 'digest/sha2'
 require 'json'
+require 'time'
 
 class Revlog
 	@file_table = Hash.new # Hash table to store all file contents
@@ -7,59 +8,101 @@ class Revlog
 
 	class << Revlog
 
+		###########
+		# Methods #
+		###########
+		# new (overwritten)
+		# load_table
+		# gen_id
+		# add_file
+		# get_file
+		# get_time
+		# delete_file
+		# diff_files
+		# merge
+
+		# As Revlog is static, it makes
+		# no sense to instantiate it
 		def new(*args)
-			raise "Cannot instantiate static class Revlog"
+			return "Cannot instantiate static class Revlog"
 		end
 
-		# Load new file table
+		# Loads a new file_table from file
+		# Parameters:
+		# filename:: filename to load table from (should be a json)
 		def load_table (filename)
-			new_table = File.open(filename)
-			@file_table = JSON.load(new_table)
-			new_table.close
+			File.open(filename) {|file|
+				@file_table = JSON.load(file)} if File.file? (filename)
+			# puts "file table #{@file_table}"
 		end
 
+		# Generate a hash code for the
+		# specified contents and time stamp
+		# Parameters:
+		# contents_and_time:: [file contents, last modified] to be hashed
+		# Returns:
+		# file_id:: id of the hashed contents
+		def gen_id (contents_and_time)
+			return Digest::SHA2.hexdigest(contents_and_time[0].to_s + contents_and_time[1].to_s)
+		end
 
 		# Stores the specified file in a
 		# hash table {file_id => file_contents}
 		# Parameters:
-		# contents:: file_contents to be hashed
+		# contents_and_time:: [file contents, last modified] to be hashed
 		# Returns:
-		# string file_id:: id of the hashed contents
-		def add_file (contents)
+		# file_id:: id of the hashed contents
+		def add_file (contents_and_time)
+			load_table(@json_file)
 			#generate hash for file contents
-			file_id = Digest::SHA2.hexdigest(contents)
-			@file_table[file_id.to_sym] = contents	#store file
-			database = File.open(@json_file, 'w')
-			JSON.dump(@file_table, database) #update hashfile
-			database.close
+			file_id = gen_id(contents_and_time)
+			# p "file table here: " + @file_table.inspect
+			@file_table[file_id.to_s] = contents_and_time	#store file
+			# p "file table here: " + @file_table.inspect
+			File.open(@json_file, 'w') {|file|
+				JSON.dump(@file_table, file)} #update hashfile
 			return file_id
 		end
 
 		# Retrieves the file associated with
 		# the specified file_id from the
-		# hash table {file_id => file_contents}
+		# hash table {file_id => [file contents, last modified]}
 		# Parameters:
 		# file_id:: file_id used for retrieval
 		# Returns:
-		# string contents:: the contents retrieved from file_id
+		# contents:: the contents retrieved from file_id
 		def get_file (file_id)
-			raise "Revlog Error: No such file" if @file_table[file_id.to_sym] == nil #if trying to get a nonexistant file
-			return @file_table[file_id.to_sym]
+			load_table(@json_file)
+			return "Revlog: File not found" if @file_table[file_id.to_s].nil? #if trying to get a nonexistant file
+			return @file_table[file_id.to_s][0]
 		end
 
-		# Deletes the file associated with
+		# Retrieves the time stamp associated with
 		# the specified file_id from the
-		# hash table {file_id => file_contents}
+		# hash table {file_id => [file contents, last modified]}
 		# Parameters:
 		# file_id:: file_id used for retrieval
 		# Returns:
-		# int exit_code:: 0 if exited successfully
+		# time:: the time retrieved from file_id
+		def get_time (file_id)
+			load_table(@json_file)
+			return "Revlog: File not found" if @file_table[file_id.to_s].nil? #if trying to get a nonexistant file
+			return @file_table[file_id.to_s][1]
+		end
+
+		# Deletes the file and time associated with
+		# the specified file_id from the
+		# hash table {file_id => [file contents, last modified]}
+		# Parameters:
+		# file_id:: file_id used for retrieval
+		# Returns:
+		# exit_code:: 0 if exited successfully
 		def delete_file (file_id)
-			raise "Revlog Error: No such file" if @file_table[file_id.to_sym] == nil	#if trying to delete a nonexistant file
-			@file_table[file_id.to_sym] = nil
-			database = File.open(@json_file, 'w')
-			JSON.dump(@file_table, database) #update hashfile
-			database.close
+			load_table(@json_file)
+			return "Revlog Error: No such file" if @file_table[file_id.to_s] == nil	#if trying to delete a nonexistant file
+			@file_table[file_id.to_s] = nil
+			File.open(@json_file, 'w') {|file|
+				JSON.dump(@file_table, file)} #update hashfile
 			return 0
 		end
 
@@ -69,26 +112,26 @@ class Revlog
 		# file_id1:: file_id for first file
 		# file_id2:: file_id for second file
 		# Returns:
-		# array diffs:: list of differences by line
+		# diffs:: array of differences by line
 		def diff_files(file_id1, file_id2)
 			file1 = get_file(file_id1)
 			file2 = get_file(file_id2)
 			file1 = file1.lines
 			file2 = file2.lines
 
-			return ((file1 - file2) + (file2-file1))
+			return ((file1 - file2) + (file2-file1)) #union of set differences
 		end
 
 		# Merges two files, returning
 		# the id of a file which is
 		# either the successful merge
 		# or the conflict file
-		# hash table {file_id => file}
+		# hash table {file_id => [file contents, last modified]}
 		# Parameters:
 		# file_id1:: file_id for first file
 		# file_id2:: file_id for second file
 		# Returns:
-		# string file_id:: id of the merged file
+		# file_id:: id of the merged file
 		def merge(file_id1, file_id2)
 			file1 = get_file(file_id1)
 			file2 = get_file(file_id2)
@@ -201,8 +244,8 @@ class Revlog
 				merged << lines[1] if lines[1] == lines[2]
 				break if files.all? {|i, file| file.empty?}
 			end #End loop do
-			return add_file(merged)
+			return add_file([merged,Time.now])
 		end #End merge
-	end
+	end #End metaclass Revlog
 
 end #End class Revlog
