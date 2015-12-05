@@ -5,6 +5,11 @@ require "#{File.dirname(__FILE__)}/../push_pull/push_pull.rb"
 require "#{File.dirname(__FILE__)}/../repo/repos.rb"
 class UserInterface
 	include PushPull
+
+  # Flag for printing the octopus
+  # Some commands give output which needs to be parsed
+  # Removing the octopus makes that parsing easier
+  @print_octopus = true
 	
 	#--List of supported commands
 	SupportedCmds = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone", "update", "diff", "get_latest_snapshot", "get_all_snapshots", "help"]
@@ -84,6 +89,8 @@ class UserInterface
 	#Returns:
 	# - result(String): output of execution
 	def parseCommand(cmd, fullCmd)
+    @print_octopus = true # Default value
+
 		result = ""
 		if cmd == "init"
 			matched = fullCmd.match InitRE
@@ -134,12 +141,20 @@ class UserInterface
 					else
 						files = matched[6].split(" ")
 					# files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
+					base_dir = File.read('.octopus/base_dir')
+					# puts base_dir
 					files.map! do |file| 
-						file = Dir.pwd + "/" + file
+						file = file.gsub(/"#{base_dir}"/, "")
+						if (file.match(/\A\//))
+							file = file.gsub(/\A\//, "")
+						end
+						file
 					end
+					# puts files.inspect
+					Workspace.new.commit(files, message)
 				end
 			end
-			puts "Files passed for commit #{files.inspect}"
+			# puts "Files passed for commit #{files.inspect}"
 				result = Workspace.new.commit(files, message)  #replace by commit(files, message) once the commit method supports it 
 			else
 				result = "Incorrect format. Expected: " + CommitUsg
@@ -151,7 +166,7 @@ class UserInterface
 				add = matched[2]
 				if add
 					branch = matched[4]
-					Repos.make_branch(branch)
+					result = Repos.make_branch(branch)
 				end
 				#params["add"] = true if matched[2]
 				#params["branch"] = matched[4] if matched[4]
@@ -171,17 +186,22 @@ class UserInterface
 				result = "Incorrect format. Expected: " + MergeUsg
 			end	
 		elsif cmd == "push"
-			matched = fullCmd.match PushRE
-			if matched
-				params = Hash.new
-				remote = matched[2] if matched[2]
-				branch = matched[4] if matched[4]
-				params["remote"] = remote
-				params["branch"] = branch
-				result = PushPull.push(remote,branch)
-			else
-				result = "Incorrect format. Expected: " + PushUsg
-			end	
+			# matched = fullCmd.match PushRE
+			# if matched
+			# 	params = Hash.new
+			# 	remote = matched[2] if matched[2]
+			# 	branch = matched[4] if matched[4]
+			# 	params["remote"] = remote
+			# 	params["branch"] = branch
+			# 	result = PushPull.push(remote,branch)
+			# else
+			# 	result = "Incorrect format. Expected: " + PushUsg
+			# end
+			r = fullCmd.split
+			# r0 = remote, r1 = branch
+			puts r.inspect
+			result = PushPull.push(r[1],r[2])
+
 		elsif cmd == "pull"
 			matched = fullCmd.match PullRE
 			if matched
@@ -202,7 +222,7 @@ class UserInterface
 				files.each_with_index{|file,i| 
 					puts "    "+red(file.to_s)
 				}
-				result = "Current branch: "
+				result = "Current branch: " + Repos.get_current_branch
 			else
 				result = "Incorrect format. Expected: " + StatusUsg
 			end	
@@ -215,6 +235,7 @@ class UserInterface
 				directory = matched[5] if matched[5]
 				params["repository"] = repository
 				params["directory"] = directory
+				# puts params.inspect
 				result = PushPull.clone(repository,directory)
 			else
 				result = "Incorrect format. Expected: " + CloneUsg
@@ -230,32 +251,37 @@ class UserInterface
 				result = "Incorrect format. Expected: " + DiffUsg
 			end	
 		elsif cmd == "update"
+      @print_octopus = false
+
 			matched = fullCmd.match UpdateRE
 			if matched
 				params = Hash.new
 				textfile = matched[2] if matched[2]
 				params["textfile"] = textfile
-				Repos.new.update_tree(textfile)
+				#Repos.update_tree(textfile)
 				#result = executeCommand(cmd,params)
 			else
 				result = "Incorrect format. Expected: " + UpdateUsg
 			end	
-		elsif cmd == "get_latest_snapshot"
+		elsif cmd == "get_latest_snapshot" # unused by push and pull
+      @print_octopus = false
+
 			matched = fullCmd.match GetLatestSnapshotRE
 			if matched
 				params = Hash.new
 				snapshot_id =  matched[2] if matched[2]
 				params["snapshot_id"] = snapshot_id
-				result = Repos.new.get_latest_snapshot(snapshot_id)
-				p 
+				result = Marshal.dump(Repos.get_latest_snapshots(snapshot_id))
 			else
 				result = "Incorrect format. Expected: " + GetLatestSnapshotUsg
 			end	
 		elsif cmd == "get_all_snapshots"
+      @print_octopus = false
+
 			matched = fullCmd.match GetAllSnapshotRE
 			msg = ""
 			if matched
-				result = Repos.get_all_snapshots()
+				result = Marshal.dump(Repos.get_all_snapshots())
 				if result
 					msg = "success"
 				else
@@ -306,6 +332,7 @@ class UserInterface
 	# - result(String): result of the execution to the testing module
 	private
 	def displayResult(result)
+    print " 🐙  => " if @print_octopus
 		puts result.to_s
 	end
 
