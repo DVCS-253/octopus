@@ -1,6 +1,6 @@
 # CSC 253 - DVCS Project 
 # Repos implementation
-# 11/20/2015 
+# 11/25/2015 
 
 # require_relative 'revlog'
 require 'json'
@@ -8,10 +8,8 @@ require 'json'
 # For Tree structrue
 # Tree class and Snapshot class (represents nodes in the tree)
 
-
-# Snapshot(node) has snapshot_ID, repos_hash with file_title and file_id
-# parent(last commit), child (next commit)
-
+# Tree initialized an array to keep snapshots and current_branch to indicate 
+# what is the current branch
 class Tree
 	# $last_commit = nil
 	# $current_branch = "master"
@@ -23,22 +21,29 @@ class Tree
 		@current_branch = "master"
 	end	
 
+	# use Marshal to load snapshot ID and find that commit_time
 	def find_snapshot(snapshot_ID)
+    # Return the root snapshot if the id is "0"
+    if snapshot_ID == '0'
+      @snapshots.each { |s|
+        return s if s.root
+      }
+
+      return nil
+    end
+
 		# time we are looking for
-		p "old id" + snapshot_ID.to_s
-		s = Marshal::load(snapshot_ID)
-		p "looking for" + s.commit_time.to_s
+    s = Marshal.load(snapshot_ID)
 		for snapshot in @snapshots
-			p snapshot.commit_time.to_s
 			if snapshot.commit_time.to_s == s.commit_time.to_s
-				p "FOUND"
 				return snapshot
 			end
 		end
-
-		raise "Unable to find Snapshot with snapshot_id #{snapshot_ID}"
+		# Returns nil if the snapshot cannot be found
+		return nil
 	end
 
+	#  Attributes in every snapshot
 	def add_snapshot(commit_msg, root, branch_name, latest_commit=nil)
 		snapshot = Snapshot.new
 
@@ -58,18 +63,19 @@ class Tree
 			latest_commit.add_child(snapshot)
 			snapshot.add_parent(latest_commit)
 		end
-
-		snapshot.snapshot_ID = Marshal::dump(snapshot) 
-		@snapshots.push(snapshot)
+ 
 		snapshot
 	end
 
 end
 
+# More like interaction stuff among snapshots
 class Snapshot
-	attr_accessor :snapshot_ID, :commit_msg, :repos_hash, :parent, :child, :root, :commit_time, :branch_name, :branch_HEAD
+	attr_accessor :snapshot_ID, :repos_hash, :parent, :child, :branch_HEAD
+  attr_accessor :commit_time, :commit_msg, :branch_name, :root
 
 	def initialize
+		# To save file and file_id, interact with Revlog
 		@repos_hash = {}
 		@parent = []
 		@child = []
@@ -89,6 +95,15 @@ class Snapshot
 		@parent = []
 		@parent.push(node)
 	end
+
+  def ==(other)
+    self.snapshot_ID == other.snapshot_ID and
+    self.parent == other.parent           and
+    self.child == other.child             and
+    self.commit_time == other.commit_time and
+    self.commit_msg == other.commit_msg   and
+    self.branch_name == other.branch_name
+  end
 end
 
 
@@ -160,45 +175,35 @@ class Repos
 	#   -------------------------------------------
 
 	def self.make_snapshot(files_to_be_commits, commit_msg=nil)
-		p files_to_be_commits.class
+		# p files_to_be_commits.class
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
 
 		if @@head == "0"
-			p "adding the first snapshot"
+			# p "adding the first snapshot"
 			snapshot = @@snapshot_tree.add_snapshot(commit_msg, true, "master")
 
-			p "printing first snapshot"
-			p snapshot
-			p snapshot.snapshot_ID
+			# p "printing first snapshot"
+			# p snapshot
+			# p snapshot.snapshot_ID
 
-			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 			# Updating the branch file -> by default the branch name is master
-			update_branch_file("master", snapshot.snapshot_ID)
+
 		else
-			p "adding the non first snapshot"
+			# p "adding the non first snapshot"
 			head_snapshot = Marshal.load(File.binread(@@head_dir))
 			current_branch = head_snapshot.branch_name
-			p head_snapshot
-			puts "current branch " + current_branch
+			# p head_snapshot
+			# puts "current branch " + current_branch
 
 			# latest_branch is the latest commit on this branch
 			# which means find last appearance snapshot with current branch name
 			# just reverse array and find first appearance 
-			r_ids = @@snapshot_tree.snapshots.reverse
 			parent = restore_snapshot(@@head)
-			# latest_commit = r_ids.find {|x| x.branch_name == @@snapshot_tree.current_branch}
-			# latest_commit = r_ids.find {|x| x.branch_name == current_branch}
-			# # Record branch name
-			# snapshot.branch_name = @@snapshot_tree.current_branch
 
 			# add new snapshot
 			snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, current_branch, parent)
-			# Updating the branch file
-			update_branch_file(current_branch, snapshot.snapshot_ID)
 
-			# Then head becomes this snapshot' ID
-			File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		end
 
 		files_to_be_commits.each do |file_path, content|
@@ -210,12 +215,23 @@ class Repos
 			snapshot.repos_hash[file_path.to_s] = Revlog.add_file([content, file_time])
 		end
 
-		p snapshot.branch_name
-		p snapshot.repos_hash.to_a.inspect
-		p "all snapshots #{@@snapshot_tree.snapshots.count}"
+		# puts snapshot.repos_hash.to_a.inspect
 
+		snapshot.snapshot_ID = Marshal::dump(snapshot)
+		@@snapshot_tree.snapshots.push(snapshot)
+
+		# Updating the branch file
+		update_branch_file(snapshot.branch_name, snapshot.snapshot_ID)
+
+		# p snapshot.branch_name
+		# p snapshot.repos_hash.to_a.inspect
+		# p "all snapshots #{@@snapshot_tree.snapshots.count}"
+
+		# Then head becomes this snapshot' ID
+		File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot.snapshot_ID}")}
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
-		test_snapshot_tree
+		# test_snapshot_tree
+		get_latest_snapshots(@@snapshot_tree.snapshots[0].snapshot_ID)
 		return snapshot.snapshot_ID
 	end
 
@@ -225,22 +241,12 @@ class Repos
 		unless @@snapshot_tree.snapshots.nil?
 			puts  @@snapshot_tree.snapshots[0].repos_hash.to_a.inspect
 		end
-		
 	end
 
 	# returns a specific snapshot
 	def self.restore_snapshot(snapshot_ID)
-
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
-		snapshot = @@snapshot_tree.find_snapshot(snapshot_ID)
-		
-		# # put file_id into file_id_lists
-		# file_id_lists = Array.new
-		# snapshot.repos_hash.each do |file_dir, file_id|
-		# 	file_id_lists << file_id
-		# end
-
-		return snapshot
+		@@snapshot_tree.find_snapshot(snapshot_ID)
 	end
 
 	# returns all parents of certain node_id
@@ -282,12 +288,8 @@ class Repos
 		# Record branch_name and HEAD's snapshot_ID
 		branch_table = load_branch_file (@@branch_dir)
 		branch_table[branch_name] = head
-		puts "branch table: #{branch_table.to_a.inspect}"
+		# puts "branch table: #{branch_table.to_a.inspect}"
 		File.open(@@branch_dir, 'wb'){|f| f.write(Marshal.dump(branch_table))}
-		branch_table2 = load_branch_file (@@branch_dir)
-		branch_table2[branch_name] = head
-		puts "Testing branch table: "
-		puts branch_table[branch_name] == branch_table2[branch_name]
 	end
 
 	def self.load_branch_file (filename)	
@@ -300,6 +302,15 @@ class Repos
 
 	def self.update_head_file(snapshot_ID)
 		File.open(@@head_dir, 'wb'){ |f| f.write (snapshot_ID)}
+	end
+
+	def self.get_branches(filename)
+		branch_table = load_branch_file(filename)
+		arr = []
+		branch_table.each do |branch_name, head|
+			arr << branch_name
+		end
+		arr
 	end
 
 	# Make 1 child from current HEAD 
@@ -327,11 +338,13 @@ class Repos
 		# Update the parent
 		parent.add_child(head_snapshot)
 
+		@@snapshot_tree.snapshots.push(head_snapshot)
+
 		# Update branch file
 		update_branch_file(branch_name, head_snapshot.snapshot_ID)
 
 		File.open(@@store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
-
+		return "In a new branch"
 	end
 
 	# means delete the whole branch? 
@@ -350,82 +363,90 @@ class Repos
 	# If a branch_name is given, then return the branch_head ID
 	# else just return current HEAD ID
 	def self.get_head(branch_name=nil)
-		head = File.open(@@head_dir, 'r'){|f| f.read}
-		
 		if branch_name.nil?
-			return head
+			return File.binread(@@head_dir)
 		else
 			branch_table = load_branch_file(@@branch_dir)
+      return nil if branch_table.empty?
 			branch_table[branch_name]
 		end
 	end
 
+	def self.get_current_branch
+		head = Marshal.load(get_head)
+		head.branch_name
+	end
+
 
 	# save text file to .octopus/communication
+	# In order to send latest snapshots from the common ancestor
+	# snapshot_ID, head.branch_name and snapshot_ID.branch_name
+	# should be the same, otherwise throw an error string
+	# Output: an array of Marshall snapshot ids
 	def self.get_latest_snapshots(snapshot_ID)
+    head = Marshal.load(get_head)
+    @@snapshot_tree = Marshal.load(File.binread(@@store_dir))
+    snapshot_ancestor = @@snapshot_tree.find_snapshot(snapshot_ID)
 
-		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
-		snapshot = @@snapshot_tree.findNode(snapshot_ID)
-		latest_snaps = @@snapshot_tree.snapshots.find_all {|x| snapshot_ID < x.snapshot_ID || snapshot.branch_name == x.branch_name}
+    if snapshot_ancestor.branch_name != head.branch_name
+      return "error from get last snapshots - unmatched branch name"
+    end
 
-		text_file = {
-					"branch_name" => "#{snapshot.branch_name}"
-					}
-		latest_snaps.each_with_index{ |snap,index|
-			text_file["snapshot_#{snap.snapshot_ID}"] = {"committed_time" => "#{snap.commit_time}"}
-			snap.repos_hash.each_with_index do |(file, id), index2|
-				text_file["snapshot_#{snap.snapshot_ID}"]["files_#{index2+1}"] = {"#{file}" => "#{Revlog.get_file(id)}"}
-			end
-		}
+    latest_snaps = @@snapshot_tree.snapshots.find_all { |x|
+      snapshot_ancestor.commit_time.to_i <= x.commit_time.to_i and
+      snapshot_ancestor.branch_name      == x.branch_name      and
+      (snapshot_ancestor != x or snapshot_ID == '0')
+    }
 
-		snapshots_data = Marshal.dump(text_file)		
-		File.open(text_file_dir, 'wb') { |f| f.puts snapshots_data}
-
+    File.open(@@text_file_dir, 'wb') { |f| f.write(Marshal.dump(latest_snaps)) }
 	end
 
 	# return "store" in /repo
 	# Use Marshal.load to open "store"
-
 	def self.get_all_snapshots
-		all_snapshots = Marshal.load(File.binread($store_dir))
-		return all_snapshots
+		snapshot_tree = Marshal.load(File.binread(@@store_dir))
+		return snapshot_tree.snapshots
 	end
 
 	# read text_file from Push and Pull module
 	# and update snapshots tree
 	def self.update_tree(text_file)
-		@@snapshot_tree = Marshal.load(File.binread($store_dir))
-		snapshots_data = Marshal.load(File.binread($text_file_dir))
+    head = File.binread(@@head_dir)
 
-		branch_name = snapshots_data["branch_name"]
-		snapshots_only = snapshots_data.select {|key, value| key.match(/^snapshot_\d+/)}
-		# Simply replace the old branch
-		if @@snapshot_tree.branches.include(branch_name)
-			delete_branch(branch_name)
+    if head != '0'
+      head_snapshot = restore_snapshot(head)
+    end
+
+		snapshots_data = Marshal.load(File.binread(text_file))
+		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
+
+		snapshots_data.each do |snapshot|
+			@@snapshot_tree.snapshots.push(snapshot)
 		end
-		@@snapshot_tree.branches.push(branch_name)
-		# snap will be string like "snapshot_1", "snapshot_2"
-		# only get number from it
-		snapshots_only.each_with_index {|(snap, info),index|
-			snapshot = @@snapshot_tree.snapshots.add_snapshot(snap.scan(/\d/).join(''))
-			if index == 0
-				snapshot.branch_HEAD = true
-			end
-			snapshot.commit_time = snapshots_only["#{snap}"]["committed_time"]
-			files_only = snapshots_only[snap].select {|key, value| key.match(/^files_\d+/)}
-			files_only.each {|file, contents|
-				snapshot.repos_hash["#{file}"] = Revlog.add_file(contents)
-			}
 
-		}
+    if head == '0'
+      head_snapshot = snapshots_data[0]
+    end
 
-		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
+    # Connect the ancestor head to the first element in the snapshot data and vice versa
+    first_element = @@snapshot_tree.find_snapshot(snapshots_data[0].snapshot_ID)
+    head_snapshot.add_child(first_element)
+    first_element.add_parent(head_snapshot)
 
+		# Reset the head and the branch file
+		new_id = @@snapshot_tree.find_snapshot(snapshots_data.last.snapshot_ID)
+		update_head_file(new_id.snapshot_ID)
+		update_branch_file(head_snapshot.branch_name, new_id.snapshot_ID)
+
+		# Store the updates tree array
+		File.open(@@store_dir, 'wb') { |f|
+      f.write(Marshal.dump(@@snapshot_tree))
+    }
 	end
 
 	# handle merging two files 
 	# Assume snapshot_ID1 here is the current branch 
-	def self.merge(ancestor_ID, snapshot_ID1, snapshot_ID2)
+	def self.merge(ancestor_ID=nil, snapshot_ID1, snapshot_ID2)
 		@@head = File.open(@@head_dir, 'r'){|f| f.read}
 		@@snapshot_tree = Marshal.load(File.binread($store_dir))
 		# find two snapshot
@@ -433,15 +454,9 @@ class Repos
 		snapshot_second = @@snapshot_tree.find_snapshot(snapshot_ID2)
 
 		# create new merged snapshot
-		snapshot = @@snapshot_tree.add_snapshot
-		# record branch name
-		snapshot.branch_name = snapshot_first.branch_name
-		# record time
-		snapshot.commit_time = Time.now
+		snapshot = @@snapshot_tree.add_snapshot(commit_msg, false, snapshot_first.branch_name, snapshot_first)
 
-		snapshot.add_parent(snapshot_first)
 		snapshot.add_parent(snapshot_second)
-		snapshot_first.add_child(snapshot)
 		snapshot_second.add_child(snapshot)
 
 		# for repos_hash,
@@ -452,23 +467,35 @@ class Repos
 
 		@@head = snapshot.snapshot_ID
 
-		File.open(@@head_dir, 'w'){ |f| f.write ("#{@@head}")}
+		update_head_file(@@head)
 		File.open($store_dir, 'wb'){|f| f.write(Marshal.dump(@@snapshot_tree))}
 
 		return snapshot.snapshot_ID
 
 	end
 
-	# Get branch head
+	# Get latest common ancestor
 	def self.get_ancestor(snapshot_ID1, snapshot_ID2)
 
 		@@snapshot_tree = Marshal.load(File.binread($store_dir))
 		snapshot1 = @@snapshot_tree.find_snapshot(snapshot_ID1)
 		snapshot2 = @@snapshot_tree.find_snapshot(snapshot_ID2)
 
-		ancestor = @@snapshot_tree.snapshots.find{|x| x.branch_HEAD == true || x.branches.include?(snapshot1.branch_name) && x.branches.include?(snapshot2.branch_name)}
+		his_snapshot1 = history(snapshot1)
+		his_snapshot2 = history(snapshot2)
 
-		return ancestor
+		# log(n^2) unefficient, will update
+		# find first common snapshot 
+		for snapshot1 in his_snapshot1
+			for snapshot2 in his_snapshot2
+				if snapshot1.commit_time.to_s = snapshot2.commit_time.to_s
+					return snapshot1
+				end
+			end
+		end
+
+		# no ancestor
+		return nil
 
 	end
 
