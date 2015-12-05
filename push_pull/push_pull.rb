@@ -187,12 +187,6 @@ module PushPull
 
         workspace.check_out_branch("master")
       }
-
-      File.open("#{@@repo_dir}/head", 'wb'){|f| f.write(@head_file)}
-      File.open("#{@@repo_dir}/store", 'wb'){|f| f.write(@store_file)}
-      File.open("#{@@repo_dir}/branches", 'wb'){|f| f.write(@branch_file)}
-      File.open("#{@@revlog_dir}/revlog.json", 'wb'){|f| f.write(@revlog_file)}
-      workspace.check_out_branch("master")
     }
   end
 end
