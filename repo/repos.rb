@@ -304,6 +304,10 @@ class Repos
 		File.open(@@head_dir, 'wb'){ |f| f.write (snapshot_ID)}
 	end
 
+	def self.get_all_branches_names
+		get_branches(@@branch_dir)
+	end
+
 	def self.get_branches(filename)
 		branch_table = load_branch_file(filename)
 		arr = []
@@ -367,7 +371,7 @@ class Repos
 			return File.binread(@@head_dir)
 		else
 			branch_table = load_branch_file(@@branch_dir)
-      return nil if branch_table.empty?
+      		return nil if branch_table.empty?
 			branch_table[branch_name]
 		end
 	end
@@ -377,6 +381,9 @@ class Repos
 		head.branch_name
 	end
 
+	def self.set_current_branch(snapshot_id)
+		File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot_id}")}
+	end
 
 	# save text file to .octopus/communication
 	# In order to send latest snapshots from the common ancestor
