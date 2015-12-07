@@ -31,6 +31,7 @@ class Revlog
 		# Parameters:
 		# filename:: filename to load table from (should be a json)
 		def load_table (filename)
+      @file_table = Hash.new
 			File.open(filename) {|file|
 				@file_table = JSON.load(file)} if File.file? (filename)
 			# puts "file table #{@file_table}"

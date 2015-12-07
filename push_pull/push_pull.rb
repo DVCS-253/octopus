@@ -14,6 +14,8 @@ module PushPull
   @@comm_dir   = File.join(@@dvcs_dir, 'communication')
   @@revlog_dir = File.join(@@dvcs_dir, 'revlog')
   @@comm_file  = File.join(@@comm_dir, 'text_file')
+  @@files_file = File.join(@@revlog_dir, 'revlog.json')
+  @@tmp_files_file = File.join(@@comm_dir, 'revlog.json')
 
   # Uses the Net::SSH gem to create an SSH session.
   # The user will be asked for their credentials for the connection,
@@ -62,9 +64,9 @@ module PushPull
     remote = user if remote.empty?
     address, path = remote.split(':', 2)
 
-    self.connect(user, address) { |ssh, sftp|
+    self.connect(user, address) { |ssh|
       # Get the HEAD of the remote branch
-      file_exists = ssh.exec! "if [ -f #{File.join(path, @@repo_dir)}/branches ]; then echo 1; else echo 0 fi"
+      file_exists = ssh.exec!("if [ -f #{File.join(path, @@repo_dir)}/branches ]; then echo 1; else echo 0; fi").strip!
       if file_exists == '1'
         branch_file  = ssh.exec! "cat #{File.join(path, @@repo_dir)}/branches"
         branch_table = Marshal.load(branch_file)
@@ -76,20 +78,43 @@ module PushPull
 
       # Get all local changes since the remote HEAD
       Repos.get_latest_snapshots(remote_head)
-      local_changes = File.binread(@@comm_file)
 
       # Raise an exception if local changes could not be calculated
-      return 'Local is not up to date, please pull and try again' if !Marshal.load(local_changes)
+      # TODO This check doesn't actually detect uncommitted changes on remote, need `oct status`
+      #local_changes = File.binread(@@comm_file)
+      #return 'Local is not up to date, please pull and try again' if !Marshal.load(local_changes)
 
       # Copy the contents of the local file to remote/#{@@dvcs_dir}/communication/text_file
       ssh.sftp.upload!(@@comm_file, File.join(path, @@comm_file))
 
-      #puts "Wrote to #{File.join(path, @@comm_file)}"
-      # Merge the new snapshots into the remote
-      ssh.exec "cd #{path} && oct update #{@@comm_file}"
+      # Download remote revlog file
+      file_exists = ssh.exec!("if [ -f #{File.join(path, @@files_file)} ]; then echo 1; else echo 0; fi").strip!
+      if file_exists == '1'
+        ssh.sftp.download!(File.join(path, @@files_file), @@tmp_files_file)
+        remote_revlog = File.open(@@tmp_files_file) { |f| JSON.load(f) }
+      else
+        remote_revlog = Hash.new
+      end
 
-      # TODO Checkout current branch on remote
-      ssh.exec "cd #{path} && oct checkout #{branch}"
+      if File.file?(@@files_file)
+        local_revlog = File.open(@@files_file) { |f| JSON.load(f) }
+      else
+        local_revlog = Hash.new
+      end
+
+      local_revlog.merge!(remote_revlog)
+
+      File.open(@@tmp_files_file, 'w') { |f| JSON.dump(local_revlog, f) }
+
+      # Upload the merged revlog files
+      ssh.sftp.upload!(@@tmp_files_file, File.join(path, @@files_file))
+
+      # Merge the new snapshots into the remote
+      puts ssh.exec! "cd #{path} && oct update #{@@comm_file}"
+
+      # Checkout current remote branch on the remote
+      remote_branch = ssh.exec! "cd #{path} && oct current_branch"
+      ssh.exec! "cd #{path} && oct checkout #{remote_branch}"
     }
   end
 
@@ -106,7 +131,7 @@ module PushPull
     remote = user if remote.empty?
     address, path = remote.split(':', 2)
 
-    self.connect(user, address) { |ssh, sftp|
+    self.connect(user, address) { |ssh|
       pull_with_connection(branch, path, ssh)
     }
   end
@@ -132,15 +157,27 @@ module PushPull
     # the #{@@dvcs_dir}/communication/text_file file on the remote
     if local_head.nil?
       # Get the entire history if our locally history is empty
-      to_merge = ssh.exec! "cd #{path} && oct get_all_snapshots"
+      ssh.exec! "cd #{path} && oct get_all_snapshots"
     else
       # Get the history since our latest local snapshot
       id = Marshal.load(local_head).snapshot_ID
       ssh.exec! "cd #{path} && oct get_latest_snapshot #{Shellwords.shellescape(id)}"
-      to_merge = ssh.exec! "cat #{path}/#{@@comm_file}"
     end
 
-    File.open(@@comm_file, 'wb') { |f| f.write(to_merge) }
+    ssh.sftp.download!(File.join(path, @@comm_file), @@comm_file)
+    ssh.sftp.download!(File.join(path, @@files_file), @@tmp_files_file)
+
+    remote_revlog = File.open(@@tmp_files_file) { |f| JSON.load(f) }
+
+    if File.file?(@@files_file)
+      local_revlog = File.open(@@files_file) { |f| JSON.load(f) }
+    else
+      local_revlog = Hash.new
+    end
+
+    local_revlog.merge!(remote_revlog)
+
+    File.open(@@files_file, 'w') { |f| JSON.dump(local_revlog, f) }
     
     # Update our local snapshot tree
     Repos.update_tree(@@comm_file)
@@ -174,7 +211,7 @@ module PushPull
       user, remote  = remote.split('@', 2)
       remote = user if remote.empty?
       address, path = remote.split(':', 2)
-      self.connect(user, address) { |ssh, sftp|
+      self.connect(user, address) { |ssh|
         head_file   = ssh.exec! "cat #{path}/#{@@repo_dir}/head"
         store_file  = ssh.exec! "cat #{path}/#{@@repo_dir}/store"
         revlog_file = ssh.exec! "cat #{path}/#{@@revlog_dir}/revlog.json"

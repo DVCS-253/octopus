@@ -68,13 +68,12 @@ class Workspace
 			#write content
 	        File.write(path, content)
 	    end
-	    "done!"
+	    Repos.set_current_branch(snapshot_id)
+	    "Successfully checked out #{Repos.get_current_branch}"
 	end
 
 	def check_out_branch(branch_name)
 		snapshot_ID = Repos.get_head(branch_name)
-		# puts "id:"
-		# puts snapshot_ID
 		check_out_snapshot(snapshot_ID)
 	end
 

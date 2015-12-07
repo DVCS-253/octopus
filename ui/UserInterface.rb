@@ -12,7 +12,7 @@ class UserInterface
   @print_octopus = true
 	
 	#--List of supported commands
-	SupportedCmds = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone", "update", "diff", "get_latest_snapshot", "get_all_snapshots", "help"]
+	SupportedCmds = ["init", "add", "checkout", "commit", "branch", "merge", "push", "pull", "status", "clone", "update", "diff", "get_latest_snapshot", "get_all_snapshots", "current_branch", "help"]
 	
 	#--Regular expressions for supported commands 
 	InitRE = "init(\s+([^\s]*))?$"
@@ -29,6 +29,7 @@ class UserInterface
 	UpdateRE = "update(\s+([^\s]*))?$"
 	GetLatestSnapshotRE = "get_latest_snapshot\s*(\s+([^\s]*)\s*)*$"
 	GetAllSnapshotRE = "get_all_snapshots$"
+	CurrentBranchRE = "current_branch$"
 	GetHeadRE = "get_head\s*(\s+([^\s]*)\s*)*$"
 	
 	#--Correct usage of the commands
@@ -46,6 +47,7 @@ class UserInterface
 	UpdateUsg = 'update ["textfile"]'
 	GetLatestSnapshotUsg = 'get_latest_snapshot [snapshot_id]' #returns error/success
 	GetAllSnapshotUsg = 'get_all_snapshots' #returns error/success
+	CurrentBranchUsg = 'current_branch' #returns error/success
 	GetHeadUsg = 'get_all_snapshots' #returns error/success
 	
 	#Entry point of the application. Takes the 'command' from user in form of program arguments 
@@ -168,6 +170,21 @@ class UserInterface
 					branch = matched[4]
 					puts "You are trying to make a branch called #{branch}"
 					result = Repos.make_branch(branch)
+				else
+					branches = Repos.get_all_branches_names
+					unless branches.nil?
+						current_branch = Repos.get_current_branch
+						puts "🐙  => You have #{branches.count} active branches"
+						branches.each do |branch_name|
+							if branch_name == current_branch
+								colored_output = colorize("*#{branch_name}", 32)
+								puts colored_output 
+							else
+								puts branch_name
+							end
+						end
+					end
+					result = "done"
 				end
 				#params["add"] = true if matched[2]
 				#params["branch"] = matched[4] if matched[4]
@@ -259,7 +276,10 @@ class UserInterface
 				params = Hash.new
 				textfile = matched[2] if matched[2]
 				params["textfile"] = textfile
+<<<<<<< HEAD
 				puts "Calling repos update file #{textfile}"
+=======
+>>>>>>> fe18270ab21a39eb2a6c9855d275fd161f726b7b
 				Repos.update_tree(textfile) #textfile will be a filename
 				#result = executeCommand(cmd,params)
 			else
@@ -273,7 +293,7 @@ class UserInterface
 				params = Hash.new
 				snapshot_id =  matched[2] if matched[2]
 				params["snapshot_id"] = snapshot_id
-				result = Marshal.dump(Repos.get_latest_snapshots(snapshot_id))
+				result = Repos.get_latest_snapshots(snapshot_id)
 			else
 				result = "Incorrect format. Expected: " + GetLatestSnapshotUsg
 			end	
@@ -283,7 +303,7 @@ class UserInterface
 			matched = fullCmd.match GetAllSnapshotRE
 			msg = ""
 			if matched
-				result = Marshal.dump(Repos.get_all_snapshots())
+				result = Repos.get_all_snapshots()
 				if result
 					msg = "success"
 				else
@@ -291,6 +311,22 @@ class UserInterface
 				end
 			else
 				result = "Incorrect format. Expected: " + GetAllSnapshotUsg
+			end	
+			msg
+		elsif cmd == "current_branch"
+      @print_octopus = false
+
+			matched = fullCmd.match CurrentBranchRE
+			msg = ""
+			if matched
+				result = Repos.get_current_branch()
+				if result
+					msg = "success"
+				else
+					msg = "error"
+				end
+			else
+				result = "Incorrect format. Expected: " + CurrentBranchUsg
 			end	
 			msg
 		elsif cmd == "get_head"
@@ -334,7 +370,7 @@ class UserInterface
 	# - result(String): result of the execution to the testing module
 	private
 	def displayResult(result)
-    print " 🐙  => " if @print_octopus
+    	print " 🐙  => " if @print_octopus
 		puts result.to_s
 	end
 

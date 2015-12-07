@@ -304,6 +304,10 @@ class Repos
 		File.open(@@head_dir, 'wb'){ |f| f.write (snapshot_ID)}
 	end
 
+	def self.get_all_branches_names
+		get_branches(@@branch_dir)
+	end
+
 	def self.get_branches(filename)
 		branch_table = load_branch_file(filename)
 		arr = []
@@ -367,16 +371,21 @@ class Repos
 			return File.binread(@@head_dir)
 		else
 			branch_table = load_branch_file(@@branch_dir)
-      return nil if branch_table.empty?
+      		return nil if branch_table.empty?
 			branch_table[branch_name]
 		end
 	end
 
 	def self.get_current_branch
-		head = Marshal.load(get_head)
-		head.branch_name
+    head = get_head
+    return 'master' if head.nil?
+
+		Marshal.load(head).branch_name
 	end
 
+	def self.set_current_branch(snapshot_id)
+		File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot_id}")}
+	end
 
 	# save text file to .octopus/communication
 	# In order to send latest snapshots from the common ancestor
@@ -405,7 +414,7 @@ class Repos
 	# Use Marshal.load to open "store"
 	def self.get_all_snapshots
 		snapshot_tree = Marshal.load(File.binread(@@store_dir))
-		return snapshot_tree.snapshots
+    File.open(@@text_file_dir, 'wb') { |f| f.write(Marshal.dump(snapshot_tree.snapshots)) }
 	end
 
 	# read text_file from Push and Pull module
@@ -429,12 +438,12 @@ class Repos
     end
 
     # Connect the ancestor head to the first element in the snapshot data and vice versa
-    first_element = @@snapshot_tree.find_snapshot(snapshots_data[0].snapshot_ID)
+    first_element = snapshots_data[0]
     head_snapshot.add_child(first_element)
     first_element.add_parent(head_snapshot)
 
 		# Reset the head and the branch file
-		new_id = @@snapshot_tree.find_snapshot(snapshots_data.last.snapshot_ID)
+		new_id = snapshots_data.last
 		update_head_file(new_id.snapshot_ID)
 		update_branch_file(head_snapshot.branch_name, new_id.snapshot_ID)
 
