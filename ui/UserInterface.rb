@@ -236,7 +236,11 @@ class UserInterface
 			matched = fullCmd.match StatusRE
 			if matched
 				files = Workspace.new.status
-				puts "  Uncommitted files/directories(#{files.size}):" if files.size>0
+				if files.size>0
+					puts "  Uncommitted files/directories(#{files.size}):" 
+				else 
+					puts "  No uncommitted files"
+				end
 				files.each_with_index{|file,i| 
 					puts "    "+red(file.to_s)
 				}
