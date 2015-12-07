@@ -48,7 +48,10 @@ Creating a new branch immidiately moves you to it:
   ```
   oct branch -a new_branch_name
   ```
-  
+At any time you can check the number of the branches:
+  ```
+  oct branch
+  ```
 **Checkout**
 
 You can checkout the latest commit of a given branch name. 

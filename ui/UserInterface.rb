@@ -258,7 +258,8 @@ class UserInterface
 				params["repository"] = repository
 				params["directory"] = directory
 				# puts params.inspect
-				result = PushPull.clone(repository,directory)
+				PushPull.clone(repository,directory)
+				result = "Successfully cloned an octopus repository"
 			else
 				result = "Incorrect format. Expected: " + CloneUsg
 			end	
