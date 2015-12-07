@@ -18,7 +18,7 @@ You can either create a repository from scratch:
   oct -help # For a full list of commands
   ```
   
-You can also clone an existing octopus repository:
+You can also clone an existing octopus repository (note: the repository you are trying to clone should have at least first commit):
   ```
   oct clone username@host:path/to/octopus/repo
   ```
