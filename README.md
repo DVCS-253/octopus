@@ -27,7 +27,7 @@ You can also clone an existing octopus repository (note: the repository you are 
 
 You can commit a file, or a number of files together with a required commit message:
   ```
-  oct commit -m "commit message" a.txt b.txt
+  oct commit -m "commit_message" a.txt b.txt
   ```
 *Note: currently commit message can only be one word long. Sorry for the inconvinience.* 
 
