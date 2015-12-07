@@ -168,7 +168,7 @@ class UserInterface
 				add = matched[2]
 				if add
 					branch = matched[4]
-					puts "adding branch name add=#{add} and branch=#{branch}"
+					puts "You are trying to make a branch called #{branch}"
 					result = Repos.make_branch(branch)
 				else
 					branches = Repos.get_all_branches_names
@@ -280,6 +280,10 @@ class UserInterface
 				params = Hash.new
 				textfile = matched[2] if matched[2]
 				params["textfile"] = textfile
+<<<<<<< HEAD
+				puts "Calling repos update file #{textfile}"
+=======
+>>>>>>> fe18270ab21a39eb2a6c9855d275fd161f726b7b
 				Repos.update_tree(textfile) #textfile will be a filename
 				#result = executeCommand(cmd,params)
 			else
