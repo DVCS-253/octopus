@@ -21,8 +21,8 @@ class UserInterface
 	CommitRE = "commit(\s+(-a))?(\s+(-m)\s+([^\s]*))?((\s+([^\s]*))*)$"
 	BranchRE = "branch\s*(\s*(\s+(-a)\s+([^\s]*))|\s*(\s+(-d)\s+([^\s]*)))?$"
 	MergeRE = "merge\s*(\s+([^\s]*)\s*)*$"
-	PushRE = "push(\s+(origin))?(\s+([^\s]*))$"
-	PullRE = "pull(\s+(origin))?(\s+([^\s]*))$"
+	PushRE = "push(\s+([^\s]*))?(\s+([^\s]*))$"
+	PullRE = "pull(\s+([^\s]*))?(\s+([^\s]*))$"
 	StatusRE = "status$"
 	CloneRE = "clone\s*(\s+([^\s]+)\s*)\s*((\s+(\"[^\s]*\"))?)$"
 	DiffRE = "diff(\s+([^\s]*))?(\s+([^\s]*))$"
@@ -39,8 +39,8 @@ class UserInterface
 	CommitUsg = 'commit [-a] [-m "msg"] ["file1"]["file2"] ...'
 	BranchUsg = 'branch ([-a branch] | [-d branch])'
 	MergeUsg = 'merge [branch]'
-	PushUsg = 'push [origin] [branch]'
-	PullUsg = 'pull [origin] [branch]'
+	PushUsg = 'push [remote_folder] [branch]'
+	PullUsg = 'pull [remote_folder] [branch]'
 	StatusUsg = 'status'
 	CloneUsg = 'clone repository ["directory"]'
 	DiffUsg = 'diff commit1 commit2'
@@ -217,7 +217,6 @@ class UserInterface
 			# end
 			r = fullCmd.split
 			# r0 = remote, r1 = branch
-			puts r.inspect
 			result = PushPull.push(r[1],r[2])
 
 		elsif cmd == "pull"

@@ -150,7 +150,7 @@ module PushPull
     local_head = Repos.get_head(branch)
 
     if !Workspace.new.status.empty?
-      raise 'Refusing to pull, you have uncommitted local changes'
+      raise 'Refusing to pull, committed local changes'
     end
 
     # Calling either of these `oct func` methods updates
