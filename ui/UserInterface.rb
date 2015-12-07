@@ -276,10 +276,6 @@ class UserInterface
 				params = Hash.new
 				textfile = matched[2] if matched[2]
 				params["textfile"] = textfile
-<<<<<<< HEAD
-				puts "Calling repos update file #{textfile}"
-=======
->>>>>>> fe18270ab21a39eb2a6c9855d275fd161f726b7b
 				Repos.update_tree(textfile) #textfile will be a filename
 				#result = executeCommand(cmd,params)
 			else
