@@ -166,6 +166,7 @@ class UserInterface
 				add = matched[2]
 				if add
 					branch = matched[4]
+					puts "You are trying to make a branch called #{branch}"
 					result = Repos.make_branch(branch)
 				end
 				#params["add"] = true if matched[2]
@@ -258,7 +259,8 @@ class UserInterface
 				params = Hash.new
 				textfile = matched[2] if matched[2]
 				params["textfile"] = textfile
-				#Repos.update_tree(textfile)
+				puts "Calling repos update file #{textfile}"
+				Repos.update_tree(textfile) #textfile will be a filename
 				#result = executeCommand(cmd,params)
 			else
 				result = "Incorrect format. Expected: " + UpdateUsg
