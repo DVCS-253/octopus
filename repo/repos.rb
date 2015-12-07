@@ -378,7 +378,7 @@ class Repos
 
 	def self.get_current_branch
     head = get_head
-    return 'master' if head.nil?
+    return 'master' if head == "0"
 
 		Marshal.load(head).branch_name
 	end
