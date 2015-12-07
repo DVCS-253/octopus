@@ -66,8 +66,10 @@ module PushPull
 
     self.connect(user, address) { |ssh|
       # Get the HEAD of the remote branch
-      file_exists = ssh.exec!("if [ -f #{File.join(path, @@repo_dir)}/branches ]; then echo 1; else echo 0; fi").strip!
-      if file_exists == '1'
+      file_exists = false
+      ssh.sftp.dir.glob(File.join(path, @@repo_dir), 'branches') { |e| file_exists = true }
+      #file_exists = ssh.exec!("if [ -f #{File.join(path, @@repo_dir)}/branches ]; then echo 1; else echo 0; fi").strip!
+      if file_exists
         branch_file  = ssh.exec! "cat #{File.join(path, @@repo_dir)}/branches"
         branch_table = Marshal.load(branch_file)
         remote_head  = branch_table[branch]
@@ -88,8 +90,10 @@ module PushPull
       ssh.sftp.upload!(@@comm_file, File.join(path, @@comm_file))
 
       # Download remote revlog file
-      file_exists = ssh.exec!("if [ -f #{File.join(path, @@files_file)} ]; then echo 1; else echo 0; fi").strip!
-      if file_exists == '1'
+      file_exists = false
+      ssh.sftp.dir.glob(path, @@files_file) { |e| file_exists = true }
+      #file_exists = ssh.exec!("if [ -f #{File.join(path, @@files_file)} ]; then echo 1; else echo 0; fi").strip!
+      if file_exists
         ssh.sftp.download!(File.join(path, @@files_file), @@tmp_files_file)
         remote_revlog = File.open(@@tmp_files_file) { |f| JSON.load(f) }
       else
