@@ -18,7 +18,7 @@ class UserInterface
 	InitRE = "init(\s+([^\s]*))?$"
 	AddRE = "add\s*(((\s+(\"[^\s]*\"))*)|(\s+(\.))?)$"
 	CheckoutRE = "checkout\s*(\s+([^\s]*))?\s*(\s+(-b)\s+([^\s]*))?\s*(\s+(--track)\s+([^\s]*/[^\s]*))?$"
-	CommitRE = "commit(\s+(-a))?(\s+(-m)\s+([^\s]*))?((\s+([^\s]*))*)$"
+	CommitRE = "commit(\s+(-a))?(\s+(-m)\s+((\"[^\"]*\")|[^~\s]*))?((\s+([^\s]*))*)$"
 	BranchRE = "branch\s*(\s*(\s+(-a)\s+([^\s]*))|\s*(\s+(-d)\s+([^\s]*)))?$"
 	MergeRE = "merge\s*(\s+([^\s]*)\s*)*$"
 	PushRE = "push(\s+([^\s]*))?(\s+([^\s]*))$"
@@ -137,11 +137,11 @@ class UserInterface
 				params["add"] = true if matched[2]
 				message = matched[5].gsub(/"/,'') if matched[4] and matched[5]
 				params["msg"] = message
-				if matched[6]
-					if matched[6] == " ."
+				if matched[7]
+					if matched[7] == " ."
 						files = nil
 					else
-						files = matched[6].split(" ")
+						files = matched[7].split(" ")
 					# files.each_with_index{|file,i| params[("file"+(i+1).to_s)] = file }
 					base_dir = File.read('.octopus/base_dir')
 					# puts base_dir
