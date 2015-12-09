@@ -219,6 +219,7 @@ class UserInterface
 			# r0 = remote, r1 = branch
 			
 			files = Workspace.new.status
+			puts files.size
 			if files.size < 1
 				result = "Please commit first"
 			else
