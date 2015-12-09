@@ -10,6 +10,10 @@ class IntegrationTests < Test::Unit::TestCase
 		File.exist?("test_dir/#{file}")
 	end
 
+	def file_contents(file)
+		File.read("test_dir/#{file}").to_s.strip
+	end
+
 	def setup
 		system("mkdir test_dir")
 
@@ -51,12 +55,41 @@ class IntegrationTests < Test::Unit::TestCase
 		# Try committing on new branch
 
 		command("echo \"hello world2\" > test4")
+		command("echo \"from branch\" > test")
 		assert command("oct commit -m \"test4\" *")
 
 		assert command("oct checkout master")
 
 		assert file_exists("test")
+		assert_equal file_contents("test"), "hello world"
 		assert file_exists("test2")
 		assert_false file_exists("test3")
+
+		assert command("oct checkout test_branch")
+		assert file_exists("test")
+		assert_equal file_contents("test"), "from branch"
+		assert file_exists("test2")
+		assert file_exists("test3")
+		assert file_exists("test4")
+
+		# Third branch
+
+		assert command("oct branch -a test_branch2")
+
+		command("echo \"from branch2\" > test")
+		command("echo \"hello world 5\" > test5")
+		assert command("oct commit -m \"test\" *")
+
+		assert command("oct checkout test_branch")
+		assert_equal file_contents("test"), "from branch"
+		assert_false file_exists("test5")
+
+		assert command("oct checkout master")
+		assert_equal file_contents("test"), "hello world"
+		assert_false file_exists("test5")
+
+		assert command("oct checkout test_branch2")
+		assert_equal file_contents("test"), "from branch2"
+		assert file_exists("test5")
 	end
 end

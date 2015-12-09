@@ -239,7 +239,6 @@ class Repos
 
 	# use Marshal to load snapshot ID and find that commit_time
 	def self.find_snapshot(snapshot_ID)
-		puts "LOOKING for #{snapshot_ID}"
 	    # Return the root snapshot if the id is "0"
 	    if snapshot_ID == '0'
 	      @@snapshot_tree.snapshots.each { |s|
@@ -250,7 +249,6 @@ class Repos
 
 		# snapshot ID we are looking for
 		@@snapshot_tree.snapshots.each { |s| 
-			puts s.snapshot_ID 	
 			if s.snapshot_ID == snapshot_ID
 				return s
 			end
