@@ -63,6 +63,7 @@ class UserInterface
 			command = ARGV
 		end 
 		result = ""
+		error = false
 		if !command.empty?
 			command.each_with_index{|cmd,i|
 				if cmd.split(' ').length>1
@@ -71,14 +72,16 @@ class UserInterface
 			}
 			command.each_with_index{|cmd,i| 
 				if i==0 && SupportedCmds.include?(cmd)
-					result = parseCommand(cmd,command*" ")
+					result, error = parseCommand(cmd,command*" ")
 					break
 				else
 					result = "Invalid command '" + cmd + "'.\nCommands supported : " + SupportedCmds.to_s
+					error = true
 			 	#result = "Invalid command '" + cmd + "'"
-			 end
+				end
 			}
 			displayResult(result) #if !testCommands
+			exit(1) if error
 		end
 		return result
 	end
@@ -94,6 +97,7 @@ class UserInterface
     @print_octopus = true # Default value
 
 		result = ""
+		error = false
 		if cmd == "init"
 			matched = fullCmd.match InitRE
 			if matched
@@ -222,6 +226,7 @@ class UserInterface
 			# if there are uncommited files - warn the user
 			if files.size > 0
 				result = "Abort push. Please commit first"
+				error = true
 			else
 				PushPull.push(r[1],r[2])
 				result = "Successfully pushed to branch #{r[2]}"
@@ -355,7 +360,7 @@ class UserInterface
 		elsif cmd == "help"
 			`cat help.txt`
 		end
-		return result
+		return result, error
 	end
 
 	#Acts a method from other module. It will be replaced by actual method from other module<br><br>

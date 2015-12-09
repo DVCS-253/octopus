@@ -56,6 +56,7 @@ class Workspace
 
 		file_hash = snapshot.repos_hash
 		# puts snapshot.repos_hash.to_a.inspect
+
         file_hash.each do |path, hash|
 			#rebuild the directory of the file
 			rebuild_dir(path)

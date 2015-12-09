@@ -31,7 +31,7 @@ class IntegrationTests < Test::Unit::TestCase
 		assert command("oct commit -m \"test2\" test2")
 	end
 
-	def nottest_branching
+	def test_branching
 		command("echo \"hello world2\" > test2")
 		assert command("oct commit -m \"test2\" *")
 
@@ -123,7 +123,7 @@ class IntegrationTests < Test::Unit::TestCase
 		assert_equal file_contents("test"), "from branch2"
 	end
 
-	def test_push
+	def nottest_push
 		remote = "ashanina@cycle1.csug.rochester.edu:/u/ashanina/Documents/253/octopus/int_tests/test_dir"
 
 		system("rm -r test_dir")

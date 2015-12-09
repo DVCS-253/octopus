@@ -118,7 +118,7 @@ module PushPull
 
       # Checkout current remote branch on the remote
       remote_branch = ssh.exec! "cd #{path} && oct current_branch"
-      ssh.exec! "cd #{path} && oct checkout #{remote_branch}"
+      puts ssh.exec! "cd #{path} && oct checkout #{remote_branch}"
     }
   end
 
