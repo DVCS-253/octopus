@@ -31,7 +31,7 @@ class IntegrationTests < Test::Unit::TestCase
 		assert command("oct commit -m \"test2\" test2")
 	end
 
-	def test_branching
+	def nottest_branching
 		command("echo \"hello world2\" > test2")
 		assert command("oct commit -m \"test2\" *")
 
@@ -93,7 +93,7 @@ class IntegrationTests < Test::Unit::TestCase
 		assert file_exists("test5")
 	end
 
-	def test_cloned_branching
+	def nottest_cloned_branching
 		system("rm -r test_dir")
 		system("oct clone ashanina@cycle1.csug.rochester.edu:/u/ashanina/Documents/253/octopus/int_tests/test_dir")
 
@@ -121,5 +121,21 @@ class IntegrationTests < Test::Unit::TestCase
 		assert file_exists("test4")
 		assert file_exists("test5")
 		assert_equal file_contents("test"), "from branch2"
+	end
+
+	def test_push
+		remote = "ashanina@cycle1.csug.rochester.edu:/u/ashanina/Documents/253/octopus/int_tests/test_dir"
+
+		system("rm -r test_dir")
+		system("oct clone #{remote}")
+
+		assert command("oct checkout push1")
+
+		command("echo \"push1\" > push1")
+		command("oct status")
+		assert command("oct commit -m \"push1\" *")
+		command("oct status")
+
+		assert command("oct push #{remote} push1")
 	end
 end
