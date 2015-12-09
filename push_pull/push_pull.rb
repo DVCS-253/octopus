@@ -78,6 +78,11 @@ module PushPull
         remote_head = '0'
       end
 
+      remote_branch = ssh.exec! "cd #{path} && oct current_branch"
+
+      # Switching to a branch we want to push to (need to have a better fix for this)
+      ssh.exec! "cd #{path} && oct checkout #{branch}"
+
       # Get all local changes since the remote HEAD
       Repos.get_latest_snapshots(remote_head)
 
@@ -117,8 +122,8 @@ module PushPull
       puts ssh.exec! "cd #{path} && oct update #{@@comm_file}"
 
       # Checkout current remote branch on the remote
-      remote_branch = ssh.exec! "cd #{path} && oct current_branch"
-      puts ssh.exec! "cd #{path} && oct checkout #{remote_branch}"
+      # remote_branch = ssh.exec! "cd #{path} && oct current_branch"
+      ssh.exec! "cd #{path} && oct checkout #{remote_branch}"
     }
   end
 
