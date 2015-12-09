@@ -50,6 +50,7 @@ class Workspace
 	def check_out_snapshot(snapshot_id)
 		#clean the workspace first
 		clean
+
 		#obtain the snapshot object using retore_snapshot
 		snapshot = Repos.restore_snapshot(snapshot_id) 
 

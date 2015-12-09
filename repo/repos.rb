@@ -233,7 +233,7 @@ class Repos
 
 	# returns a specific snapshot
 	def self.restore_snapshot(snapshot_ID)
-		@@snapshot_tree ||= Marshal.load(File.binread(@@store_dir))
+		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
     	find_snapshot(snapshot_ID)
 	end
 

@@ -92,4 +92,34 @@ class IntegrationTests < Test::Unit::TestCase
 		assert_equal file_contents("test"), "from branch2"
 		assert file_exists("test5")
 	end
+
+	def test_cloned_branching
+		system("rm -r test_dir")
+		system("oct clone ashanina@cycle1.csug.rochester.edu:/u/ashanina/Documents/253/octopus/int_tests/test_dir")
+
+		assert file_exists("test")
+		assert file_exists("test2")
+		assert_false file_exists("test3")
+		assert_false file_exists("test4")
+		assert_false file_exists("test5")
+		assert_equal file_contents("test"), "hello world"
+
+		assert command("oct checkout test_branch")
+
+		assert file_exists("test")
+		assert file_exists("test2")
+		assert file_exists("test3")
+		assert file_exists("test4")
+		assert_false file_exists("test5")
+		assert_equal file_contents("test"), "from branch"
+
+		assert command("oct checkout test_branch2")
+
+		assert file_exists("test")
+		assert file_exists("test2")
+		assert file_exists("test3")
+		assert file_exists("test4")
+		assert file_exists("test5")
+		assert_equal file_contents("test"), "from branch2"
+	end
 end
