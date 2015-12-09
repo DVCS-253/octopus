@@ -6,6 +6,10 @@ class IntegrationTests < Test::Unit::TestCase
 		system("cd test_dir && #{command}")
 	end
 
+	def file_exists(file)
+		File.exist?("test_dir/#{file}")
+	end
+
 	def setup
 		system("mkdir test_dir")
 
@@ -34,8 +38,25 @@ class IntegrationTests < Test::Unit::TestCase
 
 		assert command("oct checkout master")
 
-		assert File.exist?("test1")
-		assert File.exist?("test2")
-		assert_false File.exist?("test3")
+		assert file_exists("test")
+		assert file_exists("test2")
+		assert_false file_exists("test3")
+
+		assert command("oct checkout test_branch")
+
+		assert file_exists("test")
+		assert file_exists("test2")
+		assert file_exists("test3")
+
+		# Try committing on new branch
+
+		command("echo \"hello world2\" > test4")
+		assert command("oct commit -m \"test4\" *")
+
+		assert command("oct checkout master")
+
+		assert file_exists("test")
+		assert file_exists("test2")
+		assert_false file_exists("test3")
 	end
 end

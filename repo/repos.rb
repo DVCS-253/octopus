@@ -89,6 +89,15 @@ class Snapshot
 		self.commit_msg == other.commit_msg   and
 		self.branch_name == other.branch_name
 	end
+
+	def branch
+		a = Snapshot.new
+		a.repos_hash = @repos_hash
+		a.branch_HEAD = @branch_HEAD
+		a.commit_msg =  @commit_msg 
+		a.root =  @root 
+		a
+	end
 end
 
 
@@ -230,6 +239,7 @@ class Repos
 
 	# use Marshal to load snapshot ID and find that commit_time
 	def self.find_snapshot(snapshot_ID)
+		puts "LOOKING for #{snapshot_ID}"
 	    # Return the root snapshot if the id is "0"
 	    if snapshot_ID == '0'
 	      @@snapshot_tree.snapshots.each { |s|
@@ -239,7 +249,8 @@ class Repos
 	    end
 
 		# snapshot ID we are looking for
-		@@snapshot_tree.snapshots.each { |s|  	
+		@@snapshot_tree.snapshots.each { |s| 
+			puts s.snapshot_ID 	
 			if s.snapshot_ID == snapshot_ID
 				return s
 			end
@@ -316,10 +327,13 @@ class Repos
 	def self.make_branch(branch_name)
 		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 		head_snapshot_id = File.binread(@@head_dir)
-		head_snapshot = restore_snapshot(head_snapshot_id)
 
 		# Find the old head snapshot
-		parent = head_snapshot
+		parent = restore_snapshot(head_snapshot_id)
+
+		# new snapshot should be a copy of the parent
+		head_snapshot = parent.branch
+
 		head_snapshot.commit_time = Time.now
 		head_snapshot.add_single_parent(parent)
 		# head_snapshot.branch_HEAD = true
@@ -335,7 +349,7 @@ class Repos
 		update_head_file(head_snapshot.snapshot_ID)
 
 		# Update the parent
-		parent.add_child(head_snapshot_id)
+		parent.add_child(head_snapshot.snapshot_ID)
 
 		@@snapshot_tree.snapshots.push(head_snapshot)
 
@@ -373,10 +387,10 @@ class Repos
 	end
 
 	def self.get_current_branch
-	    head = get_head
-	    return 'master' if head == "0"
-
-		Marshal.load(head).branch_name
+	    head_id = get_head
+	    return 'master' if head_id == "0"
+	    head = restore_snapshot(head_id)
+		head.branch_name
 	end
 
 	def self.set_current_branch(snapshot_id)

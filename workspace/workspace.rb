@@ -51,13 +51,9 @@ class Workspace
 		#clean the workspace first
 		clean
 		#obtain the snapshot object using retore_snapshot
-		snapshot = Marshal.load(snapshot_id) # used to be load a file, but this is more efficient	
-		#obtian the file_hash from the object		
-		# puts "snapshot:"
-		# puts snapshot
-		# puts snapshot.branch_name
-		# puts snapshot.commit_msg
-		# puts snapshot.parent[0].repos_hash.to_a.inspect
+		snapshot = Repos.restore_snapshot(snapshot_id) 
+		puts snapshot.inspect
+
 		file_hash = snapshot.repos_hash
 		# puts snapshot.repos_hash.to_a.inspect
         file_hash.each do |path, hash|
@@ -74,6 +70,7 @@ class Workspace
 
 	def check_out_branch(branch_name)
 		snapshot_ID = Repos.get_head(branch_name)
+		puts "GOT THIS HEAD FOR BRANCH MASTER #{snapshot_ID}"
 		check_out_snapshot(snapshot_ID)
 	end
 
