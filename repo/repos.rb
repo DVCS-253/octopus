@@ -391,10 +391,6 @@ class Repos
 		head.branch_name
 	end
 
-	def self.set_current_branch(snapshot_id)
-		File.open(@@head_dir, 'wb'){ |f| f.write ("#{snapshot_id}")}
-	end
-
 	# save text file to .octopus/communication
 	# In order to send latest snapshots from the common ancestor
 	# snapshot_ID, head.branch_name and snapshot_ID.branch_name
@@ -430,16 +426,17 @@ class Repos
 	def self.update_tree(text_file)
 	    head = File.binread(@@head_dir)
 
+	    # If head is not the first snapshot
 	    if head != '0'
 	      head_snapshot = restore_snapshot(head)
 	    end
 
-			snapshots_data = Marshal.load(File.binread(text_file))
-			@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
+		snapshots_data = Marshal.load(File.binread(text_file))
+		@@snapshot_tree = Marshal.load(File.binread(@@store_dir))
 
-			snapshots_data.each do |snapshot|
-				@@snapshot_tree.snapshots.push(snapshot)
-			end
+		snapshots_data.each do |snapshot|
+			@@snapshot_tree.snapshots.push(snapshot)
+		end
 
 	    if head == '0'
 	      head_snapshot = snapshots_data[0]
@@ -450,13 +447,13 @@ class Repos
 	    head_snapshot.add_child(first_element)
 	    first_element.add_parent(head_snapshot)
 
-			# Reset the head and the branch file
-			new_id = snapshots_data.last
-			update_head_file(new_id.snapshot_ID)
-			update_branch_file(head_snapshot.branch_name, new_id.snapshot_ID)
+		# Reset the head and the branch file
+		new_id = snapshots_data.last
+		update_head_file(new_id.snapshot_ID)
+		update_branch_file(head_snapshot.branch_name, new_id.snapshot_ID)
 
-			# Store the updates tree array
-			File.open(@@store_dir, 'wb') { |f|
+		# Store the updates tree array
+		File.open(@@store_dir, 'wb') { |f|
 	      f.write(Marshal.dump(@@snapshot_tree))
 	    }
 	end
