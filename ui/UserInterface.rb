@@ -219,7 +219,7 @@ class UserInterface
 			# r0 = remote, r1 = branch
 			
 			files = Workspace.new.status
-			if files < 1
+			if files.size < 1
 				result = "Please commit first"
 			else
 				PushPull.push(r[1],r[2])
