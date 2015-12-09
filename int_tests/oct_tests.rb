@@ -26,7 +26,7 @@ class IntegrationTests < Test::Unit::TestCase
 		system("rm -r test_dir")
 	end
 
-	def test_second_commit
+	def nottest_second_commit
 		command("echo \"hello world2\" > test2")
 		assert command("oct commit -m \"test2\" test2")
 	end
@@ -129,13 +129,20 @@ class IntegrationTests < Test::Unit::TestCase
 		system("rm -r test_dir")
 		system("oct clone #{remote}")
 
-		assert command("oct checkout push1")
+		command("oct checkout test")
 
-		command("echo \"push1\" > push1")
-		command("oct status")
-		assert command("oct commit -m \"push1\" *")
 		command("oct status")
 
-		assert command("oct push #{remote} push1")
+		command("echo \"push test\" > push4file")
+		assert command("oct commit -m \"pushing 1 commit\" *")
+
+		assert command("oct push #{remote} test")
+
+		# assert command("oct checkout push1")
+
+		# command("echo \"push test\" > push1file")
+		# assert command("oct commit -m \"pushing 1 commit\" *")
+
+		# assert command("oct push #{remote} push1")
 	end
 end
