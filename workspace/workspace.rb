@@ -130,31 +130,30 @@ class Workspace
 
 		results = {}
 		#commit a branch
-		if arg == nil
-			#obtain a file list contains all files excpet for those under ./.octopus/
-			all_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
-			#build a hash table for the files
-			results = build_hash(all_files)
+		# if arg == nil
+		# 	#obtain a file list contains all files excpet for those under ./.octopus/
+		# 	all_files = Dir.glob('./**/*').select{ |e| File.file? e and (not e.include? '.octopus') }
+		# 	#build a hash table for the files
+		# 	results = build_hash(all_files)
 			#make a new snapshot and update the head
-			snapshot_id = Repos.make_snapshot(results, commit_msg)
-			Repos.update_head(snapshot_id)
-			return 0 
-		end
+		# 	snapshot_id = Repos.make_snapshot(results, commit_msg)
+		# 	Repos.update_head(snapshot_id)
+		# 	return 0 
+		# end
 		#commit a list of files
 		if arg.is_a?(Array)
 			results = {}
 			arg.each do |f|
-				content = File.read(f)
-				results[f] = content
+				#commit a directory
+				if File.directory?('./' + f)
+					all_files = Dir.glob('./' + f + '/**/*').select{ |e| File.file?}
+					results.merge!(build_hash(all_files))
+				else
+					content = File.read(f)
+					results[f] = content
+				end
 			end
-		#commit a directory
-		elsif File.directory?('./' + arg)
-			all_files = Dir.glob('./' + arg + '/**/*').select{ |e| File.file?}
-			results = build_hash(all_files)
-    #commit a file
-    else
-      results[arg] =  File.read(arg)
-		end
+    	end
 
 		#if commit a list or a directory, add last committed files 
 		# head = Repos.get_head

@@ -217,8 +217,14 @@ class UserInterface
 			# end
 			r = fullCmd.split
 			# r0 = remote, r1 = branch
-			result = PushPull.push(r[1],r[2])
-
+			
+			files = Workspace.new.status
+			if files < 1
+				result = "Please commit first"
+			else
+				PushPull.push(r[1],r[2])
+				result = "Successfully pushed to branch #{r[2]}"
+			end
 		elsif cmd == "pull"
 			matched = fullCmd.match PullRE
 			if matched
