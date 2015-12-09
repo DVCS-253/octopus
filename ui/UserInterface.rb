@@ -219,9 +219,9 @@ class UserInterface
 			# r0 = remote, r1 = branch
 			
 			files = Workspace.new.status
-			puts files.size
-			if files.size < 1
-				result = "Please commit first"
+			# if there are uncommited files - warn the user
+			if files.size > 0
+				result = "Abort push. Please commit first"
 			else
 				PushPull.push(r[1],r[2])
 				result = "Successfully pushed to branch #{r[2]}"
