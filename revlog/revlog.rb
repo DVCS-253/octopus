@@ -34,7 +34,8 @@ class Revlog
 		def load_table (filename)
       		@file_table = Hash.new
 			File.open(filename) {|file|
-				table = JSON.load(file)
+				encoded = file.read.encode("UTF-8", invalid: :replace, replace: '')
+				table = JSON.parse(encoded)
 				@file_table = table if table
 			} if File.file? (filename)
 		end
@@ -61,6 +62,9 @@ class Revlog
 			file_id = gen_id(contents_and_time)
 		 	# p "file table here: " + @file_table.inspect
 			@file_table[file_id.to_s] = contents_and_time	#store file
+			contents_and_time.map! do |x|
+				x.to_s.encode("UTF-8", invalid: :replace, replace: '')
+			end
 			# p "file table here: " + @file_table.inspect
 			File.open(@json_file, 'w') {|file|
 				JSON.dump(@file_table, file)} #update hashfile
