@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require 'fileutils'
 require "#{File.dirname(__FILE__)}/../repo/repos.rb"
 require "#{File.dirname(__FILE__)}/../revlog/revlog.rb"

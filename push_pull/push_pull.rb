@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require_relative "#{File.dirname(__FILE__)}/../repo/repos"
 require_relative "#{File.dirname(__FILE__)}/../workspace/workspace"
 require 'io/console'

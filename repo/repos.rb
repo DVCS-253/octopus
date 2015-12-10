@@ -1,10 +1,10 @@
+# encoding: UTF-8
+require 'json'
+require 'securerandom'
+
 # CSC 253 - DVCS Project 
 # Repos implementation
 # 11/25/2015 
-
-# require_relative 'revlog'
-require 'json'
-require 'securerandom'
 
 # For Tree structrue
 # Tree class and Snapshot class (represents nodes in the tree)

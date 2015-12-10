@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require 'digest/sha2'
 require 'json'
 require 'time'
@@ -31,10 +32,11 @@ class Revlog
 		# Parameters:
 		# filename:: filename to load table from (should be a json)
 		def load_table (filename)
-      @file_table = Hash.new
+      		@file_table = Hash.new
 			File.open(filename) {|file|
-				@file_table = JSON.load(file)} if File.file? (filename)
-			# puts "file table #{@file_table}"
+				table = JSON.load(file)
+				@file_table = table if table
+			} if File.file? (filename)
 		end
 
 		# Generate a hash code for the
@@ -57,7 +59,7 @@ class Revlog
 			load_table(@json_file)
 			#generate hash for file contents
 			file_id = gen_id(contents_and_time)
-			# p "file table here: " + @file_table.inspect
+		 	# p "file table here: " + @file_table.inspect
 			@file_table[file_id.to_s] = contents_and_time	#store file
 			# p "file table here: " + @file_table.inspect
 			File.open(@json_file, 'w') {|file|

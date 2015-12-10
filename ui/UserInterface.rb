@@ -1,3 +1,4 @@
+# encoding: UTF-8
 #Provides interface to the users in order to execute commands
 
 require "#{File.dirname(__FILE__)}/../workspace/workspace.rb"
@@ -130,7 +131,13 @@ class UserInterface
 				params["createBranch"] = true if matched[4]
 				params["newBranch"] = matched[5] if matched[5]
 				params["track"] = matched[6] if matched[6]
-				result = Workspace.new.check_out_branch(existingBranch)
+				branches = Repos.get_all_branches_names
+				
+				if branches.include? (existingBranch)
+					result = Workspace.new.check_out_branch(existingBranch)
+				else
+					result = "This is not an existing branch"
+				end
 			else
 				result = "Incorrect format. Expected: " + CheckoutUsg
 			end	
