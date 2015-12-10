@@ -101,7 +101,8 @@ module PushPull
       #file_exists = ssh.exec!("if [ -f #{File.join(path, @@files_file)} ]; then echo 1; else echo 0; fi").strip!
       if file_exists
         ssh.sftp.download!(File.join(path, @@files_file), @@tmp_files_file)
-        remote_revlog = File.open(@@tmp_files_file) { |f| JSON.load(f) }
+        file = File.read(@@tmp_files_file).to_s.encode("UTF-8", invalid: :replace, replace: '')
+        remote_revlog = JSON.parse(file)
       else
         remote_revlog = Hash.new
       end
