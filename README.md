@@ -87,6 +87,7 @@ You can delete .octopus file and start over!
   ```
   rm -r .octopus
   ```
+For specific questions, concerncs and bug reports email here: ashanina@u.rochester.edu
 
 ## Notes
 Please note that some commands that are not supported here right now may be fully functional and tested independentely by the corresponding module. Please browse through 5 modules - more information on them is provided in each modele's README. 
