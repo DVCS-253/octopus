@@ -2,7 +2,7 @@
 For a full documentation please check [here](https://docs.google.com/document/d/15nhO8Gd22VIENqxUBeEXDIvDkKBUW-H59sufeJj0I3w/edit?usp=sharing)
 
 ## Installation
-- Clone this repository onto your computer (use the oct branch)
+- Clone this repository onto your computer (use the oct_repo_remate branch)
 - Run `bundle install` to install Ruby dependencies.
   - If you don't have bundler, run `gem install bundler`
 - Add the path to this repository to your `PATH` variable inside `~./cshrc` file.
