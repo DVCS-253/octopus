@@ -7,7 +7,7 @@ This branch contains code that provides the implementation of the user interface
 + TestUserInterface.rb - Unit tests for UI (12 Tests and 36 Assertions).
 + MockUI.rb - Used for unit testing. Mock output is generated so that it remains independent from other modules.
 + doc - Contains documentation of the UI module
-+ UI_Design.pdf - Design and specification of the UI
++ UI_Design.pdf - Design and Specification document
 
 ##UI Dependencies
 + Depends on Repos, Push-Pull and Workspace for the actual execution of the commands. Response from these modules is shown to the user by this module. 
